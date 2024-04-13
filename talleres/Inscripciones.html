@@ -7,6 +7,7 @@
 
 <style>
     body {
+		position:relative;
         margin: 0;
         padding: 0;
         display: flex;
@@ -19,21 +20,26 @@
     }
 
     #top-bar {
-        width: 100%;
-        font-size: 20px;
+		position:absolute;
+        width: 90%;
+		top:0;
+		left:3%;
+        font-size: 25px;
         background-color: #007bff; /* Fondo azul */
         color: white; /* Texto blanco */
         text-align: center; /* Alinear texto al centro */
-        padding: 10px 0; /* Espaciado interno */
+        padding: 20px 30px; /* Espaciado interno */
         margin-top: 0; /* Eliminar margen superior */
     }
 
     #slider-container {
-        position: relative;
-        width: 100%;
+		border-radius:20px;
+        position: absolute;
+        width: 90%;
+		left:33%;
 		max-width: 285px;
         overflow: hidden; /* Asegurar que las imágenes se mantengan dentro del contenedor */
-        margin-top: 0; /* Eliminar margen superior */
+		top:10%;
     }
 
     #image-slider {
@@ -93,13 +99,18 @@
         display: inline-block;
         text-decoration: none;
     }
-	
-	@media (max-width: 280px){
-	    #slider-container {
-        width: 180%;
-        max-width: 285%px;
+
+
+	@media (max-width: 580px) {
+		#slider-container {
+			border-radius:20px;
+			position: absolute;
+			width: 90%;
+			left:18%;
+			max-width: 285px;
+			overflow: hidden;
+			top:10%;
 		}
-		
 	}
 
 
@@ -107,7 +118,7 @@
 </head>
 <body>
     <div id="top-bar">
-        Haz click en el taller que te interesa
+        Haz click en el Taller
     </div>
     <div id="slider-container">
         <div id="image-slider">

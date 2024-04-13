@@ -13,7 +13,7 @@
     }
 
     #formulario {
-        width: 230px;
+        width: 80%;
         margin: 20px auto;
         background-color: #fff;
         border-radius: 8px;
@@ -39,10 +39,12 @@
     }
 
     .boton {
+		font-size:18px;
         background-color: #007bff;
         color: #fff;
         border: none;
-        padding: 10px 20px;
+        padding: 10px 40px;
+		margin-left:80px;
         border-radius: 4px;
         cursor: pointer;
     }
@@ -53,10 +55,17 @@
 
 
     #nota {
-        font-size: 12px;
+        font-size: 18px;
         color: #666;
         margin-bottom: 10px;
     }
+	@media (max-width: 550px){
+		.boton{
+			margin:0px;
+			margin-bottom:15px;
+			margin-left:10px;
+		}
+	}
 </style>
 </head>
 <body>
