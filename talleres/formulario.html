@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formulario</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-color: #007bff;
+    }
+
+    #formulario {
+        width: 230px;
+        margin: 20px auto;
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    input[type="text"],
+    input[type="number"] {
+        width: calc(100% - 20px);
+        margin-bottom: 10px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    textarea {
+        width: calc(100% - 20px);
+        margin-bottom: 10px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .boton {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .boton:hover {
+        background-color: #0056b3;
+    }
+
+
+    #nota {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 10px;
+    }
+</style>
+</head>
+<body>
+    <div id="formulario">
+        <form id="miFormulario" action="https://formsubmit.co/fundacionceavallecalchaqui@gmail.com" method="POST">
+			<label readonly for="taller">Elección</label>
+            <input readonly type="text" id="taller" name="taller" value="valor">
+            <label for="nombre">Nombre y Apellido</label>
+            <input type="text" id="nombre" name="nombre" required>
+            <label for="celular">Número de Celular</label>
+            <input type="number" id="celular" name="celular" required>
+            <label for="dni">Número de documento</label>
+            <input type="number" id="dni" name="dni" required>
+            <label for="direccion">Dirección</label>
+            <input type="text" id="direccion" name="direccion" required>
+            <div id="nota">
+                Este taller es de pago exclusivo solo en la República Argentina. El costo mínimo del mismo es de $3.000 por 4 clases de aprendizaje, SIN MATERIAL por persona. El costo completo es de $20.000 por 4 clases de aprendizaje CON MATERIAL por persona. Si comprende y desea continuar presione el botón "Aceptar", si desea ver los talleres gratuitos presione el botón "Volver".
+            </div>
+            <button onclick="aceptar()" class="boton"  type="submit">Aceptar</button>
+            <button type="button" class="boton" onclick="volver()">Volver</button>
+            <input type="hidden" name="_next" value="https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/talleres/Inscripciones.html">
+            <input type="hidden" name="_captcha" value="false">
+        </form>
+    </div>
+
+    <script>
+        function aceptar() {
+            // Mostrar ventana emergente
+            var mensaje = "Gracias por inscribirte a nuestros talleres! te llegará un mensaje al WhatsApp.";
+            alert(mensaje);
+            window.location.href = "Inscripciones.html";
+        }
+
+        function volver() {
+            // Aquí puedes redireccionar a la página de talleres gratuitos
+            window.location.href = "Inscripciones.html";
+        }
+        
+        function comprobarTaller() {
+            var valorGuardado = localStorage.getItem('valorTaller');
+
+            var inputTaller = document.getElementById('taller').value;
+            var notaDiv = document.getElementById('nota');
+            if (valorGuardado === '1') {
+				document.getElementById('taller').value = 'Taller de cotillón';
+            } else if (valorGuardado === '2') {
+				document.getElementById('taller').value = 'Taller de peluches';
+            } else if (valorGuardado === '3') {
+				document.getElementById('taller').value = 'Taller de hamacas paraguayas';
+            } else if (valorGuardado === '4') {
+				document.getElementById('taller').value = 'Taller de serigrafía';
+            } else if (valorGuardado === '5') {
+				document.getElementById('taller').value = 'Taller de panamina';
+            } else if (valorGuardado === '6') {
+				document.getElementById('taller').value = 'Taller de bijouterie';
+                
+                notaDiv.innerHTML = 'Este taller es gratuito exclusivo solo en la República Argentina, desde la Fundación CEA Valle Calchaqui queremos asegurar la participación de todos los interesados que no puedan costear los talleres de pago, por lo que crearemos diversas campañas de beneficio para abrir nuevamente los talleres de forma gratuita para todos en Cafayate. Si comprende y desea continuar presione el botón "Aceptar", si desea ver el resto de talleres presione el botón "Volver"';
+            } else {
+				document.getElementById('taller').value = 'NO ELIGIO';
+            }
+        
+        }
+		document.addEventListener("DOMContentLoaded", function() {
+			comprobarTaller();
+		});
+
+    </script>
+</body>
+</html>

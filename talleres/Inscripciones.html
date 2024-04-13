@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inscripciones</title>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #007bff;
+        flex-direction: column; /* Organizar elementos en columna */
+	
+    }
+
+    #top-bar {
+        width: 100%;
+        font-size: 20px;
+        background-color: #007bff; /* Fondo azul */
+        color: white; /* Texto blanco */
+        text-align: center; /* Alinear texto al centro */
+        padding: 10px 0; /* Espaciado interno */
+        margin-top: 0; /* Eliminar margen superior */
+    }
+
+    #slider-container {
+        position: relative;
+        width: 100%;
+		max-width: 285px;
+        overflow: hidden; /* Asegurar que las imágenes se mantengan dentro del contenedor */
+        margin-top: 0; /* Eliminar margen superior */
+    }
+
+    #image-slider {
+        display: flex;
+        animation: slideRight 30s linear infinite alternate;
+    }
+
+    .slider-image {
+		width:100%;
+        width: 285px; /* Establecer la anchura del contenedor al ancho de una imagen */
+        height: auto;
+        display: block;
+    }
+
+    @keyframes slideRight {
+        0% {
+            transform: translateX(0);
+        }
+        16.66% {
+            transform: translateX(0);
+        }
+        25% {
+            transform: translateX(-285px);
+        }
+        33.33% {
+            transform: translateX(-285px);
+        }
+        41.66% {
+            transform: translateX(-570px);
+        }
+        50% {
+            transform: translateX(-570px);
+        }
+        58.33% {
+            transform: translateX(-855px);
+        }
+        66.66% {
+            transform: translateX(-855px);
+        }
+        75% {
+            transform: translateX(-1140px);
+        }
+        83.33% {
+            transform: translateX(-1140px);
+        }
+        91.66% {
+            transform: translateX(-1425px);
+        }
+        100% {
+            transform: translateX(-1425px);
+        }
+    }
+
+    /* Estilos para el enlace */
+    .slider-link {
+        width: 285px; /* Asegurar que el enlace ocupe todo el ancho */
+        display: inline-block;
+        text-decoration: none;
+    }
+	
+	@media (max-width: 280px){
+	    #slider-container {
+        width: 180%;
+        max-width: 285%px;
+		}
+		
+	}
+
+
+</style>
+</head>
+<body>
+    <div id="top-bar">
+        Haz click en el taller que te interesa
+    </div>
+    <div id="slider-container">
+        <div id="image-slider">
+            <a onclick="valortaller(1)" href="formulario.html" class="slider-link"><img src="imagen1.jpg" class="slider-image"></a>
+            <a onclick="valortaller(2)" href="formulario.html" class="slider-link"><img src="imagen6.jpg" class="slider-image"></a>
+            <a onclick="valortaller(3)" href="formulario.html" class="slider-link"><img src="imagen5.jpg" class="slider-image"></a>
+            <a onclick="valortaller(4)" href="formulario.html" class="slider-link"><img src="imagen4.jpg" class="slider-image"></a>
+            <a onclick="valortaller(5)" href="formulario.html" class="slider-link"><img src="imagen3.jpg" class="slider-image"></a>
+            <a onclick="valortaller(6)" href="formulario.html" class="slider-link"><img src="imagen2.jpg" class="slider-image"></a>
+            <!-- Se vuelve a cargar la primera imagen para simular un ciclo -->
+        </div>
+    </div>
+	<script>
+	
+        function valortaller(numero) {
+            localStorage.setItem('valorTaller', numero);
+        }
+	</script>
+</body>
+</html>
