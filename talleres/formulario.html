@@ -37,6 +37,9 @@
         border: 1px solid #ccc;
         border-radius: 4px;
     }
+	.error{
+		color:red;
+	}
 
     .boton {
 		font-size:18px;
@@ -84,7 +87,7 @@
             <div id="nota">
                 Este taller es de pago exclusivo solo en la República Argentina. El costo mínimo del mismo es de $3.000 por 4 clases de aprendizaje, SIN MATERIAL por persona. El costo completo es de $20.000 por 4 clases de aprendizaje CON MATERIAL por persona. Si comprende y desea continuar presione el botón "Aceptar", si desea ver los talleres gratuitos presione el botón "Volver".
             </div>
-            <button onclick="aceptar()" class="boton"  type="submit">Aceptar</button>
+            <button class="boton"  type="submit">Aceptar</button>
             <button type="button" class="boton" onclick="volver()">Volver</button>
             <input type="hidden" name="_next" value="https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/talleres/Inscripciones.html">
             <input type="hidden" name="_captcha" value="false">
@@ -92,12 +95,6 @@
     </div>
 
     <script>
-        function aceptar() {
-            // Mostrar ventana emergente
-            var mensaje = "Gracias por inscribirte a nuestros talleres! te llegará un mensaje al WhatsApp.";
-            alert(mensaje);
-            window.location.href = "Inscripciones.html";
-        }
 
         function volver() {
             // Aquí puedes redireccionar a la página de talleres gratuitos
@@ -131,6 +128,21 @@
 		document.addEventListener("DOMContentLoaded", function() {
 			comprobarTaller();
 		});
+        document.getElementById('miFormulario').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            var requiredFields = document.querySelectorAll('input[required]');
+            var allFilled = true;
+
+            if (allFilled) {
+                // Aquí puedes colocar el código que deseas ejecutar
+                alert('Gracias por inscribirte a nuestros tallares, a continuación te llegara un mensaje de whatsapp');
+				window.location.href = "Inscripciones.html";
+            } else {
+                console.log('Por favor, llene todos los campos obligatorios.');
+            }
+        });
+		
 
     </script>
 </body>
