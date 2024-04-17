@@ -108,12 +108,15 @@
             var notaDiv = document.getElementById('nota');
             if (valorGuardado === '1') {
 				document.getElementById('taller').value = 'Taller de cotillón';
+				
+				notaDiv.innerHTML = 'Este taller es de pago exclusivo solo en la República Argentina. El costo mínimo del mismo es de $2.000 por 4 clases de aprendizaje, SIN MATERIAL por persona. El costo completo es de $4.000 por 4 clases de aprendizaje CON MATERIAL por persona. Si comprende y desea continuar presione el botón "Aceptar", si desea ver los talleres gratuitos presione el botón "Volver".';
             } else if (valorGuardado === '2') {
 				document.getElementById('taller').value = 'Taller de peluches';
             } else if (valorGuardado === '3') {
 				document.getElementById('taller').value = 'Taller de hamacas paraguayas';
             } else if (valorGuardado === '4') {
 				document.getElementById('taller').value = 'Taller de serigrafía';
+
             } else if (valorGuardado === '5') {
 				document.getElementById('taller').value = 'Taller de panamina';
             } else if (valorGuardado === '6') {
