@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Compra</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        .form-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            color: #333;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .form-group input[type="file"] {
+            padding: 3px;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .submit-btn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="form-container">
+        <h2>Formulario de Compra</h2>
+        <form action="https://formsubmit.co/palrepshopventas@gmail.com" method="POST" enctype="multipart/form-data">
+            
+            <!-- Campo: Nombre de usuario -->
+            <div class="form-group">
+                <label for="username">Nombre de usuario</label>
+                <input type="text" id="username" name="Nombre de usuario" placeholder="Ingresa tu nombre de usuario" required>
+            </div>
+            
+            <!-- Campo: Dirección -->
+            <div class="form-group">
+                <label for="address">Dirección</label>
+                <input type="text" id="address" name="Dirección" placeholder="Ingresa tu dirección" required>
+            </div>
+            
+            <!-- Campo: Contacto -->
+            <div class="form-group">
+                <label for="contact">Contacto</label>
+                <input type="text" id="contact" name="Contacto" placeholder="Ingresa tu número de contacto" required>
+            </div>
+            
+            <!-- Campo: Producto comprado -->
+            <div class="form-group">
+                <label for="product">Producto comprado</label>
+                <input type="text" id="product" name="Producto comprado" placeholder="Ingresa el producto comprado" required>
+            </div>
+            
+            <!-- Campo: Fecha y hora de la compra -->
+            <div class="form-group">
+                <label for="date-time">Fecha y hora de la compra</label>
+                <input type="datetime-local" id="date-time" name="Fecha y hora de la compra" required>
+            </div>
+            
+            <!-- Campo: Imagen de la compra -->
+            <div class="form-group">
+                <label for="image">Imagen de la compra</label>
+                <input type="file" id="image" name="Imagen de la compra" accept="image/*">
+            </div>
+            
+            <!-- Campo: Cantidad de dinero gastado -->
+            <div class="form-group">
+                <label for="amount">Cantidad de dinero gastado</label>
+                <input type="number" id="amount" name="Cantidad de dinero gastado" placeholder="Ingresa la cantidad" required step="0.01">
+            </div>
+            
+            <!-- Botón de envío -->
+            <button type="submit" class="submit-btn">Enviar</button>
+            
+            <!-- Ocultar algunos campos para evitar SPAM -->
+            <input type="hidden" name="_next" value="https://tuweb.com/gracias"> <!-- Redirección tras enviar -->
+            <input type="hidden" name="_captcha" value="false">
+        </form>
+    </div>
+
+    <script>
+        // Función para establecer la fecha y hora actual automáticamente
+        window.onload = function() {
+            const dateTimeInput = document.getElementById('date-time');
+            const now = new Date();
+
+            // Obtiene la fecha y hora en formato adecuado para el campo "datetime-local"
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+
+            // Formato correcto: YYYY-MM-DDTHH:MM
+            const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            
+            // Establece el valor del campo
+            dateTimeInput.value = formattedDateTime;
+        };
+    </script>
+
+</body>
+</html>
