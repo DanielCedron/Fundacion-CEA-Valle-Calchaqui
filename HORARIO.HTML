@@ -1,235 +1,224 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Horario de Trabajo</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f2f2f2;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: start;
-      min-height: 100vh;
-    }
-
-    h1 {
-      font-size: 1.8rem;
-      text-align: center;
-      margin: 20px 10px;
-    }
-
-    #popup {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-    }
-
-    #popup form {
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 350px;
-      box-sizing: border-box;
-    }
-
-    label {
-      display: block;
-      margin-top: 16px;
-      font-size: 1rem;
-      text-align: left;
-    }
-
-    select {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      font-size: 1rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-
-    button {
-      margin-top: 24px;
-      padding: 12px;
-      font-size: 1rem;
-      width: 100%;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 8px;
-    }
-
-    #status {
-      font-size: 1.2rem;
-      margin: 20px;
-      text-align: center;
-      padding: 15px;
-      background: white;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 400px;
-    }
-
-    @media (min-width: 768px) {
-      h1 {
-        font-size: 2rem;
-      }
-      #status {
-        font-size: 1.4rem;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Horario de Trabajo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0; padding: 0;
+            background: #f2f2f2;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: start;
+            min-height: 100vh;
+        }
+        h1 { font-size: 1.8rem; margin: 20px; text-align: center; }
+        #popup {
+            position: fixed; top:0; left:0; right:0; bottom:0;
+            background: rgba(0,0,0,0.7);
+            display: none; justify-content: center; align-items: center;
+        }
+        #popup form {
+            background: #fff; padding: 20px; border-radius: 12px;
+            width: 90%; max-width: 350px; box-sizing: border-box;
+        }
+        label { display: block; margin-top: 16px; font-size: 1rem; }
+        select, input {
+            width: 100%; padding: 10px; margin-top: 6px;
+            font-size: 1rem; border-radius: 6px; border: 1px solid #ccc;
+        }
+        button {
+            margin-top: 24px; padding: 12px; font-size: 1rem;
+            width: 100%; background-color: #007bff; color: white;
+            border: none; border-radius: 8px;
+        }
+        #status {
+            font-size: 1.2rem; margin: 20px; text-align: center;
+            padding: 15px; background: white; border-radius: 12px;
+            width: 90%; max-width: 400px;
+        }
+        @media (min-width: 768px) {
+            h1 { font-size: 2rem; }
+            #status { font-size: 1.4rem; }
+        }
+    </style>
 </head>
 <body>
 
-<div id="popup" style="display:none;">
-  <form id="userForm">
-    <h3>Primera vez, elige tus datos</h3>
-    <label>Tu nombre:
-      <select id="name" required>
-        <option value="">Seleccionar</option>
-        <option>Xavier Adrian</option>
-        <option>Diego A. Muramasa Gutierrez</option>
-        <option>Mitisti</option>
-        <option>Mario</option>
-        <option>Arianna</option>
-        <option>Cale</option>
-        <option>Cande Hernandez</option>
-        <option>Eliott Tomas Cambareri</option>
-		<option>Karla Valentina</option>
-      </select>
-    </label>
-    <label>Tu país:
-      <select id="country" required>
-        <option value="">Seleccionar</option>
-        <option value="Argentina">Argentina</option>
-        <option value="Venezuela">Venezuela</option>
-        <option value="México">México</option>
-        <option value="Perú">Perú</option>
-      </select>
-    </label>
-    <button type="submit">Guardar</button>
-  </form>
+<div id="popup">
+    <form id="userForm">
+        <h3>Configuración Inicial</h3>
+        <label>Selecciona tu nombre:
+            <select id="name" required>
+                <option value="">Seleccionar</option>
+                <option>Xavier Adrian</option>
+                <option>Diego A. Muramasa Gutierrez</option>
+                <option>Mitisti</option>
+                <option>Mario</option>
+                <option>Ariana</option>
+                <option>Karla Valentina</option>
+                <option>Cale</option>
+                <option>Cande Hernandez</option>
+                <option>Eliot Tomas Cambareri</option>
+            </select>
+        </label>
+        <label>Selecciona tu país:
+            <select id="country" required>
+                <option value="">Seleccionar</option>
+                <option value="Argentina">Argentina</option>
+                <option value="Venezuela">Venezuela</option>
+                <option value="México">México</option>
+                <option value="Perú">Perú</option>
+            </select>
+        </label>
+        <button type="submit">Guardar</button>
+    </form>
 </div>
 
 <h1>Horario de Trabajo del Proyecto</h1>
 <div id="status">Cargando información...</div>
 
 <script>
-  const tzMap = {
-    'Argentina': 'America/Argentina/Buenos_Aires',
-    'Venezuela': 'America/Caracas',
-    'México': 'America/Mexico_City',
-    'Perú': 'America/Lima'
-  };
+const tzMap = {
+    'Argentina': 'America/Argentina/Buenos_Aires', // UTC-3
+    'Venezuela': 'America/Caracas',           // UTC-4
+    'México': 'America/Mexico_City',          // UTC-5 (CDT en abril)
+    'Perú': 'America/Lima'                   // UTC-5
+};
 
-  const workDays = [
-    { day: 1, hour: 16 }, // Lunes
-    { day: 4, hour: 17 }, // Jueves
-    { day: 0, hour: 17 }  // Domingo
-  ];
+// Reuniones en horario de MÉXICO (hora base)
+const workSessionsMexico = [
+    { day: 1, hour: 16 }, // Lunes 4PM
+    { day: 4, hour: 17 }, // Jueves 5PM
+    { day: 0, hour: 17 }   // Domingo 5PM
+];
 
-  const MAX_WORK_HOUR = 22;
-  const WORK_DURATION = 3;
+const WORK_DURATION = 3;
+const MAX_WORK_HOUR = 22;
 
-  const popup = document.getElementById('popup');
-  const userForm = document.getElementById('userForm');
-  const statusDiv = document.getElementById('status');
+const popup = document.getElementById('popup');
+const userForm = document.getElementById('userForm');
+const statusDiv = document.getElementById('status');
 
-  function getUserData() {
+function getUserData() {
     return JSON.parse(localStorage.getItem('userData'));
-  }
+}
 
-  function saveUserData(name, country) {
+function saveUserData(name, country) {
     localStorage.setItem('userData', JSON.stringify({ name, country }));
-  }
+}
 
-  function showPopup() {
+function showPopup() {
     popup.style.display = 'flex';
-  }
+}
 
-  function hidePopup() {
+function hidePopup() {
     popup.style.display = 'none';
-  }
+}
 
-  function checkIfNowIsWorkTime(now, timezone) {
-    const localNow = new Date(now.toLocaleString("en-US", { timeZone: timezone }));
-    const day = localNow.getDay();
-    const hour = localNow.getHours();
+function getLocalDateTime(baseHour, dayOffset, userTimeZone) {
+    const meetingDateMexico = new Date('2025-04-24T' + baseHour.toString().padStart(2, '0') + ':00:00-05:00'); // Asumimos la fecha de la reunión y la zona horaria de México (CDT)
+    meetingDateMexico.setDate(meetingDateMexico.getDate() + dayOffset);
 
-    const session = workDays.find(w => w.day === day);
-    if (session) {
-      if (hour >= session.hour && hour < session.hour + WORK_DURATION && hour < MAX_WORK_HOUR) {
-        return true;
-      }
+    const userDate = new Date(meetingDateMexico.toLocaleString('en-US', { timeZone: userTimeZone }));
+    return userDate;
+}
+
+function isNowWorkTime(userTimeZone) {
+    const now = new Date();
+    const localNowStr = now.toLocaleString('en-US', { timeZone: userTimeZone });
+    const localNow = new Date(localNowStr);
+    const localDay = localNow.getDay();
+    const localHour = localNow.getHours();
+    const localDate = localNow.toDateString();
+
+    for (const session of workSessionsMexico) {
+        const sessionDate = getLocalDateTime(session.hour, (session.day - localDay + 7) % 7, userTimeZone);
+        const sessionDay = sessionDate.getDay();
+        const sessionHour = sessionDate.getHours();
+        const sessionDateStr = sessionDate.toDateString();
+
+        if (
+            localDate === sessionDateStr &&
+            localHour >= sessionHour &&
+            localHour < sessionHour + WORK_DURATION &&
+            localHour < MAX_WORK_HOUR
+        ) {
+            return true;
+        }
     }
     return false;
-  }
+}
 
-  function getNextSession(now, timezone) {
+function getNextSession(userTimeZone) {
+    const now = new Date();
+    const localNowStr = now.toLocaleString('en-US', { timeZone: userTimeZone });
+    const localNow = new Date(localNowStr);
+
     for (let i = 0; i < 7; i++) {
-      const future = new Date(now);
-      future.setDate(future.getDate() + i);
-      const localFuture = new Date(future.toLocaleString("en-US", { timeZone: timezone }));
-      const day = localFuture.getDay();
+        for (const session of workSessionsMexico) {
+            // Usamos la fecha de la primera reunión como referencia para calcular los días siguientes
+            const firstMeeting = new Date('2025-04-21T' + session.hour.toString().padStart(2, '0') + ':00:00-05:00');
+            const sessionDateMexico = new Date(firstMeeting);
+            sessionDateMexico.setDate(sessionDateMexico.getDate() + i);
 
-      const session = workDays.find(w => w.day === day);
-      if (session) {
-        localFuture.setHours(session.hour, 0, 0, 0);
-        if (localFuture > now && session.hour < MAX_WORK_HOUR) {
-          return localFuture;
+            const sessionDateUser = new Date(sessionDateMexico.toLocaleString('en-US', { timeZone: userTimeZone }));
+
+            if (
+                sessionDateUser > localNow &&
+                sessionDateUser.getDay() === session.day && // Aseguramos que el día de la semana coincida
+                sessionDateUser.getHours() < MAX_WORK_HOUR
+            ) {
+                return sessionDateUser;
+            }
         }
-      }
     }
     return null;
-  }
+}
 
-  function renderStatus() {
+
+function renderStatus() {
     const user = getUserData();
     if (!user) return showPopup();
 
-    const timezone = tzMap[user.country];
-    const now = new Date();
-
-    if (checkIfNowIsWorkTime(now, timezone)) {
-      statusDiv.textContent = `¡${user.name}, es hora de trabajar ahora mismo! 🛠️`;
-    } else {
-      const next = getNextSession(now, timezone);
-      if (next) {
-        statusDiv.textContent = `Hola ${user.name}, la próxima sesión grupal será el ${next.toLocaleDateString()} a las ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} (${user.country})`;
-      } else {
-        statusDiv.textContent = `No hay sesiones programadas por ahora.`;
-      }
+    const userTZ = tzMap[user.country];
+    if (!userTZ) {
+        statusDiv.textContent = 'Zona horaria no encontrada.';
+        return;
     }
-  }
 
-  userForm.addEventListener('submit', e => {
+    if (isNowWorkTime(userTZ)) {
+        statusDiv.textContent = `¡Es hora de trabajar!`;
+    } else {
+        const next = getNextSession(userTZ);
+        if (next) {
+            const options = { weekday: 'long', hour: 'numeric', minute: '2-digit' };
+            const timeStr = next.toLocaleString('es-ES', options);
+            statusDiv.textContent = `Hola ${user.name}, la próxima sesión grupal será el ${timeStr} del ${next.toLocaleDateString()} (${user.country})`;
+        } else {
+            statusDiv.textContent = `No hay sesiones programadas.`;
+        }
+    }
+}
+
+userForm.addEventListener('submit', e => {
     e.preventDefault();
     const name = document.getElementById('name').value;
     const country = document.getElementById('country').value;
     if (name && country) {
-      saveUserData(name, country);
-      hidePopup();
-      renderStatus();
+        saveUserData(name, country);
+        hidePopup();
+        renderStatus();
     }
-  });
+});
 
-  // Inicia
-  if (!getUserData()) {
+// Inicia
+if (!getUserData()) {
     showPopup();
-  } else {
+} else {
     renderStatus();
-  }
+}
 </script>
 
 </body>
