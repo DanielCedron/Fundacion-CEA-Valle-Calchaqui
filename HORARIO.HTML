@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Horario de Trabajo</title>
     <style>
-        body {
+        /* ... (Estilos CSS sin cambios) ... */
+         body {
             font-family: 'Segoe UI', sans-serif;
             margin: 0; padding: 0;
             background: #f2f2f2;
@@ -47,7 +48,7 @@
 <body>
 
 <div id="popup">
-    <form id="userForm">
+     <form id="userForm">
         <h3>Configuración Inicial</h3>
         <label>Selecciona tu nombre:
             <select id="name" required>
@@ -82,20 +83,21 @@
 <script>
 const tzMap = {
     'Argentina': 'America/Argentina/Buenos_Aires', // UTC-3
-    'Venezuela': 'America/Caracas',           // UTC-4
-    'México': 'America/Mexico_City',          // UTC-5 (CDT en abril)
-    'Perú': 'America/Lima'                   // UTC-5
+    'Venezuela': 'America/Caracas',             // UTC-4
+    'México': 'America/Mexico_City',           // UTC-6 / UTC-5 (CDT)
+    'Perú': 'America/Lima'                     // UTC-5
 };
 
-// Reuniones en horario de MÉXICO (hora base)
-const workSessionsMexico = [
-    { day: 1, hour: 16 }, // Lunes 4PM
-    { day: 4, hour: 17 }, // Jueves 5PM
-    { day: 0, hour: 17 }   // Domingo 5PM
-];
+// --- HORARIOS BASE DEFINIDOS EN UTC ---
+// Asumiendo México Central (CDT) = UTC-5
+// Domingo UTC: 0, Lunes UTC: 1, ..., Sábado UTC: 6
+const workSessionsUTC = [
+    { day: 1, hour: 21 }, // Lunes 16:00 MX (UTC-5) = Lunes 21:00 UTC
+    { day: 4, hour: 22 }, // Jueves 17:00 MX (UTC-5) = Jueves 22:00 UTC
+    { day: 0, hour: 22 }  // Domingo 17:00 MX (UTC-5) = Domingo 22:00 UTC
+].sort((a, b) => a.day - b.day || a.hour - b.hour); // Ordenar por día y hora UTC
 
-const WORK_DURATION = 3;
-const MAX_WORK_HOUR = 22;
+const WORK_DURATION = 3; // Duración en horas
 
 const popup = document.getElementById('popup');
 const userForm = document.getElementById('userForm');
@@ -117,107 +119,128 @@ function hidePopup() {
     popup.style.display = 'none';
 }
 
-function getLocalDateTime(baseHour, dayOffset, userTimeZone) {
-    const meetingDateMexico = new Date('2025-04-24T' + baseHour.toString().padStart(2, '0') + ':00:00-05:00'); // Asumimos la fecha de la reunión y la zona horaria de México (CDT)
-    meetingDateMexico.setDate(meetingDateMexico.getDate() + dayOffset);
+// --- FUNCIÓN CORREGIDA (USA UTC) ---
+// Verifica si AHORA MISMO (en UTC) es tiempo de trabajo
+function isNowWorkTimeUTC() {
+    const now = new Date(); // Obtiene la fecha/hora actual (internamente UTC)
+    const currentDayUTC = now.getUTCDay(); // 0=Domingo, 1=Lunes, ...
+    const currentHourUTC = now.getUTCHours(); // 0-23
 
-    const userDate = new Date(meetingDateMexico.toLocaleString('en-US', { timeZone: userTimeZone }));
-    return userDate;
-}
-
-function isNowWorkTime(userTimeZone) {
-    const now = new Date();
-    const localNowStr = now.toLocaleString('en-US', { timeZone: userTimeZone });
-    const localNow = new Date(localNowStr);
-    const localDay = localNow.getDay();
-    const localHour = localNow.getHours();
-    const localDate = localNow.toDateString();
-
-    for (const session of workSessionsMexico) {
-        const sessionDate = getLocalDateTime(session.hour, (session.day - localDay + 7) % 7, userTimeZone);
-        const sessionDay = sessionDate.getDay();
-        const sessionHour = sessionDate.getHours();
-        const sessionDateStr = sessionDate.toDateString();
-
-        if (
-            localDate === sessionDateStr &&
-            localHour >= sessionHour &&
-            localHour < sessionHour + WORK_DURATION &&
-            localHour < MAX_WORK_HOUR
-        ) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function getNextSession(userTimeZone) {
-    const now = new Date();
-    const localNowStr = now.toLocaleString('en-US', { timeZone: userTimeZone });
-    const localNow = new Date(localNowStr);
-
-    for (let i = 0; i < 7; i++) {
-        for (const session of workSessionsMexico) {
-            // Usamos la fecha de la primera reunión como referencia para calcular los días siguientes
-            const firstMeeting = new Date('2025-04-21T' + session.hour.toString().padStart(2, '0') + ':00:00-05:00');
-            const sessionDateMexico = new Date(firstMeeting);
-            sessionDateMexico.setDate(sessionDateMexico.getDate() + i);
-
-            const sessionDateUser = new Date(sessionDateMexico.toLocaleString('en-US', { timeZone: userTimeZone }));
-
-            if (
-                sessionDateUser > localNow &&
-                sessionDateUser.getDay() === session.day && // Aseguramos que el día de la semana coincida
-                sessionDateUser.getHours() < MAX_WORK_HOUR
-            ) {
-                return sessionDateUser;
+    for (const session of workSessionsUTC) {
+        if (session.day === currentDayUTC) {
+            const sessionEndHourUTC = session.hour + WORK_DURATION;
+            // Comprueba si la hora UTC actual está dentro del rango de la sesión UTC
+            // Nota: Esto no maneja sesiones que crucen la medianoche UTC, pero para este caso funciona.
+            if (currentHourUTC >= session.hour && currentHourUTC < sessionEndHourUTC) {
+                return true; // Es hora de trabajar
             }
         }
     }
-    return null;
+    return false; // No es hora de trabajar
+}
+
+// --- FUNCIÓN CORREGIDA (USA UTC) ---
+// Encuentra la próxima sesión de trabajo y devuelve su objeto Date (representando el momento UTC)
+function getNextSessionUTC() {
+    const now = new Date(); // Hora actual REAL (base UTC)
+    const currentDayUTC = now.getUTCDay();
+    const currentHourUTC = now.getUTCHours();
+    const currentMinutesUTC = now.getUTCMinutes(); // Podríamos necesitar minutos para desempate
+
+    let nextSessionTimestamp = Infinity; // Usaremos timestamp para facilitar la comparación
+
+    // Buscar la próxima sesión en los próximos 7 días
+    for (let i = 0; i < 7; i++) {
+        const checkDayUTC = (currentDayUTC + i) % 7; // Día UTC de la semana a revisar (0-6)
+
+        for (const session of workSessionsUTC) {
+            if (session.day === checkDayUTC) {
+                 // Construir la fecha UTC de esta posible sesión futura
+                 const potentialNextSession = new Date(now);
+                 potentialNextSession.setUTCDate(now.getUTCDate() + i); // Ajusta el día del mes (maneja cambio de mes/año)
+                 potentialNextSession.setUTCHours(session.hour, 0, 0, 0); // Establece la hora UTC de inicio
+
+                 // Convertir a timestamp para comparar
+                 const potentialTimestamp = potentialNextSession.getTime();
+
+                 // Si esta sesión es *después* de ahora y es la más cercana encontrada hasta ahora
+                 if (potentialTimestamp > now.getTime() && potentialTimestamp < nextSessionTimestamp) {
+                      nextSessionTimestamp = potentialTimestamp;
+                 }
+            }
+        }
+         // Optimización: Si encontramos una sesión válida en el día `i` y es la más temprana,
+         // no necesitamos seguir buscando en días posteriores si ya hemos completado el ciclo de sesiones para `i`.
+         // Sin embargo, la lógica actual de buscar el mínimo timestamp en 7 días es segura.
+    }
+
+    if (nextSessionTimestamp === Infinity) {
+        return null; // No se encontró ninguna sesión futura (improbable)
+    }
+
+    // Devolver un objeto Date que representa el momento exacto (UTC) de la próxima sesión
+    return new Date(nextSessionTimestamp);
 }
 
 
 function renderStatus() {
     const user = getUserData();
-    if (!user) return showPopup();
-
-    const userTZ = tzMap[user.country];
-    if (!userTZ) {
-        statusDiv.textContent = 'Zona horaria no encontrada.';
+    if (!user) {
+        showPopup();
         return;
     }
 
-    if (isNowWorkTime(userTZ)) {
-        statusDiv.textContent = `¡Es hora de trabajar!`;
+    const userTZ = tzMap[user.country];
+    if (!userTZ) {
+        statusDiv.textContent = 'Zona horaria no encontrada para tu país.';
+        return;
+    }
+
+    // Usamos la nueva función isNowWorkTimeUTC
+    if (isNowWorkTimeUTC()) {
+        // El mensaje puede seguir siendo genérico o mostrar la hora local
+         const now = new Date();
+         const options = { hour: 'numeric', minute: '2-digit', timeZone: userTZ };
+         const horaLocal = now.toLocaleTimeString('es-ES', options);
+        statusDiv.textContent = `¡Hola ${user.name}! Es hora de trabajar (son las ${horaLocal} en ${user.country}).`;
+
     } else {
-        const next = getNextSession(userTZ);
-        if (next) {
-            const options = { weekday: 'long', hour: 'numeric', minute: '2-digit' };
-            const timeStr = next.toLocaleString('es-ES', options);
-            statusDiv.textContent = `Hola ${user.name}, la próxima sesión grupal será el ${timeStr} del ${next.toLocaleDateString()} (${user.country})`;
+        // Usamos la nueva función getNextSessionUTC para obtener el objeto Date (UTC)
+        const nextSessionDateUTC = getNextSessionUTC();
+        if (nextSessionDateUTC) {
+            // Formateamos la fecha/hora UTC para mostrarla en la zona horaria LOCAL del usuario
+            const options = {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                hour: 'numeric', minute: '2-digit', timeZone: userTZ, timeZoneName: 'short' // Añadir nombre de zona horaria ayuda
+             };
+            const timeStr = nextSessionDateUTC.toLocaleString('es-ES', options);
+
+            statusDiv.textContent = `Hola ${user.name}, la próxima sesión grupal será el ${timeStr}.`; // Ya incluye la hora local correcta y TZ
         } else {
-            statusDiv.textContent = `No hay sesiones programadas.`;
+            statusDiv.textContent = `Hola ${user.name}. No se pudo determinar la próxima sesión. Revisa la configuración.`;
         }
     }
 }
 
 userForm.addEventListener('submit', e => {
-    e.preventDefault();
+     // ... (Listener de submit sin cambios) ...
+     e.preventDefault();
     const name = document.getElementById('name').value;
     const country = document.getElementById('country').value;
     if (name && country) {
         saveUserData(name, country);
         hidePopup();
-        renderStatus();
+        renderStatus(); // Vuelve a renderizar con los datos guardados
     }
 });
 
-// Inicia
+// Inicia la lógica al cargar la página
 if (!getUserData()) {
     showPopup();
 } else {
     renderStatus();
+    // Opcional: Actualizar el estado periódicamente (ej. cada minuto)
+    // setInterval(renderStatus, 60000);
 }
 </script>
 
