@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Convertidor de Video para TikTok</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #121212;
+            color: #e0e0e0;
+            text-align: center;
+        }
+
+        .container {
+            background-color: #1e1e1e;
+            padding: 2rem 3rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h1 {
+            color: #1DB954; /* Un color vibrante */
+            margin-bottom: 1.5rem;
+        }
+
+        p {
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            color: #b3b3b3;
+        }
+
+        #video-input {
+            display: none; /* Ocultamos el input original */
+        }
+        
+        .upload-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            border: 2px solid #1DB954;
+            color: #ffffff;
+            background-color: transparent;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-btn-wrapper:hover .btn {
+            background-color: #1DB954;
+            color: #121212;
+        }
+
+        #file-name {
+            display: block;
+            margin-top: 1rem;
+            color: #a0a0a0;
+            font-style: italic;
+        }
+
+        #convert-btn {
+            background-color: #1DB954;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 30px;
+            font-weight: bold;
+            color: #121212;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        #convert-btn:disabled {
+            background-color: #535353;
+            cursor: not-allowed;
+            color: #b3b3b3;
+        }
+
+        #status, #log-output {
+            margin-top: 1.5rem;
+            background-color: #282828;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: "Courier New", Courier, monospace;
+            color: #c5c5c5;
+            text-align: left;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        video, #download-link {
+            display: none; /* Ocultar hasta que esté listo */
+            margin-top: 1.5rem;
+        }
+        
+        video {
+            max-width: 100%;
+            border-radius: 8px;
+            /* Proporción 9:16 para la previsualización */
+            width: 270px; 
+            height: 480px;
+            background-color: #000;
+        }
+
+        #download-link {
+            display: none;
+            text-decoration: none;
+            background-color: #f44336;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        #download-link:hover {
+            background-color: #d32f2f;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Convertidor de Video para TikTok</h1>
+        <p>Sube tu video para convertirlo al formato vertical 1020x1920. El proceso se realiza en tu navegador y puede ser lento.</p>
+        
+        <div class="upload-btn-wrapper">
+            <button class="btn" onclick="document.getElementById('video-input').click();">Seleccionar Video</button>
+            <input type="file" id="video-input" accept="video/*"/>
+        </div>
+        <span id="file-name">Ningún archivo seleccionado</span>
+
+        <button id="convert-btn" disabled>Convertir Video</button>
+
+        <div id="status" style="display: none;"></div>
+        <pre id="log-output" style="display: none;"></pre>
+        
+        <video id="output-video" controls></video>
+        <a id="download-link" href="#" download="video-tiktok.mp4">Descargar Video Convertido</a>
+    </div>
+
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+    <script>
+        const { createFFmpeg, fetchFile } = FFmpeg;
+        let ffmpeg;
+
+        const videoInput = document.getElementById('video-input');
+        const fileNameDisplay = document.getElementById('file-name');
+        const convertBtn = document.getElementById('convert-btn');
+        const statusDiv = document.getElementById('status');
+        const logOutput = document.getElementById('log-output');
+        const outputVideo = document.getElementById('output-video');
+        const downloadLink = document.getElementById('download-link');
+
+        let videoFile = null;
+
+        // Función para cargar ffmpeg
+        const loadFFmpeg = async () => {
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = 'Cargando librería FFmpeg... (puede tardar un momento)';
+            ffmpeg = createFFmpeg({
+                log: true, // Habilita los logs para ver el progreso
+                corePath: "https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js",
+            });
+            await ffmpeg.load();
+            statusDiv.textContent = 'Librería cargada. Listo para convertir.';
+        };
+
+        loadFFmpeg();
+
+        // Manejar la selección de archivo
+        videoInput.addEventListener('change', (e) => {
+            videoFile = e.target.files[0];
+            if (videoFile) {
+                fileNameDisplay.textContent = videoFile.name;
+                convertBtn.disabled = false;
+                statusDiv.textContent = 'Archivo seleccionado. Presiona "Convertir".';
+            } else {
+                fileNameDisplay.textContent = 'Ningún archivo seleccionado';
+                convertBtn.disabled = true;
+            }
+        });
+
+        // Manejar el clic en el botón de convertir
+        convertBtn.addEventListener('click', async () => {
+            if (!videoFile || !ffmpeg.isLoaded()) {
+                alert('Por favor, selecciona un video primero o espera a que la librería cargue.');
+                return;
+            }
+
+            // Deshabilitar botones y mostrar estado
+            convertBtn.disabled = true;
+            videoInput.disabled = true;
+            statusDiv.textContent = 'Preparando conversión...';
+            logOutput.style.display = 'block';
+            logOutput.textContent = 'Iniciando proceso...\n';
+            outputVideo.style.display = 'none';
+            downloadLink.style.display = 'none';
+
+            // Escribir el archivo en el sistema de archivos virtual de ffmpeg
+            ffmpeg.FS('writeFile', videoFile.name, await fetchFile(videoFile));
+
+            // Configurar el log para que se muestre en tiempo real
+            ffmpeg.setLogger(({ type, message }) => {
+                logOutput.textContent += message + '\n';
+                logOutput.scrollTop = logOutput.scrollHeight; // Auto-scroll
+            });
+
+            statusDiv.textContent = 'Conversión en progreso... Esto puede tardar varios minutos.';
+            
+            // Comando de FFmpeg para escalar y añadir padding
+            // -vf "scale=1020:1920:force_original_aspect_ratio=decrease,pad=1020:1920:(ow-iw)/2:(oh-ih)/2,setsar=1"
+            // scale: Escala el video para que quepa dentro de 1020x1920 manteniendo la proporción.
+            // pad: Añade barras negras para rellenar hasta 1020x1920, centrando el video.
+            // setsar=1: Asegura que los píxeles no se estiren.
+            await ffmpeg.run(
+                '-i', videoFile.name,
+                '-vf', 'scale=1020:1920:force_original_aspect_ratio=decrease,pad=1020:1920:(ow-iw)/2:(oh-ih)/2,setsar=1',
+                '-c:a', 'copy', // Copia el audio sin volver a codificarlo para acelerar el proceso
+                'output.mp4'
+            );
+
+            statusDiv.textContent = '¡Conversión completada!';
+            logOutput.style.display = 'none'; // Ocultar log detallado
+
+            // Leer el archivo de resultado
+            const data = ffmpeg.FS('readFile', 'output.mp4');
+
+            // Crear una URL para la previsualización y descarga
+            const videoUrl = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+
+            // Mostrar el video y el enlace de descarga
+            outputVideo.src = videoUrl;
+            downloadLink.href = videoUrl;
+            outputVideo.style.display = 'block';
+            downloadLink.style.display = 'inline-block';
+
+            // Habilitar botones nuevamente
+            convertBtn.disabled = false;
+            videoInput.disabled = false;
+        });
+    </script>
+</body>
+</html>
