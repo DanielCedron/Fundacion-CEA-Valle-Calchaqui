@@ -127,7 +127,49 @@
     margin-left: 28px;
     margin-top: 6px;
   }
+	/* --- Estilos para Botones del Formulario --- */
 
+	/* Estilo base para ambos botones */
+	.envi, .close {
+	  display: block;
+	  width: 100%;
+	  padding: 14px;
+	  font-size: 16px;
+	  font-weight: 600;
+	  border-radius: 12px;
+	  border: none;
+	  cursor: pointer;
+	  text-align: center;
+	  text-decoration: none;
+	  box-sizing: border-box;
+	  transition: all 0.3s ease;
+	}
+
+	/* Botón Principal: Enviar */
+	.envi {
+	  background-color: var(--accent); /* Color de acento principal */
+	  color: #ffffff;
+	  margin-top: 10px; /* Espacio arriba */
+	  box-shadow: 0 4px 15px rgba(0, 107, 122, 0.2);
+	}
+
+	.envi:hover, .envi:focus {
+	  background-color: #005966; /* Un tono más oscuro del acento */
+	  box-shadow: 0 6px 20px rgba(0, 107, 122, 0.3);
+	  transform: translateY(-2px); /* Efecto de elevación sutil */
+	}
+
+	/* Botón Secundario: Cancelar */
+	.close {
+	  background-color: transparent;
+	  color: var(--muted); /* Color de texto apagado */
+	  margin-top: 8px; /* Espacio entre botones */
+	}
+
+	.close:hover, .close:focus {
+	  background-color: #f0f4f5; /* Un fondo muy sutil */
+	  color: var(--accent); /* Color de acento al pasar el mouse */
+	}
   /* --- Gracias --- */
   .thank h1{color:var(--accent); cursor:pointer;}
 
