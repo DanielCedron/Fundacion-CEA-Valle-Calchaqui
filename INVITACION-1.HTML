@@ -261,23 +261,18 @@
     typeWriter(sc.querySelector('p')||sc.querySelector('h1'),text,()=>btn.classList.add('show'));
   }
 
-  // Comprueba si la URL actual es la de redirección de "gracias"
-  if (window.location.href.includes('INVITACION-1.HTML')) {
-      // Si es la página de gracias, la muestra directamente
+  // ----- LÓGICA DE INICIO CORREGIDA Y SIMPLIFICADA -----
+  // La página ahora solo se basa en localStorage para decidir qué mostrar.
+  // Esto soluciona el error que impedía resetear correctamente.
+  if (localStorage.getItem(LS_KEY)) {
+      // Si ya está guardado que completó el form, muestra el agradecimiento.
       intro.classList.add('hidden');
       formPanel.classList.add('hidden');
       thank.classList.remove('hidden');
-      // Guarda en localStorage para que si recarga la página, siga viendo la pantalla de gracias
-      localStorage.setItem(LS_KEY, 'true');
-  } else if(localStorage.getItem(LS_KEY)){
-    // Si ya está en localStorage (visitó antes), también muestra la pantalla de gracias
-    intro.classList.add('hidden');
-    formPanel.classList.add('hidden');
-    thank.classList.remove('hidden');
   } else {
-    // Si es la primera vez, muestra la introducción
-    typeWriter(document.getElementById('text1'),'¡ Bienvenidos !');
-    typeWriter(document.getElementById('sub1'),'Al Foro Internacional de\nNeurodivergencia y Derechos Humanos',()=>document.getElementById('next1').classList.add('show'));
+      // Si es la primera vez (o se reseteó), muestra la introducción.
+      typeWriter(document.getElementById('text1'),'¡ Bienvenidos !');
+      typeWriter(document.getElementById('sub1'),'Al Foro Internacional de\nNeurodivergencia y Derechos Humanos',()=>document.getElementById('next1').classList.add('show'));
   }
 
   document.getElementById('next1').onclick=()=>showScreen('screen2','Este espacio busca promover el diálogo, la inclusión y la defensa\nde los derechos de las personas neurodivergentes\na nivel internacional.',document.getElementById('next2'));
@@ -285,14 +280,22 @@
   document.getElementById('toForm').onclick=()=>{intro.classList.add('hidden'); formPanel.classList.remove('hidden');};
 
   document.getElementById('fm3').onsubmit=e=>{
+    // Antes de que el formulario se envíe, guardamos la confirmación.
     localStorage.setItem(LS_KEY,'true');
-    // El formulario se enviará normalmente.
+    // El formulario se envía a FormSubmit normalmente.
   };
 
-  // Dev reset
+  // ----- FUNCIÓN DE RESET CORREGIDA -----
   let clicks=0;
   document.getElementById('gracias').onclick=()=>{
-    clicks++; if(clicks>=5){localStorage.removeItem(LS_KEY); alert('LocalStorage reseteado'); clicks=0; window.location.href = window.location.pathname;}
+    clicks++; 
+    if(clicks>=5){
+      localStorage.removeItem(LS_KEY); // Borra la clave
+      alert('LocalStorage reseteado');
+      clicks=0;
+      // Simplemente recargamos la página. La nueva lógica de inicio hará el resto.
+      window.location.reload(); 
+    }
   };
 
   // Carrusel automático
