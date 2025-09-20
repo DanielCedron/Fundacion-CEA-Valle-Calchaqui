@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Foro Internacional de Neurodivergencia</title>
+<style>
+  :root{
+    --celeste:#BEEAF5;
+    --accent:#006B7A;
+    --text:#06333a;
+    --muted:#6b7c80;
+    --card:#ffffff;
+    --radius:16px;
+  }
+  html,body{
+    height:100%;
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    background:var(--celeste);
+    color:var(--text);
+  }
+  .app{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:12px;
+    box-sizing:border-box;
+  }
+
+  .panel{
+    width:100%;
+    max-width:720px;
+    background:rgba(255,255,255,0.95);
+    border-radius:var(--radius);
+    box-shadow:0 8px 30px rgba(0,0,0,0.08);
+    padding:20px;
+    box-sizing:border-box;
+    text-align:center;
+  }
+
+  /* --- Intro --- */
+  .screen{
+    min-height:80vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+  }
+  .hidden{display:none;}
+  h1{margin:0; font-size:22px; color:var(--accent);}
+  p.lead{margin:0; font-size:16px; line-height:1.4; white-space:pre-line;}
+  button.btn{
+    border:0; background:var(--accent); color:#fff;
+    padding:12px 18px; border-radius:12px;
+    font-weight:600; font-size:15px;
+    opacity:0; transition:opacity .6s ease;
+  }
+  button.btn.show{opacity:1;}
+
+  /* Carrusel */
+  .carousel{
+    position:relative; width:100%; height:35vh;
+    border-radius:12px; overflow:hidden;
+    margin-bottom:10px;
+  }
+  .carousel img{
+    position:absolute; top:0; left:0;
+    width:100%; height:100%; object-fit:cover;
+    opacity:0; transition:opacity 1s ease;
+  }
+  .carousel img.active{opacity:1;}
+
+  /* --- Formulario --- */
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+  }
+  label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 4px;
+    display: block;
+  }
+  input, textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(6, 51, 58, 0.1);
+    font-size: 15px;
+    box-sizing: border-box;
+  }
+  textarea {min-height: 80px; resize: vertical;}
+
+  .checkbox-group, .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 10px;
+    padding: 10px;
+  }
+
+  .checkbox-group label,
+  .radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .checkbox-group input[type="checkbox"],
+  .radio-group input[type="radio"] {
+    margin: 0;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent); /* cambia el color al celeste */
+  }
+
+  #otroText {
+    margin-left: 28px;
+    margin-top: 6px;
+  }
+
+  /* --- Gracias --- */
+  .thank h1{color:var(--accent); cursor:pointer;}
+
+  /* --- Tabla de horario --- */
+  .schedule{width:100%; border-collapse:collapse; margin-top:16px; font-size:14px;}
+  .schedule th,.schedule td{border:1px solid rgba(0,0,0,0.1); padding:8px; text-align:center;}
+
+  /* Imagen final */
+  .image-placeholder{
+    width:100%; margin-top:16px;
+    border-radius:12px; overflow:hidden;
+    background:linear-gradient(90deg,#e6f7fb,#d8f1f6);
+    padding:20px; box-sizing:border-box;
+  }
+  .image-placeholder .hint{font-size:13px; color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="introContainer" class="panel">
+    <div id="screen1" class="screen">
+      <div class="carousel">
+        <img src="INVITACIONES/inv1/uno.jpg" class="active" alt="Imagen 1 del carrusel">
+        <img src="INVITACIONES/inv1/dos.jpg" alt="Imagen 2 del carrusel">
+        <img src="INVITACIONES/inv1/tres.jpg" alt="Imagen 3 del carrusel">
+      </div>
+      <h1 id="text1"></h1>
+      <p class="lead" id="sub1"></p>
+      <button class="btn" id="next1">Siguiente</button>
+    </div>
+    <div id="screen2" class="screen hidden">
+      <p class="lead" id="text2"></p>
+      <button class="btn" id="next2">Siguiente</button>
+    </div>
+    <div id="screen3" class="screen hidden">
+      <p class="lead" id="text3"></p>
+      <button class="btn" id="toForm">Siguiente</button>
+    </div>
+  </div>
+
+  <div id="formPanel" class="panel hidden">
+	<form id="fm3" action="https://formsubmit.co/fundacionceavallecalchaqui@gmail.com" method="POST">
+	  <h1 class="tit">Inscripción para el Foro Internacional</h1>
+
+	  <input type="text" id="asunto" name="asunto" value="Foro Internacional de Neurodivergencia y Derechos Humanos" hidden>
+
+	  <label for="nombre">Nombre y Apellido</label>
+	  <input type="text" id="nombre" name="nombre" required>
+
+	  <label for="dni">Número de Documento (DNI)</label>
+	  <input type="text" id="dni" name="dni" required>
+
+	  <label for="email">Correo</label>
+	  <input type="email" id="email" name="email" required>
+
+	  <label for="telefono">Teléfono de contacto</label>
+	  <input type="tel" id="telefono" name="telefono" required>
+
+	  <label for="institucion">Institución / Organización</label>
+	  <input type="text" id="institucion" name="institucion">
+
+	  <label for="localidad">Ciudad / Provincia / País</label>
+	  <input type="text" id="localidad" name="localidad">
+
+	  <label>Participación en el Foro</label>
+	  <div class="checkbox-group">
+		<label><input type="checkbox" name="participacion[]" value="Asistente"> Asistente</label>
+		<label><input type="checkbox" name="participacion[]" value="Ponente / Expositor"> Ponente / Expositor</label>
+		<label><input type="checkbox" name="participacion[]" value="Organización / Institución aliada"> Organización / Institución aliada</label>
+		<label><input type="checkbox" name="participacion[]" value="Otro"> Otro (especificar abajo)</label>
+	  </div>
+	  <input type="text" id="otro" name="otro" placeholder="Especificar otro tipo de participación">
+
+	  <label>¿Necesita certificado de asistencia?</label>
+	  <div class="radio-group">
+		<label><input type="radio" name="certificado" value="Si" required> Sí</label>
+		<label><input type="radio" name="certificado" value="No" required> No</label>
+	  </div>
+
+	  <label for="obs">Observación o necesidades especiales (opcional)</label>
+	  <textarea id="obs" name="observacion"></textarea>
+
+	  <button class="envi" type="submit">Enviar</button>
+	  <a onclick="vf()" class="close">Cancelar</a>
+
+	  <input type="hidden" name="_next" value="https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/novedades.html">
+	  <input type="hidden" name="_captcha" value="false">
+	</form>
+
+  </div>
+
+  <div id="thankPanel" class="panel hidden">
+    <div class="thank">
+      <h1 id="gracias">¡Muchas Gracias por contar contigo!</h1>
+    </div>
+    <table class="schedule">
+      <tr><th colspan="3">Mes de Noviembre | Año 2025</th></tr>
+      <tr><td>Jueves 20</td><td>Viernes 21</td><td>Sábado 22</td></tr>
+      <tr><td colspan="3">A las 9:30 am</td></tr>
+      <tr><td colspan="3">En la Universidad Nacional de Catamarca - Sede Belén</td></tr>
+    </table>
+    <div class="image-placeholder">
+      <div class="hint">
+        Aquí irá la imagen de la fundación.<br>
+        Usa proporción <b>4:1</b>, ej. 1200×300px o 2400×600px.<br>
+        Reemplaza este bloque por:<br>
+        &lt;img src="INVITACIONES/inv1/logo.jpg" style="width:100%"&gt;
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const LS_KEY='foro_done';
+  const intro=document.getElementById('introContainer');
+  const formPanel=document.getElementById('formPanel');
+  const thank=document.getElementById('thankPanel');
+
+  function typeWriter(el,text,cb){
+    el.textContent=''; let i=0;
+    function step(){
+      if(i<text.length){el.textContent+=text.charAt(i);i++;setTimeout(step,40);}
+      else if(cb) cb();
+    } step();
+  }
+  function showScreen(id,text,btn){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+    const sc=document.getElementById(id); sc.classList.remove('hidden');
+    btn.classList.remove('show');
+    typeWriter(sc.querySelector('p')||sc.querySelector('h1'),text,()=>btn.classList.add('show'));
+  }
+
+  if(localStorage.getItem(LS_KEY)){
+    intro.classList.add('hidden'); formPanel.classList.add('hidden'); thank.classList.remove('hidden');
+  } else {
+    typeWriter(document.getElementById('text1'),'¡ Bienvenidos !');
+    typeWriter(document.getElementById('sub1'),'Al Foro Internacional de\nNeurodivergencia y Derechos Humanos',()=>document.getElementById('next1').classList.add('show'));
+  }
+
+  document.getElementById('next1').onclick=()=>showScreen('screen2','Este espacio busca promover el diálogo, la inclusión y la defensa\nde los derechos de las personas neurodivergentes\na nivel internacional.',document.getElementById('next2'));
+  document.getElementById('next2').onclick=()=>showScreen('screen3','Por favor completa el formulario para confirmar tu participación',document.getElementById('toForm'));
+  document.getElementById('toForm').onclick=()=>{intro.classList.add('hidden'); formPanel.classList.remove('hidden');};
+
+  // ----- CORRECCIÓN AQUÍ -----
+  // Se cambió 'registroForm' por 'fm3' para que coincida con el ID del formulario en el HTML.
+  document.getElementById('fm3').onsubmit=e=>{
+    // No prevenimos el envío para que FormSubmit funcione, 
+    // pero guardamos en localStorage antes.
+    localStorage.setItem(LS_KEY,'true');
+    // El formulario se enviará normalmente. FormSubmit se encargará de la redirección.
+  };
+
+  // Dev reset
+  let clicks=0;
+  document.getElementById('gracias').onclick=()=>{
+    clicks++; if(clicks>=5){localStorage.removeItem(LS_KEY); alert('LocalStorage reseteado'); clicks=0; location.reload();}
+  };
+
+  // Carrusel automático
+  const imgs=document.querySelectorAll('.carousel img'); let idx=0;
+  setInterval(()=>{
+    imgs[idx].classList.remove('active');
+    idx=(idx+1)%imgs.length;
+    imgs[idx].classList.add('active');
+  },3000);
+})();
+</script>
+</body>
+</html>
