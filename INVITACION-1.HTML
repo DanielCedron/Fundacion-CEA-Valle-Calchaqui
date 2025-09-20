@@ -120,7 +120,7 @@
     margin: 0;
     width: 18px;
     height: 18px;
-    accent-color: var(--accent); /* cambia el color al celeste */
+    accent-color: var(--accent);
   }
 
   #otroText {
@@ -135,14 +135,19 @@
   .schedule{width:100%; border-collapse:collapse; margin-top:16px; font-size:14px;}
   .schedule th,.schedule td{border:1px solid rgba(0,0,0,0.1); padding:8px; text-align:center;}
 
-  /* Imagen final */
+  /* --- Imagen final (CORREGIDO) --- */
   .image-placeholder{
-    width:100%; margin-top:16px;
-    border-radius:12px; overflow:hidden;
-    background:linear-gradient(90deg,#e6f7fb,#d8f1f6);
-    padding:20px; box-sizing:border-box;
+    width:100%;
+    margin-top:16px;
+    border-radius:12px;
+    overflow:hidden; /* Mantiene las esquinas redondeadas para la imagen */
+    /* Se elimina el padding y el fondo para que la imagen ocupe todo el espacio */
   }
-  .image-placeholder .hint{font-size:13px; color:var(--accent);}
+  .image-placeholder img {
+    width: 100%;
+    height: auto;  /* Mantiene la proporción original de la imagen */
+    display: block; /* Elimina espacios extra debajo de la imagen */
+  }
 </style>
 </head>
 <body>
@@ -230,12 +235,7 @@
       <tr><td colspan="3">En la Universidad Nacional de Catamarca - Sede Belén</td></tr>
     </table>
     <div class="image-placeholder">
-      <div class="hint">
-        Aquí irá la imagen de la fundación.<br>
-        Usa proporción <b>4:1</b>, ej. 1200×300px o 2400×600px.<br>
-        Reemplaza este bloque por:<br>
-        <img src="INVITACIONES/inv1/logo.jpg" style="width:100%">
-      </div>
+        <img src="INVITACIONES/inv1/logo.jpg" alt="Logo de la Fundación CEA Valle Calchaquí">
     </div>
   </div>
 </div>
@@ -261,9 +261,21 @@
     typeWriter(sc.querySelector('p')||sc.querySelector('h1'),text,()=>btn.classList.add('show'));
   }
 
-  if(localStorage.getItem(LS_KEY)){
-    intro.classList.add('hidden'); formPanel.classList.add('hidden'); thank.classList.remove('hidden');
+  // Comprueba si la URL actual es la de redirección de "gracias"
+  if (window.location.href.includes('INVITACION-1.HTML')) {
+      // Si es la página de gracias, la muestra directamente
+      intro.classList.add('hidden');
+      formPanel.classList.add('hidden');
+      thank.classList.remove('hidden');
+      // Guarda en localStorage para que si recarga la página, siga viendo la pantalla de gracias
+      localStorage.setItem(LS_KEY, 'true');
+  } else if(localStorage.getItem(LS_KEY)){
+    // Si ya está en localStorage (visitó antes), también muestra la pantalla de gracias
+    intro.classList.add('hidden');
+    formPanel.classList.add('hidden');
+    thank.classList.remove('hidden');
   } else {
+    // Si es la primera vez, muestra la introducción
     typeWriter(document.getElementById('text1'),'¡ Bienvenidos !');
     typeWriter(document.getElementById('sub1'),'Al Foro Internacional de\nNeurodivergencia y Derechos Humanos',()=>document.getElementById('next1').classList.add('show'));
   }
@@ -272,19 +284,15 @@
   document.getElementById('next2').onclick=()=>showScreen('screen3','Por favor completa el formulario para confirmar tu participación',document.getElementById('toForm'));
   document.getElementById('toForm').onclick=()=>{intro.classList.add('hidden'); formPanel.classList.remove('hidden');};
 
-  // ----- CORRECCIÓN AQUÍ -----
-  // Se cambió 'registroForm' por 'fm3' para que coincida con el ID del formulario en el HTML.
   document.getElementById('fm3').onsubmit=e=>{
-    // No prevenimos el envío para que FormSubmit funcione, 
-    // pero guardamos en localStorage antes.
     localStorage.setItem(LS_KEY,'true');
-    // El formulario se enviará normalmente. FormSubmit se encargará de la redirección.
+    // El formulario se enviará normalmente.
   };
 
   // Dev reset
   let clicks=0;
   document.getElementById('gracias').onclick=()=>{
-    clicks++; if(clicks>=5){localStorage.removeItem(LS_KEY); alert('LocalStorage reseteado'); clicks=0; location.reload();}
+    clicks++; if(clicks>=5){localStorage.removeItem(LS_KEY); alert('LocalStorage reseteado'); clicks=0; window.location.href = window.location.pathname;}
   };
 
   // Carrusel automático
