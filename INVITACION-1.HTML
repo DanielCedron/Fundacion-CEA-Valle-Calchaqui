@@ -127,49 +127,49 @@
     margin-left: 28px;
     margin-top: 6px;
   }
-	/* --- Estilos para Botones del Formulario --- */
+    /* --- Estilos para Botones del Formulario --- */
 
-	/* Estilo base para ambos botones */
-	.envi, .close {
-	  display: block;
-	  width: 100%;
-	  padding: 14px;
-	  font-size: 16px;
-	  font-weight: 600;
-	  border-radius: 12px;
-	  border: none;
-	  cursor: pointer;
-	  text-align: center;
-	  text-decoration: none;
-	  box-sizing: border-box;
-	  transition: all 0.3s ease;
-	}
+    /* Estilo base para ambos botones */
+    .envi, .close {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+    }
 
-	/* Botón Principal: Enviar */
-	.envi {
-	  background-color: var(--accent); /* Color de acento principal */
-	  color: #ffffff;
-	  margin-top: 10px; /* Espacio arriba */
-	  box-shadow: 0 4px 15px rgba(0, 107, 122, 0.2);
-	}
+    /* Botón Principal: Enviar */
+    .envi {
+      background-color: var(--accent); /* Color de acento principal */
+      color: #ffffff;
+      margin-top: 10px; /* Espacio arriba */
+      box-shadow: 0 4px 15px rgba(0, 107, 122, 0.2);
+    }
 
-	.envi:hover, .envi:focus {
-	  background-color: #005966; /* Un tono más oscuro del acento */
-	  box-shadow: 0 6px 20px rgba(0, 107, 122, 0.3);
-	  transform: translateY(-2px); /* Efecto de elevación sutil */
-	}
+    .envi:hover, .envi:focus {
+      background-color: #005966; /* Un tono más oscuro del acento */
+      box-shadow: 0 6px 20px rgba(0, 107, 122, 0.3);
+      transform: translateY(-2px); /* Efecto de elevación sutil */
+    }
 
-	/* Botón Secundario: Cancelar */
-	.close {
-	  background-color: transparent;
-	  color: var(--muted); /* Color de texto apagado */
-	  margin-top: 8px; /* Espacio entre botones */
-	}
+    /* Botón Secundario: Cancelar */
+    .close {
+      background-color: transparent;
+      color: var(--muted); /* Color de texto apagado */
+      margin-top: 8px; /* Espacio entre botones */
+    }
 
-	.close:hover, .close:focus {
-	  background-color: #f0f4f5; /* Un fondo muy sutil */
-	  color: var(--accent); /* Color de acento al pasar el mouse */
-	}
+    .close:hover, .close:focus {
+      background-color: #f0f4f5; /* Un fondo muy sutil */
+      color: var(--accent); /* Color de acento al pasar el mouse */
+    }
   /* --- Gracias --- */
   .thank h1{color:var(--accent); cursor:pointer;}
 
@@ -216,53 +216,62 @@
   </div>
 
   <div id="formPanel" class="panel hidden">
-	<form id="fm3" action="https://formsubmit.co/fundacionceavallecalchaqui@gmail.com" method="POST">
-	  <h1 class="tit">Inscripción para el Foro Internacional</h1>
+    <form id="fm3" action="https://formsubmit.co/fundacionceavallecalchaqui@gmail.com" method="POST" enctype="multipart/form-data">
+      <h1 class="tit">Inscripción para el Foro Internacional</h1>
 
-	  <input type="text" id="asunto" name="asunto" value="Foro Internacional de Neurodivergencia y Derechos Humanos" hidden>
+      <input type="text" id="asunto" name="asunto" value="Foro Internacional de Neurodivergencia y Derechos Humanos" hidden>
 
-	  <label for="nombre">Nombre y Apellido</label>
-	  <input type="text" id="nombre" name="nombre" required>
+      <label for="nombre">Nombre y Apellido</label>
+      <input type="text" id="nombre" name="nombre" required>
 
-	  <label for="dni">Número de (DNI o Pasaporte)</label>
-	  <input type="text" id="dni" name="dni" required>
+      <label for="dni">Número de (DNI o Pasaporte)</label>
+      <input type="text" id="dni" name="dni" required>
 
-	  <label for="email">Correo</label>
-	  <input type="email" id="email" name="email" required>
+      <label for="email">Correo</label>
+      <input type="email" id="email" name="email" required>
 
-	  <label for="telefono">Teléfono de contacto</label>
-	  <input type="tel" id="telefono" name="telefono" required>
+      <label for="telefono">Teléfono de contacto</label>
+      <input type="tel" id="telefono" name="telefono" required>
 
-	  <label for="institucion">Institución / Organización</label>
-	  <input type="text" id="institucion" name="institucion">
+      <label for="institucion">Institución / Organización</label>
+      <input type="text" id="institucion" name="institucion">
 
-	  <label for="localidad">Ciudad / Provincia / País</label>
-	  <input type="text" id="localidad" name="localidad">
+      <label for="localidad">Ciudad / Provincia / País</label>
+      <input type="text" id="localidad" name="localidad">
 
-	  <label>Participación en el Foro</label>
-	  <div class="checkbox-group">
-		<label><input type="checkbox" name="participacion[]" value="Asistente"> Asistente</label>
-		<label><input type="checkbox" name="participacion[]" value="Ponente / Expositor"> Ponente / Expositor</label>
-		<label><input type="checkbox" name="participacion[]" value="Organización / Institución aliada"> Organización / Institución aliada</label>
-		<label><input type="checkbox" name="participacion[]" value="Otro"> Otro (especificar abajo)</label>
-	  </div>
-	  <input type="text" id="otro" name="otro" placeholder="Especificar otro tipo de participación">
+      <label>Participación en el Foro</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox" name="participacion[]" value="Asistente"> Asistente</label>
+        <label><input type="checkbox" name="participacion[]" value="Ponente / Expositor"> Ponente / Expositor</label>
+        <label><input type="checkbox" name="participacion[]" value="Organización / Institución aliada"> Organización / Institución aliada</label>
+        <label><input type="checkbox" name="participacion[]" value="Sponsor"> Sponsor</label>
+        <label><input type="checkbox" name="participacion[]" value="Ministerio"> Ministerio</label>
+        <label><input type="checkbox" name="participacion[]" value="Provincia"> Provincia</label>
+        <label><input type="checkbox" name="participacion[]" value="Pais"> País</label>
+        <label><input type="checkbox" name="participacion[]" value="Otro"> Otro (especificar abajo)</label>
+      </div>
+      <input type="text" id="otro" name="otro" placeholder="Especificar otro tipo de participación">
 
-	  <label>¿Necesita certificado de asistencia?</label>
-	  <div class="radio-group">
-		<label><input type="radio" name="certificado" value="Si" required> Sí</label>
-		<label><input type="radio" name="certificado" value="No" required> No</label>
-	  </div>
+      <div id="cvContainer" style="display: none;">
+        <label for="cvFile">Agregue su Curriculum Vitae</label>
+        <input type="file" id="cvFile" name="curriculum_vitae" accept=".pdf,.doc,.docx">
+      </div>
 
-	  <label for="obs">Observación o necesidades especiales (opcional)</label>
-	  <textarea id="obs" name="observacion"></textarea>
+      <label>¿Necesita certificado de asistencia?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="certificado" value="Si" required> Sí</label>
+        <label><input type="radio" name="certificado" value="No" required> No</label>
+      </div>
 
-	  <button class="envi" type="submit">Enviar</button>
-	  <a onclick="vf()" class="close">Cancelar</a>
+      <label for="obs">Observación o necesidades especiales (opcional)</label>
+      <textarea id="obs" name="observacion"></textarea>
 
-	  <input type="hidden" name="_next" value="https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/INVITACION-1.HTML">
-	  <input type="hidden" name="_captcha" value="false">
-	</form>
+      <button class="envi" type="submit">Enviar</button>
+      <a onclick="vf()" class="close">Cancelar</a>
+
+      <input type="hidden" name="_next" value="https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/INVITACION-1.HTML">
+      <input type="hidden" name="_captcha" value="false">
+    </form>
 
   </div>
 
@@ -304,15 +313,11 @@
   }
 
   // ----- LÓGICA DE INICIO CORREGIDA Y SIMPLIFICADA -----
-  // La página ahora solo se basa en localStorage para decidir qué mostrar.
-  // Esto soluciona el error que impedía resetear correctamente.
   if (localStorage.getItem(LS_KEY)) {
-      // Si ya está guardado que completó el form, muestra el agradecimiento.
       intro.classList.add('hidden');
       formPanel.classList.add('hidden');
       thank.classList.remove('hidden');
   } else {
-      // Si es la primera vez (o se reseteó), muestra la introducción.
       typeWriter(document.getElementById('text1'),'¡ Bienvenidos !');
       typeWriter(document.getElementById('sub1'),'Al Foro Internacional de\nNeurodivergencia y Derechos Humanos',()=>document.getElementById('next1').classList.add('show'));
   }
@@ -322,21 +327,18 @@
   document.getElementById('toForm').onclick=()=>{intro.classList.add('hidden'); formPanel.classList.remove('hidden');};
 
   document.getElementById('fm3').onsubmit=e=>{
-    // Antes de que el formulario se envíe, guardamos la confirmación.
     localStorage.setItem(LS_KEY,'true');
-    // El formulario se envía a FormSubmit normalmente.
   };
 
   // ----- FUNCIÓN DE RESET CORREGIDA -----
   let clicks=0;
   document.getElementById('gracias').onclick=()=>{
-    clicks++; 
+    clicks++;  
     if(clicks>=5){
-      localStorage.removeItem(LS_KEY); // Borra la clave
+      localStorage.removeItem(LS_KEY);
       alert('LocalStorage reseteado');
       clicks=0;
-      // Simplemente recargamos la página. La nueva lógica de inicio hará el resto.
-      window.location.reload(); 
+      window.location.reload();  
     }
   };
 
@@ -347,6 +349,23 @@
     idx=(idx+1)%imgs.length;
     imgs[idx].classList.add('active');
   },3000);
+
+  // --- MODIFICACIÓN 3: LÓGICA PARA MOSTRAR/OCULTAR Y REQUERIR EL CAMPO DE CV ---
+  const ponenteCheckbox = document.querySelector('input[name="participacion[]"][value="Ponente / Expositor"]');
+  const cvContainer = document.getElementById('cvContainer');
+  const cvFileInput = document.getElementById('cvFile');
+
+  ponenteCheckbox.addEventListener('change', function() {
+    if (this.checked) {
+      cvContainer.style.display = 'block'; // Muestra el campo de archivo
+      cvFileInput.required = true;         // Lo hace obligatorio
+    } else {
+      cvContainer.style.display = 'none';  // Oculta el campo de archivo
+      cvFileInput.required = false;        // Le quita la obligatoriedad
+      cvFileInput.value = '';              // Limpia el valor si ya se había seleccionado un archivo
+    }
+  });
+
 })();
 </script>
 </body>
