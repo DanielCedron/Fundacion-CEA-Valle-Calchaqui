@@ -1,36 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
     <title>Menu de Spawn</title>
+    <meta charset="utf-8">
     <style>
-        /* Estilos para que se vea bien en el juego */
+        /* CSS Integrado */
         body {
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
+            background-color: #121212; /* Fondo nocturno */
+            color: #e0e0e0;
             font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             text-align: center;
-            padding-top: 50px;
+            overflow: hidden;
         }
+        
         .container {
-            width: 300px;
-            margin: auto;
-            border: 2px solid #555;
+            background-color: #1e1e1e;
+            padding: 30px 40px;
             border-radius: 10px;
-            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
         }
+
+        h1 {
+            color: #ffffff;
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+
+        /* Estilo del botón */
         button {
             display: block;
-            width: 100%;
+            width: 300px;
             padding: 15px;
-            font-size: 18px;
-            margin-top: 10px;
-            cursor: pointer;
-            background-color: #007bff;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: #007bff; /* Azul */
             border: none;
-            color: white;
             border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
         }
+
         button:hover {
             background-color: #0056b3;
         }
@@ -39,15 +55,32 @@
 <body>
 
     <div class="container">
-        <h2>Elige tu Spawn</h2>
-        <p>Selecciona un vehículo para aparecer.</p>
+        <h1>Spawn de Moto</h1>
         
-        <button onclick="cef.call('requestSpawn', 460);">Spawn con NRG-500</button>
-        
-        <button onclick="cef.call('requestSpawn', 411);">Spawn con Infernus</button>
-        
-        <button onclick="cef.call('requestSpawn', 0);">Spawn a pie (Sin vehículo)</button>
+        <button onclick="spawnConMoto()">Aparecer con Moto (PCJ-600)</button>
     </div>
+
+    <script>
+        
+        // Esta es la función que se llama al hacer clic en el botón
+        function spawnConMoto() {
+            // El ID 461 es la PCJ-600
+            const vehicleId = 461;
+
+            // Comprueba si el objeto 'cef' (del plugin) existe
+            if (typeof cef !== 'undefined') {
+                
+                // Si existe, llama al evento "requestSpawn" en tu script de Pawn
+                // y le pasa el número 461
+                cef.call("requestSpawn", vehicleId);
+
+            } else {
+                // Mensaje de error si pruebas esto en Google Chrome
+                console.log("CEF no está definido. ID Vehículo: " + vehicleId);
+                alert("Esto solo funciona dentro del juego (SA-MP).");
+            }
+        }
+    </script>
 
 </body>
 </html>
