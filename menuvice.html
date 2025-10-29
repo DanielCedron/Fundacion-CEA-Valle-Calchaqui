@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Menu de Spawn</title>
+    <style>
+        /* Estilos para que se vea bien en el juego */
+        body {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding-top: 50px;
+        }
+        .container {
+            width: 300px;
+            margin: auto;
+            border: 2px solid #555;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            margin-top: 10px;
+            cursor: pointer;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Elige tu Spawn</h2>
+        <p>Selecciona un vehículo para aparecer.</p>
+        
+        <button onclick="cef.call('requestSpawn', 460);">Spawn con NRG-500</button>
+        
+        <button onclick="cef.call('requestSpawn', 411);">Spawn con Infernus</button>
+        
+        <button onclick="cef.call('requestSpawn', 0);">Spawn a pie (Sin vehículo)</button>
+    </div>
+
+</body>
+</html>
