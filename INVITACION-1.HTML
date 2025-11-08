@@ -315,6 +315,7 @@
   const modal=document.getElementById('modalCert');
   const modalContent = modal.querySelector('.modal-content');
   const transferInfo=document.getElementById('transferInfo');
+  const modalTitle = document.getElementById('modalTitle'); // <-- título del modal
 
   function typeWriter(el,text,cb){
     el.textContent=''; let i=0;
@@ -381,9 +382,11 @@
     });
   }
 
-  // ---- CONTROL SEGURO DEL MODAL: mostrar SOLO al elegir "Si" ----
-  function openModal(){
-    transferInfo.classList.add('hidden');
+  // ---- CONTROL DEL MODAL: ahora acepta título opcional ----
+  function openModal(title){
+    // Si recibimos title lo usamos; si no, dejamos un título por defecto
+    modalTitle.textContent = title || 'Certificado de Capacitación';
+    transferInfo.classList.add('hidden'); // por defecto ocultamos info de transferencia
     modal.classList.add('show');
     modal.setAttribute('aria-hidden','false');
   }
@@ -396,14 +399,12 @@
   // Añadimos listeners a los radios de certificado
   const certificadoRadios = document.querySelectorAll('input[name="certificado"]');
   certificadoRadios.forEach(radio=>{
-    // en load: no forzamos nada (no abrir)
     radio.addEventListener('change', function(){
       if (this.value === 'Si') {
-        // solo abrir si el formulario está visible (evita que aparezca antes de tiempo)
         const formVisible = !formPanel.classList.contains('hidden');
-        if (formVisible) openModal();
+        if (formVisible) openModal('Certificado de Capacitación');
       } else {
-        // si elige "No", cerramos el modal por si estaba abierto
+        // si elige "No", cerramos modal (si estaba abierto)
         closeModal();
       }
     });
@@ -411,9 +412,7 @@
 
   // Botones dentro del modal
   document.getElementById('btnPago').onclick=()=>{
-    // abrir link de pago en nueva pestaña
     window.open('https://mpago.la/33apn3X','_blank');
-    // opcional: cerrar modal después de abrir el link
     closeModal();
   };
   document.getElementById('btnTransferencia').onclick=()=>{
@@ -430,10 +429,21 @@
     if (e.key === 'Escape') closeModal();
   });
 
-  // Botón de donación en pantalla de gracias
+  // Botón de donación: título depende de la selección de certificado
   document.getElementById('donacion-btn').onclick=()=>{
-    // abrir modal desde pantalla de gracias
-    openModal();
+    const selected = document.querySelector('input[name="certificado"]:checked');
+    if (selected) {
+      if (selected.value === 'No') {
+        // si el usuario eligió NO, mostramos el título de agradecimiento
+        openModal('Te lo agradecemos de todo corazón');
+      } else {
+        // si eligió SI, mostramos el título de certificado (comportamiento original)
+        openModal('Certificado de Capacitación');
+      }
+    } else {
+      // si no hay selección, mostramos agradecimiento por defecto
+      openModal('Te lo agradecemos de todo corazón');
+    }
   };
 
   // Protección extra: al cargar la página, asegúrate de que el modal no esté visible
@@ -441,5 +451,6 @@
 
 })();
 </script>
+
 </body>
 </html>
