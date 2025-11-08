@@ -28,7 +28,6 @@
     padding:12px;
     box-sizing:border-box;
   }
-
   .panel{
     width:100%;
     max-width:720px;
@@ -39,8 +38,6 @@
     box-sizing:border-box;
     text-align:center;
   }
-
-  /* --- Intro --- */
   .screen{
     min-height:80vh;
     display:flex;
@@ -59,8 +56,6 @@
     opacity:0; transition:opacity .6s ease;
   }
   button.btn.show{opacity:1;}
-
-  /* Carrusel */
   .carousel{
     position:relative; width:100%; height:35vh;
     border-radius:12px; overflow:hidden;
@@ -72,8 +67,6 @@
     opacity:0; transition:opacity 1s ease;
   }
   .carousel img.active{opacity:1;}
-
-  /* --- Formulario --- */
   form {
     display: flex;
     flex-direction: column;
@@ -95,7 +88,6 @@
     box-sizing: border-box;
   }
   textarea {min-height: 80px; resize: vertical;}
-
   .checkbox-group, .radio-group {
     display: flex;
     flex-direction: column;
@@ -104,7 +96,6 @@
     border-radius: 10px;
     padding: 10px;
   }
-
   .checkbox-group label,
   .radio-group label {
     display: flex;
@@ -114,7 +105,6 @@
     color: var(--text);
     cursor: pointer;
   }
-
   .checkbox-group input[type="checkbox"],
   .radio-group input[type="radio"] {
     margin: 0;
@@ -122,73 +112,86 @@
     height: 18px;
     accent-color: var(--accent);
   }
-
-  #otroText {
-    margin-left: 28px;
-    margin-top: 6px;
+  #otroText {margin-left: 28px;margin-top: 6px;}
+  .envi, .close {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
   }
-    /* --- Estilos para Botones del Formulario --- */
-
-    /* Estilo base para ambos botones */
-    .envi, .close {
-      display: block;
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      font-weight: 600;
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
-      text-align: center;
-      text-decoration: none;
-      box-sizing: border-box;
-      transition: all 0.3s ease;
-    }
-
-    /* Botón Principal: Enviar */
-    .envi {
-      background-color: var(--accent); /* Color de acento principal */
-      color: #ffffff;
-      margin-top: 10px; /* Espacio arriba */
-      box-shadow: 0 4px 15px rgba(0, 107, 122, 0.2);
-    }
-
-    .envi:hover, .envi:focus {
-      background-color: #005966; /* Un tono más oscuro del acento */
-      box-shadow: 0 6px 20px rgba(0, 107, 122, 0.3);
-      transform: translateY(-2px); /* Efecto de elevación sutil */
-    }
-
-    /* Botón Secundario: Cancelar */
-    .close {
-      background-color: transparent;
-      color: var(--muted); /* Color de texto apagado */
-      margin-top: 8px; /* Espacio entre botones */
-    }
-
-    .close:hover, .close:focus {
-      background-color: #f0f4f5; /* Un fondo muy sutil */
-      color: var(--accent); /* Color de acento al pasar el mouse */
-    }
-  /* --- Gracias --- */
+  .envi {
+    background-color: var(--accent);
+    color: #ffffff;
+    margin-top: 10px;
+    box-shadow: 0 4px 15px rgba(0, 107, 122, 0.2);
+  }
+  .envi:hover {background-color:#005966;transform:translateY(-2px);}
+  .close {background-color: transparent;color: var(--muted);}
+  .close:hover {background-color: #f0f4f5; color: var(--accent);}
   .thank h1{color:var(--accent); cursor:pointer;}
-
-  /* --- Tabla de horario --- */
   .schedule{width:100%; border-collapse:collapse; margin-top:16px; font-size:14px;}
   .schedule th,.schedule td{border:1px solid rgba(0,0,0,0.1); padding:8px; text-align:center;}
+  .image-placeholder{width:100%;margin-top:16px;border-radius:12px;overflow:hidden;}
+  .image-placeholder img {width:100%;height:auto;display:block;}
 
-  /* --- Imagen final (CORREGIDO) --- */
-  .image-placeholder{
-    width:100%;
-    margin-top:16px;
-    border-radius:12px;
-    overflow:hidden; /* Mantiene las esquinas redondeadas para la imagen */
-    /* Se elimina el padding y el fondo para que la imagen ocupe todo el espacio */
+  /* --- MODAL: ahora por defecto oculto y se muestra con .show --- */
+  .modal {
+    position: fixed;
+    top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.5);
+    align-items:center; justify-content:center;
+    z-index:1000;
+    display:none; /* oculto por defecto */
   }
-  .image-placeholder img {
-    width: 100%;
-    height: auto;  /* Mantiene la proporción original de la imagen */
-    display: block; /* Elimina espacios extra debajo de la imagen */
+  .modal.show { display:flex; }
+  .modal-content {
+    background:#fff;
+    border-radius:16px;
+    padding:24px;
+    max-width:360px;
+    text-align:center;
+    box-shadow:0 8px 30px rgba(0,0,0,0.2);
+    animation:fadeIn .4s ease;
+  }
+  .modal-content h2{color:var(--accent); margin-bottom:16px;}
+  .modal-content button {
+    margin:8px;
+    padding:12px 18px;
+    border:none;
+    border-radius:10px;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .pay-btn {background:var(--accent); color:#fff;}
+  .transfer-btn {background:#e8f4f5; color:var(--accent);}
+  .close-modal {margin-top:12px; background:none; color:var(--muted); border: none; cursor:pointer; font-size:15px;}
+  @keyframes fadeIn {from{opacity:0; transform:scale(0.9);} to{opacity:1; transform:scale(1);} }
+
+  /* --- BOTÓN DONACIÓN --- */
+  #donacion-btn {
+    margin-top: 20px;
+    background: var(--accent);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 16px;
+    display: inline-block;
+    font-weight: bold;
+    cursor: pointer;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0% {transform: scale(1);}
+    50% {transform: scale(1.05);}
+    100% {transform: scale(1);}
   }
 </style>
 </head>
@@ -220,22 +223,16 @@
       <h1 class="tit">Inscripción para el Foro Internacional</h1>
 
       <input type="text" id="asunto" name="asunto" value="Foro Internacional de Neurodivergencia y Derechos Humanos" hidden>
-
       <label for="nombre">Nombre y Apellido</label>
       <input type="text" id="nombre" name="nombre" required>
-
       <label for="dni">Número de (DNI o Pasaporte)</label>
       <input type="text" id="dni" name="dni" required>
-
       <label for="email">Correo</label>
       <input type="email" id="email" name="email" required>
-
       <label for="telefono">Teléfono de contacto</label>
       <input type="tel" id="telefono" name="telefono" required>
-
       <label for="institucion">Institución / Organización</label>
       <input type="text" id="institucion" name="institucion">
-
       <label for="localidad">Ciudad / Provincia / País</label>
       <input type="text" id="localidad" name="localidad">
 
@@ -257,7 +254,7 @@
         <input type="file" id="cvFile" name="curriculum_vitae">
       </div>
 
-      <label>¿Necesita certificado de asistencia?</label>
+      <label>¿Quiere el certificado de capacitación?</label>
       <div class="radio-group">
         <label><input type="radio" name="certificado" value="Si" required> Sí</label>
         <label><input type="radio" name="certificado" value="No" required> No</label>
@@ -272,12 +269,12 @@
       <input type="hidden" name="_next" value="https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/INVITACION-1.HTML">
       <input type="hidden" name="_captcha" value="false">
     </form>
-
   </div>
 
   <div id="thankPanel" class="panel hidden">
     <div class="thank">
       <h1 id="gracias">¡Muchas Gracias por contar contigo!</h1>
+      <div id="donacion-btn">💖 Apóyanos con una donación</div>
     </div>
     <table class="schedule">
       <tr><th colspan="3">Mes de Noviembre | Año 2025</th></tr>
@@ -291,12 +288,33 @@
   </div>
 </div>
 
+<!-- Ventana emergente (oculta por defecto, se abre con .show) -->
+<div id="modalCert" class="modal" aria-hidden="true">
+  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle">Certificado de Capacitación</h2>
+    <p>Seleccione su forma de pago:</p>
+    <button class="pay-btn" id="btnPago">💳 Link de Pago</button>
+    <button class="transfer-btn" id="btnTransferencia">🏦 Transferencia</button>
+    <div id="transferInfo" class="hidden" style="margin-top:10px; text-align:left;">
+      <p><strong>CBU:</strong> 2850113640095461316708<br>
+      <strong>Alias:</strong> TESOREROMARIO<br>
+      <strong>Titular:</strong> Mario Daniel Hoornaert<br>
+      <strong>Banco:</strong> Banco Macro</p>
+	  <strong>Monto:</strong> $20 mil peso Argentino o 20USD</p>
+    </div>
+    <button class="close-modal" id="closeModal">Cerrar</button>
+  </div>
+</div>
+
 <script>
 (function(){
   const LS_KEY='foro_done';
   const intro=document.getElementById('introContainer');
   const formPanel=document.getElementById('formPanel');
   const thank=document.getElementById('thankPanel');
+  const modal=document.getElementById('modalCert');
+  const modalContent = modal.querySelector('.modal-content');
+  const transferInfo=document.getElementById('transferInfo');
 
   function typeWriter(el,text,cb){
     el.textContent=''; let i=0;
@@ -312,7 +330,6 @@
     typeWriter(sc.querySelector('p')||sc.querySelector('h1'),text,()=>btn.classList.add('show'));
   }
 
-  // ----- LÓGICA DE INICIO CORREGIDA Y SIMPLIFICADA -----
   if (localStorage.getItem(LS_KEY)) {
       intro.classList.add('hidden');
       formPanel.classList.add('hidden');
@@ -330,19 +347,17 @@
     localStorage.setItem(LS_KEY,'true');
   };
 
-  // ----- FUNCIÓN DE RESET CORREGIDA -----
   let clicks=0;
   document.getElementById('gracias').onclick=()=>{
-    clicks++;  
+    clicks++;
     if(clicks>=5){
       localStorage.removeItem(LS_KEY);
       alert('LocalStorage reseteado');
       clicks=0;
-      window.location.reload();  
+      window.location.reload();
     }
   };
 
-  // Carrusel automático
   const imgs=document.querySelectorAll('.carousel img'); let idx=0;
   setInterval(()=>{
     imgs[idx].classList.remove('active');
@@ -350,21 +365,79 @@
     imgs[idx].classList.add('active');
   },3000);
 
-  // --- MODIFICACIÓN 3: LÓGICA PARA MOSTRAR/OCULTAR Y REQUERIR EL CAMPO DE CV ---
   const ponenteCheckbox = document.querySelector('input[name="participacion[]"][value="Ponente / Expositor"]');
   const cvContainer = document.getElementById('cvContainer');
   const cvFileInput = document.getElementById('cvFile');
+  if (ponenteCheckbox) {
+    ponenteCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        cvContainer.style.display = 'block';
+        cvFileInput.required = true;
+      } else {
+        cvContainer.style.display = 'none';
+        cvFileInput.required = false;
+        cvFileInput.value = '';
+      }
+    });
+  }
 
-  ponenteCheckbox.addEventListener('change', function() {
-    if (this.checked) {
-      cvContainer.style.display = 'block'; // Muestra el campo de archivo
-      cvFileInput.required = true;         // Lo hace obligatorio
-    } else {
-      cvContainer.style.display = 'none';  // Oculta el campo de archivo
-      cvFileInput.required = false;        // Le quita la obligatoriedad
-      cvFileInput.value = '';              // Limpia el valor si ya se había seleccionado un archivo
-    }
+  // ---- CONTROL SEGURO DEL MODAL: mostrar SOLO al elegir "Si" ----
+  function openModal(){
+    transferInfo.classList.add('hidden');
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden','false');
+  }
+  function closeModal(){
+    modal.classList.remove('show');
+    transferInfo.classList.add('hidden');
+    modal.setAttribute('aria-hidden','true');
+  }
+
+  // Añadimos listeners a los radios de certificado
+  const certificadoRadios = document.querySelectorAll('input[name="certificado"]');
+  certificadoRadios.forEach(radio=>{
+    // en load: no forzamos nada (no abrir)
+    radio.addEventListener('change', function(){
+      if (this.value === 'Si') {
+        // solo abrir si el formulario está visible (evita que aparezca antes de tiempo)
+        const formVisible = !formPanel.classList.contains('hidden');
+        if (formVisible) openModal();
+      } else {
+        // si elige "No", cerramos el modal por si estaba abierto
+        closeModal();
+      }
+    });
   });
+
+  // Botones dentro del modal
+  document.getElementById('btnPago').onclick=()=>{
+    // abrir link de pago en nueva pestaña
+    window.open('https://mpago.la/33apn3X','_blank');
+    // opcional: cerrar modal después de abrir el link
+    closeModal();
+  };
+  document.getElementById('btnTransferencia').onclick=()=>{
+    transferInfo.classList.remove('hidden');
+  };
+  document.getElementById('closeModal').onclick=closeModal;
+
+  // cerrar modal si hace clic fuera del contenido
+  modal.addEventListener('click', (e)=>{
+    if (!modalContent.contains(e.target)) closeModal();
+  });
+  // cerrar con Escape
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // Botón de donación en pantalla de gracias
+  document.getElementById('donacion-btn').onclick=()=>{
+    // abrir modal desde pantalla de gracias
+    openModal();
+  };
+
+  // Protección extra: al cargar la página, asegúrate de que el modal no esté visible
+  document.addEventListener('DOMContentLoaded', ()=>{ closeModal(); });
 
 })();
 </script>
