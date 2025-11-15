@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Editor A4 móvil - Corregido (Landscape)</title>
+  <style>
+    :root{--page-bg:#fff;--paper-border:#ddd;--accent:#2b8cff}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:#f3f4f6}
+    .app{padding:12px;max-width:1200px;margin:0 auto}
+
+    /* A4 en horizontal (landscape) por defecto para editar en el ancho del móvil */
+    .paper-wrap{display:flex;justify-content:center}
+    .paper{width:297mm;height:210mm;background:var(--page-bg);box-shadow:0 6px 18px rgba(0,0,0,.12);border:1px solid var(--paper-border);position:relative;touch-action:none;overflow:hidden}
+
+    /* Área editable de texto */
+    .editor{padding:18mm;box-sizing:border-box;height:100%;outline:none;overflow:auto}
+    .editor:empty::before{content:'Pega tu texto aquí...';color:#9aa3b2}
+
+    /* Imagenes añadidas */
+    .img-wrapper{position:absolute;border:2px dashed transparent;box-sizing:border-box;touch-action:none}
+    .img-wrapper.selected{border-color:var(--accent)}
+    .img-wrapper img{display:block;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
+
+    /* Mangos en las esquinas para redimensionar - ocultos por defecto */
+    .img-wrapper .handle{display:none; width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid #666;position:absolute;z-index:30;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+    .img-wrapper.selected .handle{display:block}
+    .handle.tl{left:-11px;top:-11px;touch-action:none}
+    .handle.tr{right:-11px;top:-11px}
+    .handle.bl{left:-11px;bottom:-11px}
+    .handle.br{right:-11px;bottom:-11px}
+
+    /* Botón redondo para confirmar (tick) */
+    .confirm-btn{position:absolute;right:10px;bottom:10px;width:56px;height:56px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;box-shadow:0 6px 18px rgba(43,140,255,.25);z-index:200}
+    .confirm-btn.hidden{display:none}
+
+    /* Controls inferiores */
+    .controls{display:flex;gap:8px;margin-top:12px;align-items:center}
+    button.primary{background:var(--accent);color:#fff;border:none;padding:10px 14px;border-radius:10px;font-size:16px}
+
+    /* Modales simples */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:400}
+    .modal{background:#fff;border-radius:12px;padding:18px;min-width:260px;max-width:95%;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+    .modal h3{margin:0 0 8px}
+    .modal .row{margin-top:8px}
+
+    /* Durante la exportación quitamos todo lo visible (mangos, borde, confirm) */
+    .exporting .img-wrapper{border-color:transparent !important}
+    .exporting .img-wrapper .handle{display:none !important}
+
+    /* Adaptaciones para pantallas pequeñas */
+    @media (max-width:520px){
+      .app{padding:8px}
+      /* usar vw y calc para mantener proporción A4 landscape */
+      .paper{width:96vw;height:calc(96vw * 210 / 297)}
+      .editor{padding:12px}
+    }
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2>Editor A4 móvil (landscape)</h2>
+      <div class="controls">
+        <button id="exportPdf" class="primary">Convertir PDF</button>
+      </div>
+    </div>
+
+    <div class="paper-wrap">
+      <div id="paper" class="paper">
+        <div id="editor" class="editor" contenteditable="true"></div>
+      </div>
+    </div>
+
+    <!-- Botón confirm (tick) que aparece cuando una imagen está seleccionada -->
+    <button id="confirmBtn" class="confirm-btn hidden">✓</button>
+
+    <!-- Input file oculto para agregar imagenes -->
+    <input id="fileInput" type="file" accept="image/*" style="display:none">
+
+    <!-- Modal agregar imagen / nombre de archivo -->
+    <div id="modal" class="modal-backdrop" style="display:none">
+      <div class="modal" id="modalContent">
+        <h3 id="modalTitle">Agregar imagen</h3>
+        <div id="modalBody"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:12px">
+          <button id="modalCancel">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Dependencias: html2canvas y jsPDF (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script>
+    // Elementos
+    const paper = document.getElementById('paper');
+    const editor = document.getElementById('editor');
+    const fileInput = document.getElementById('fileInput');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalCancel = document.getElementById('modalCancel');
+    const confirmBtn = document.getElementById('confirmBtn');
+
+    // Long press detection (3s)
+    let pressTimer = null;
+    let longPressPos = {x:0,y:0};
+    let longPressActive = false;
+    let touchStartedOnEditor = false;
+
+    function showModal(title, bodyHtml){
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modal.style.display = 'flex';
+    }
+    function hideModal(){ modal.style.display = 'none'; /* restaurar edición */ editor.contentEditable = 'true'; }
+
+    // TOUCH events on paper for long-press
+    paper.addEventListener('touchstart', e=>{
+      if (e.touches.length>1) return; // ignore multi-touch
+      const t = e.touches[0];
+      longPressPos = {x:t.clientX, y:t.clientY};
+
+      const target = e.target;
+      touchStartedOnEditor = !!target.closest('#editor');
+
+      // Evitar que el editor reciba focus inmediatamente (y abra teclado) si vamos a detectar longpress
+      // Pero si tocamos una imagen o su handle no interferimos (queremos drag/resize)
+      if (touchStartedOnEditor && !target.closest('.img-wrapper') && !target.classList.contains('handle')){
+        e.preventDefault(); // prevenimos foco automático: manejaremos focus en touchend si es tap corto
+        editor.blur();
+      }
+
+      pressTimer = setTimeout(()=>{
+        longPressActive = true;
+        // open modal with agregar imagen button
+        showModal('Agregar imagen', '<div class="row">Pulsa "Agregar imagen" para seleccionar una foto desde tu dispositivo.</div>'+
+          '<div style="display:flex;justify-content:center;margin-top:12px"><button id="modalAddImage" class="primary">Agregar imagen</button></div>');
+        // al abrir el modal dejamos el editor en modo no editable para evitar teclado
+        editor.contentEditable = 'false';
+        const btn = document.getElementById('modalAddImage');
+        if (btn) btn.addEventListener('click', ()=>{ fileInput.click(); });
+      }, 3000);
+    });
+
+    paper.addEventListener('touchend', e=>{
+      if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+      if (longPressActive){
+        // long press ya manejado en el timeout
+        longPressActive = false;
+        return;
+      }
+      // No fue long press: si fue un tap corto en el editor, abrimos foco/teclado
+      if (touchStartedOnEditor){
+        editor.contentEditable = 'true';
+        editor.focus();
+      }
+      touchStartedOnEditor = false;
+    });
+
+    paper.addEventListener('touchmove', e=>{ if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } });
+
+    modalCancel.addEventListener('click', ()=>{ hideModal(); });
+    // cerrar al tocar fuera
+    modal.addEventListener('click', (ev)=>{ if (ev.target===modal) hideModal(); });
+
+    // Cuando seleccionan un archivo
+    fileInput.addEventListener('change', async (ev)=>{
+      hideModal();
+      const file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      addImageToPaper(url);
+      fileInput.value = '';
+    });
+
+    // Añadir imagen como wrapper posicionable y redimensionable
+    let zIndexCounter = 10;
+    function addImageToPaper(src){
+      const wrapper = document.createElement('div');
+      wrapper.className = 'img-wrapper';
+      wrapper.style.left = '20mm';
+      wrapper.style.top = '40mm';
+      wrapper.style.width = '60mm';
+      wrapper.style.height = '60mm';
+      wrapper.style.zIndex = zIndexCounter++;
+
+      const img = document.createElement('img'); img.src = src;
+      wrapper.appendChild(img);
+
+      // handles (si no está selected no se muestran por CSS)
+      ['tl','tr','bl','br'].forEach(pos=>{
+        const h = document.createElement('div'); h.className='handle '+pos; wrapper.appendChild(h);
+      });
+
+      paper.appendChild(wrapper);
+
+      makeInteractive(wrapper);
+      selectWrapper(wrapper);
+    }
+
+    // Selecting / deselecting images
+    let selectedWrapper = null;
+    function selectWrapper(w){
+      if (selectedWrapper && selectedWrapper !== w) deselectWrapper(selectedWrapper);
+      selectedWrapper = w;
+      w.classList.add('selected');
+      showConfirmBtnForWrapper(w);
+    }
+    function deselectWrapper(w){
+      if (!w) return;
+      w.classList.remove('selected');
+      if (selectedWrapper === w) selectedWrapper = null;
+      hideConfirmBtn();
+    }
+
+    // confirmar cambios (boton tick)
+    function showConfirmBtnForWrapper(w){
+      confirmBtn.classList.remove('hidden');
+      confirmBtn.style.right = '10px';
+      confirmBtn.style.bottom = '10px';
+      confirmBtn.onclick = ()=>{ deselectWrapper(w); };
+    }
+    function hideConfirmBtn(){ confirmBtn.classList.add('hidden'); confirmBtn.onclick=null; }
+
+    // Tap / click para seleccionar
+    paper.addEventListener('click', (e)=>{
+      const el = e.target;
+      const wrapper = el.closest && el.closest('.img-wrapper');
+      if (wrapper){
+        selectWrapper(wrapper);
+      } else {
+        if (selectedWrapper) deselectWrapper(selectedWrapper);
+      }
+    });
+
+    // Make wrapper draggable and resizable via handles (touch compatible)
+    function makeInteractive(wrapper){
+      const handles = wrapper.querySelectorAll('.handle');
+      let mode = null; // 'drag' or 'resize'
+      let start = {};
+      let orig = {};
+
+      // drag
+      wrapper.addEventListener('touchstart', (ev)=>{
+        ev.stopPropagation();
+        const t = ev.touches[0];
+        // si tocó un handle, sus listeners gestionan resize
+        if (ev.target.classList && ev.target.classList.contains('handle')) return;
+        mode = 'drag';
+        start = {x:t.clientX, y:t.clientY};
+        const r = wrapper.getBoundingClientRect();
+        const parentRect = paper.getBoundingClientRect();
+        orig = {left: r.left - parentRect.left, top: r.top - parentRect.top};
+        wrapper.style.zIndex = zIndexCounter++;
+        selectWrapper(wrapper);
+      });
+      wrapper.addEventListener('touchmove', (ev)=>{
+        if (mode !== 'drag') return;
+        ev.preventDefault();
+        const t = ev.touches[0];
+        const dx = t.clientX - start.x; const dy = t.clientY - start.y;
+        const parentRect = paper.getBoundingClientRect();
+        const newLeftPx = orig.left + dx; const newTopPx = orig.top + dy;
+        wrapper.style.left = pxToMm(newLeftPx, parentRect.width) + 'mm';
+        wrapper.style.top = pxToMm(newTopPx, parentRect.height) + 'mm';
+      });
+      wrapper.addEventListener('touchend', (ev)=>{ mode=null; });
+
+      // handles for resize
+      handles.forEach(h=>{
+        h.addEventListener('touchstart', (ev)=>{
+          ev.stopPropagation(); ev.preventDefault();
+          mode = 'resize';
+          const t = ev.touches[0];
+          start = {x:t.clientX, y:t.clientY, corner: h.classList[1]};
+          const r = wrapper.getBoundingClientRect();
+          const parentRect = paper.getBoundingClientRect();
+          orig = {left: r.left - parentRect.left, top: r.top - parentRect.top, width: r.width, height: r.height};
+          wrapper.style.zIndex = zIndexCounter++;
+          selectWrapper(wrapper);
+        });
+        h.addEventListener('touchmove', (ev)=>{
+          if (mode !== 'resize') return;
+          ev.stopPropagation(); ev.preventDefault();
+          const t = ev.touches[0];
+          const dx = t.clientX - start.x; const dy = t.clientY - start.y;
+          const parentRect = paper.getBoundingClientRect();
+
+          let newLeft = orig.left, newTop = orig.top, newW = orig.width, newH = orig.height;
+          // handle corners
+          if (start.corner === 'tl'){
+            newLeft = orig.left + dx; newTop = orig.top + dy; newW = orig.width - dx; newH = orig.height - dy;
+          } else if (start.corner === 'tr'){
+            newTop = orig.top + dy; newW = orig.width + dx; newH = orig.height - dy;
+          } else if (start.corner === 'bl'){
+            newLeft = orig.left + dx; newW = orig.width - dx; newH = orig.height + dy;
+          } else if (start.corner === 'br'){
+            newW = orig.width + dx; newH = orig.height + dy;
+          }
+
+          // min size
+          newW = Math.max(30, newW); newH = Math.max(30, newH);
+          wrapper.style.left = pxToMm(newLeft, parentRect.width) + 'mm';
+          wrapper.style.top = pxToMm(newTop, parentRect.height) + 'mm';
+          wrapper.style.width = pxToMm(newW, parentRect.width) + 'mm';
+          wrapper.style.height = pxToMm(newH, parentRect.height) + 'mm';
+        });
+        h.addEventListener('touchend', ()=>{ mode=null; });
+      });
+
+      // Allow tap to select (cuando el usuario toca con mouse/pen)
+      wrapper.addEventListener('click', (e)=>{ e.stopPropagation(); selectWrapper(wrapper); });
+    }
+
+    // Helpers para pasar px a mm relativo al ancho actual del paper
+    function pxToMm(px, parentPxWidth){
+      const mmPerPx = 297 / parentPxWidth; // ahora el ancho de paper es 297mm (landscape)
+      return (px * mmPerPx).toFixed(2);
+    }
+
+    // Export to PDF (landscape) - ocultamos mangos y selecciones antes de capturar
+    document.getElementById('exportPdf').addEventListener('click', ()=>{
+      showModal('Guardar PDF', '<div class="row">Ponle un nombre al archivo:</div>'+
+        '<div class="row" style="margin-top:8px"><input id="fileName" type="text" placeholder="mi-documento" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px"></div>'+
+        '<div style="display:flex;justify-content:space-between;margin-top:12px"><button id="modalCancel2">Cancelar</button><button id="modalDownload" class="primary">Descargar</button></div>');
+
+      const dl = document.getElementById('modalDownload');
+      const cancel2 = document.getElementById('modalCancel2');
+      if (dl) dl.addEventListener('click', async ()=>{
+        const filename = (document.getElementById('fileName').value || 'documento') + '.pdf';
+        hideModal();
+        await exportPaperToPdf(filename);
+      }, {once:true});
+      if (cancel2) cancel2.addEventListener('click', hideModal, {once:true});
+    });
+
+    async function exportPaperToPdf(filename){
+      // quitar clasificacion y mangos visibles
+      const wrappers = Array.from(paper.querySelectorAll('.img-wrapper'));
+      wrappers.forEach(w=>w.classList.remove('selected'));
+      hideConfirmBtn();
+      paper.classList.add('exporting');
+
+      try{
+        // usar html2canvas; aumentar escala para calidad
+        const scale = Math.min(3, window.devicePixelRatio || 2);
+        const canvas = await html2canvas(paper, {scale:scale, useCORS:true, allowTaint:true});
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({unit:'mm', format:'a4', orientation:'landscape'});
+        const pageWidth = 297; const pageHeight = 210;
+        pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight);
+        pdf.save(filename);
+      }catch(err){
+        alert('Error al generar PDF: '+(err && err.message ? err.message : err));
+      }finally{
+        // restaurar estado
+        paper.classList.remove('exporting');
+      }
+    }
+
+    // Evitar scroll accidental mientras interactuamos con imagenes (mejora mínima)
+    editor.addEventListener('touchstart', (e)=>{ /* no-op: focus manejado en touchend */ });
+
+  </script>
+</body>
+</html>
