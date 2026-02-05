@@ -2,78 +2,113 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Transferencia Flash</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transferencia Directa QR</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f4f4f4; }
-        #drop-area { border: 2px dashed #ccc; padding: 20px; margin: 20px auto; width: 80%; }
-        .hidden { display: none; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 20px; background: #1a1a1a; color: white; }
+        .card { background: #2d2d2d; padding: 20px; border-radius: 15px; max-width: 400px; margin: 20px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        #qrcode { background: white; padding: 10px; display: inline-block; border-radius: 10px; margin-top: 15px; }
+        .btn { background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; cursor: pointer; width: 100%; }
+        input[type="file"] { display: none; }
+        #status { color: #00ff88; margin-bottom: 10px; font-weight: bold; }
+        img { max-width: 100%; border-radius: 8px; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <h2>🚀 Transferencia Temporal</h2>
-    <div id="status">Iniciando...</div>
-    
-    <div id="pc-view" class="hidden">
-        <p>Tu ID de conexión es: <strong id="my-id">...</strong></p>
-        <p>Esperando imágenes...</p>
+
+    <h2>🚀 Enviar Imágenes</h2>
+    <div id="status">Iniciando sistema...</div>
+
+    <div id="pc-view" class="card" style="display:none;">
+        <p>Escanea este QR con tu celular para conectar:</p>
+        <div id="qrcode"></div>
+        <p><small id="url-text"></small></p>
         <div id="gallery"></div>
     </div>
 
-    <div id="mobile-view" class="hidden">
-        <input type="text" id="target-id" placeholder="Pega el ID de la PC aquí">
-        <button onclick="connectToPeer()">Conectar</button>
-        <br><br>
-        <input type="file" id="file-input" accept="image/*" disabled>
+    <div id="mobile-view" class="card" style="display:none;">
+        <p>Conectado a la PC ✅</p>
+        <label class="btn">
+            SELECCIONAR FOTOS
+            <input type="file" id="file-input" accept="image/*" multiple>
+        </label>
+        <p>Las fotos aparecerán en tu PC al instante.</p>
     </div>
 
     <script>
-        const peer = new Peer();
-        let conn;
+        // 1. Generar o recuperar ID de la URL para conexión fija
+        let roomID = window.location.hash.substring(1);
+        if (!roomID) {
+            roomID = Math.random().toString(36).substring(2, 8);
+            window.location.hash = roomID;
+        }
 
-        // Detectar si es móvil o PC para mostrar la interfaz
         const isMobile = /iPhone|Android/i.test(navigator.userAgent);
-        if(isMobile) document.getElementById('mobile-view').classList.remove('hidden');
-        else document.getElementById('pc-view').classList.remove('hidden');
+        const status = document.getElementById('status');
+        const peer = new Peer('room-' + roomID); // ID fijo basado en la URL
 
-        peer.on('open', id => {
-            document.getElementById('my-id').innerText = id;
-            document.getElementById('status').innerText = "Listo";
+        peer.on('open', () => {
+            status.innerText = "Sistema Listo";
+            if (isMobile) {
+                setupMobile();
+            } else {
+                setupPC();
+            }
         });
 
-        // LÓGICA PC: Recibir conexión y datos
-        peer.on('connection', c => {
-            conn = c;
-            conn.on('data', data => {
-                const blob = new Blob([data.file], {type: data.type});
-                const url = URL.createObjectURL(blob);
-                const img = document.createElement('img');
-                img.src = url;
-                img.style.width = "200px";
-                document.getElementById('gallery').appendChild(img);
-                
-                // Descarga automática
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = "transfer_" + Date.now();
-                a.click();
-            });
-        });
+        // --- LÓGICA PC ---
+        function setupPC() {
+            document.getElementById('pc-view').style.display = 'block';
+            const url = window.location.href;
+            document.getElementById('url-text').innerText = url;
+            new QRCode(document.getElementById("qrcode"), url);
 
-        // LÓGICA MOVIL: Conectar y enviar
-        function connectToPeer() {
-            const targetId = document.getElementById('target-id').value;
-            conn = peer.connect(targetId);
-            conn.on('open', () => {
-                alert("Conectado con éxito!");
-                document.getElementById('file-input').disabled = false;
+            peer.on('connection', conn => {
+                status.innerText = "¡Celular Conectado!";
+                conn.on('data', data => {
+                    const blob = new Blob([data.file], {type: data.type});
+                    const url = URL.createObjectURL(blob);
+                    
+                    // Mostrar previa
+                    const img = document.createElement('img');
+                    img.src = url;
+                    document.getElementById('gallery').prepend(img);
+                    
+                    // Descargar automáticamente
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = "foto_" + Date.now() + ".jpg";
+                    a.click();
+                });
             });
         }
 
-        document.getElementById('file-input').addEventListener('change', e => {
-            const file = e.target.files[0];
-            conn.send({ file: file, type: file.type });
-            alert("Enviado!");
+        // --- LÓGICA MOVIL ---
+        function setupMobile() {
+            document.getElementById('mobile-view').style.display = 'block';
+            status.innerText = "Conectando con PC...";
+            
+            // Intentar conectar automáticamente a la PC
+            const conn = peer.connect('room-' + roomID);
+            
+            conn.on('open', () => {
+                status.innerText = "Enlace Establecido";
+                document.getElementById('file-input').onchange = (e) => {
+                    const files = e.target.files;
+                    for (let file of files) {
+                        conn.send({ file: file, type: file.type });
+                    }
+                    alert("¡Enviado!");
+                };
+            });
+        }
+        
+        peer.on('error', err => {
+            if(err.type === 'peer-unavailable' && isMobile) {
+                status.innerText = "La PC no está abierta. Abre el link en la PC primero.";
+            }
         });
     </script>
 </body>
