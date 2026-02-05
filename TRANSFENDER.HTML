@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Transferencia Flash</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f4f4f4; }
+        #drop-area { border: 2px dashed #ccc; padding: 20px; margin: 20px auto; width: 80%; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h2>🚀 Transferencia Temporal</h2>
+    <div id="status">Iniciando...</div>
+    
+    <div id="pc-view" class="hidden">
+        <p>Tu ID de conexión es: <strong id="my-id">...</strong></p>
+        <p>Esperando imágenes...</p>
+        <div id="gallery"></div>
+    </div>
+
+    <div id="mobile-view" class="hidden">
+        <input type="text" id="target-id" placeholder="Pega el ID de la PC aquí">
+        <button onclick="connectToPeer()">Conectar</button>
+        <br><br>
+        <input type="file" id="file-input" accept="image/*" disabled>
+    </div>
+
+    <script>
+        const peer = new Peer();
+        let conn;
+
+        // Detectar si es móvil o PC para mostrar la interfaz
+        const isMobile = /iPhone|Android/i.test(navigator.userAgent);
+        if(isMobile) document.getElementById('mobile-view').classList.remove('hidden');
+        else document.getElementById('pc-view').classList.remove('hidden');
+
+        peer.on('open', id => {
+            document.getElementById('my-id').innerText = id;
+            document.getElementById('status').innerText = "Listo";
+        });
+
+        // LÓGICA PC: Recibir conexión y datos
+        peer.on('connection', c => {
+            conn = c;
+            conn.on('data', data => {
+                const blob = new Blob([data.file], {type: data.type});
+                const url = URL.createObjectURL(blob);
+                const img = document.createElement('img');
+                img.src = url;
+                img.style.width = "200px";
+                document.getElementById('gallery').appendChild(img);
+                
+                // Descarga automática
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "transfer_" + Date.now();
+                a.click();
+            });
+        });
+
+        // LÓGICA MOVIL: Conectar y enviar
+        function connectToPeer() {
+            const targetId = document.getElementById('target-id').value;
+            conn = peer.connect(targetId);
+            conn.on('open', () => {
+                alert("Conectado con éxito!");
+                document.getElementById('file-input').disabled = false;
+            });
+        }
+
+        document.getElementById('file-input').addEventListener('change', e => {
+            const file = e.target.files[0];
+            conn.send({ file: file, type: file.type });
+            alert("Enviado!");
+        });
+    </script>
+</body>
+</html>
