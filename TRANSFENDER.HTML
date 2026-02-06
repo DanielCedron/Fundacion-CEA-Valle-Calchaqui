@@ -59,13 +59,38 @@
     </div>
 
     <script>
+        // --- CONFIGURACIÓN DE REDIRECCIÓN Y SESIÓN ---
+        const URL_PROYECTO = "https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/TRANSFENDER.HTML";
+        const isMobile = /iPhone|Android/i.test(navigator.userAgent);
+
+        // 1. Gestión de ID Persistente
         let baseID = window.location.hash.substring(1);
+        
         if (!baseID) {
-            baseID = Math.random().toString(36).substring(2, 8);
+            // Si no hay ID en la URL, buscamos en la memoria del navegador
+            baseID = localStorage.getItem('transfender_session');
+            
+            if (!baseID) {
+                // Si es la primera vez absoluta, generamos uno nuevo
+                baseID = Math.random().toString(36).substring(2, 8);
+                localStorage.setItem('transfender_session', baseID);
+            }
+            // Asignamos el ID a la URL actual
             window.location.hash = baseID;
+        } else {
+            // Si venía en la URL, actualizamos la memoria local para recordar esta sesión
+            localStorage.setItem('transfender_session', baseID);
         }
 
-        const isMobile = /iPhone|Android/i.test(navigator.userAgent);
+        // 2. Redirección Automática (Solo para PC ejecutando archivo local)
+        // Si NO estamos en GitHub Pages Y NO es un celular -> Redirigir a la web oficial con el ID correcto
+        if (!window.location.hostname.includes("github.io") && !isMobile) {
+            console.log("Redirigiendo a la versión online...");
+            window.location.href = URL_PROYECTO + "#" + baseID;
+        }
+
+        // --- INICIO DE PEERJS Y LÓGICA DE TRANSFERENCIA ---
+        
         const pcPeerID = 'pc-' + baseID;
         const mobilePeerID = 'mob-' + baseID + Math.floor(Math.random() * 1000);
         
@@ -87,7 +112,9 @@
         function setupPC() {
             document.getElementById('pc-view').style.display = 'block';
             document.getElementById('status-tag').innerText = "ESPERANDO VÍNCULO";
-            new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 180, height: 180 });
+            // Generar QR con la URL del proyecto + el ID actual
+            const qrUrl = URL_PROYECTO + "#" + baseID;
+            new QRCode(document.getElementById("qrcode"), { text: qrUrl, width: 180, height: 180 });
 
             peer.on('connection', (conn) => {
                 document.getElementById('qr-section').classList.add('hidden');
@@ -140,10 +167,9 @@
                 conn.on('close', () => {
                     activeConn = null;
                     document.getElementById('conn-status').innerText = "PC desconectada. Reintentando...";
-                    setTimeout(connect, 2000); // Reintentar conectar si la PC se cerró o recargó
+                    setTimeout(connect, 2000); 
                 });
                 
-                // Fallback por si la PC recarga y el socket muere sin avisar
                 conn.on('error', () => setTimeout(connect, 2000));
             }
 
