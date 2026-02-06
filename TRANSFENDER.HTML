@@ -3,44 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transferencia Directa QR</title>
+    <title>Transferencia Flash - Manual</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; background: #121212; color: #e0e0e0; }
-        .card { background: #1e1e1e; padding: 25px; border-radius: 20px; max-width: 400px; margin: 20px auto; border: 1px solid #333; }
+        .card { background: #1e1e1e; padding: 25px; border-radius: 20px; max-width: 500px; margin: 20px auto; border: 1px solid #333; }
         #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 10px; margin: 20px 0; }
         .btn { background: #007aff; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; display: block; width: 100%; box-sizing: border-box; }
         input[type="file"] { display: none; }
         #status { color: #00d1ff; font-size: 0.9em; margin-bottom: 10px; }
-        img { max-width: 100px; margin: 5px; border-radius: 5px; border: 1px solid #444; }
+        
+        /* Galería Mejorada */
+        #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 20px; }
+        .img-container { position: relative; background: #2d2d2d; padding: 5px; border-radius: 8px; border: 1px solid #444; }
+        .img-container img { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; }
+        .download-btn { background: #28a745; color: white; border: none; font-size: 10px; padding: 5px; width: 100%; cursor: pointer; border-radius: 4px; margin-top: 5px; }
+        .delete-btn { background: #dc3545; color: white; border: none; padding: 2px 5px; border-radius: 50%; position: absolute; top: -5px; right: -5px; cursor: pointer; }
+        
         .success { color: #00ff88 !important; }
     </style>
 </head>
 <body>
 
-    <h2>⚡ Envío Flash</h2>
+    <h2>⚡ Cola de Transferencia</h2>
     <div id="status">Iniciando...</div>
 
     <div id="pc-view" class="card" style="display:none;">
-        <p>Escanea para conectar tu celular:</p>
+        <p>Escanea para vincular:</p>
         <div id="qrcode"></div>
-        <p><small>Esperando archivos...</small></p>
         <div id="gallery"></div>
     </div>
 
     <div id="mobile-view" class="card" style="display:none;">
-        <div id="conn-status">Conectando con PC...</div>
+        <div id="conn-status">Conectando...</div>
         <br>
         <label class="btn" id="upload-label" style="opacity: 0.5; pointer-events: none;">
-            SELECCIONAR FOTOS
+            SELECCIONAR VARIAS FOTOS
             <input type="file" id="file-input" accept="image/*" multiple>
         </label>
-        <p><small>Las fotos se descargarán solas en la PC.</small></p>
+        <div id="send-log" style="font-size: 12px; margin-top: 15px; color: #888;"></div>
     </div>
 
     <script>
-        // 1. Crear un ID único basado en el hash o uno aleatorio
         let baseID = window.location.hash.substring(1);
         if (!baseID) {
             baseID = Math.random().toString(36).substring(2, 8);
@@ -49,88 +54,82 @@
 
         const isMobile = /iPhone|Android/i.test(navigator.userAgent);
         const statusText = document.getElementById('status');
-        
-        // La PC usa el ID "base", el celular usa el ID "base-mobile" para no chocar
         const myID = isMobile ? 'mob-' + baseID + Math.floor(Math.random()*100) : 'pc-' + baseID;
         const targetPCID = 'pc-' + baseID;
 
         const peer = new Peer(myID);
 
-        peer.on('open', (id) => {
+        peer.on('open', () => {
             statusText.innerText = "Sistema en línea";
-            if (isMobile) {
-                setupMobile();
-            } else {
-                setupPC();
-            }
+            if (isMobile) setupMobile();
+            else setupPC();
         });
 
         // --- LÓGICA PARA LA PC ---
         function setupPC() {
             document.getElementById('pc-view').style.display = 'block';
-            new QRCode(document.getElementById("qrcode"), {
-                text: window.location.href,
-                width: 200,
-                height: 200
-            });
+            new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 150, height: 150 });
 
             peer.on('connection', (conn) => {
-                statusText.innerText = "¡Celular vinculado!";
+                statusText.innerText = "¡Dispositivo vinculado!";
                 statusText.classList.add('success');
                 
                 conn.on('data', (data) => {
                     const blob = new Blob([data.file], { type: data.type });
                     const url = URL.createObjectURL(blob);
                     
-                    // Previa visual
-                    const img = document.createElement('img');
-                    img.src = url;
-                    document.getElementById('gallery').prepend(img);
+                    const container = document.createElement('div');
+                    container.className = 'img-container';
                     
-                    // Descarga automática
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = "foto_" + Date.now() + ".jpg";
-                    a.click();
+                    container.innerHTML = `
+                        <button class="delete-btn" onclick="this.parentElement.remove()">×</button>
+                        <img src="${url}">
+                        <button class="download-btn" onclick="downloadImg('${url}', '${data.name}')">DESCARGAR</button>
+                    `;
+                    
+                    document.getElementById('gallery').prepend(container);
                 });
             });
+        }
+
+        function downloadImg(url, name) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name || "foto_" + Date.now();
+            a.click();
         }
 
         // --- LÓGICA PARA EL CELULAR ---
         function setupMobile() {
             document.getElementById('mobile-view').style.display = 'block';
             const connStatus = document.getElementById('conn-status');
+            const log = document.getElementById('send-log');
             
-            // Intentar conectar con la PC
             const conn = peer.connect(targetPCID);
             
             conn.on('open', () => {
                 connStatus.innerText = "Conectado a PC ✅";
                 connStatus.classList.add('success');
-                document.getElementById('upload-label').style.opacity = "1";
-                document.getElementById('upload-label').style.pointer_events = "auto";
-                document.getElementById('upload-label').style.pointerEvents = "auto";
+                const label = document.getElementById('upload-label');
+                label.style.opacity = "1";
+                label.style.pointerEvents = "auto";
 
-                document.getElementById('file-input').onchange = (e) => {
-                    const files = e.target.files;
+                document.getElementById('file-input').onchange = async (e) => {
+                    const files = Array.from(e.target.files);
+                    log.innerText = `Enviando ${files.length} archivos...`;
+                    
                     for (let file of files) {
-                        conn.send({ file: file, type: file.type });
+                        // Enviamos en cola
+                        await conn.send({ 
+                            file: file, 
+                            type: file.type, 
+                            name: file.name 
+                        });
                     }
-                    alert("Enviado correctamente");
+                    log.innerText = "¡Todo enviado!";
                 };
             });
-
-            conn.on('error', () => {
-                connStatus.innerText = "Error: Asegúrate de tener la PC abierta con el mismo link.";
-            });
         }
-
-        peer.on('error', (err) => {
-            console.error(err);
-            if(err.type === 'unavailable-id') {
-                statusText.innerText = "ID en uso. Recarga la página.";
-            }
-        });
     </script>
 </body>
 </html>
