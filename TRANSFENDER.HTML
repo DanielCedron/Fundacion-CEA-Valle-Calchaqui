@@ -8,30 +8,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root { --primary: #007aff; --success: #00ff88; --bg: #121212; --card-bg: #1e1e1e; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #e0e0e0; margin: 0; padding: 20px; overflow-x: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #e0e0e0; margin: 0; padding: 20px; }
         
-        /* Notificaciones */
-        #notification-container { position: fixed; top: 20px; right: 20px; z-index: 1000; }
-        .toast { background: var(--card-bg); border-left: 5px solid var(--success); color: white; padding: 15px 25px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideIn 0.5s ease forwards; }
+        #notification-container { position: fixed; top: 20px; right: 20px; z-index: 1000; pointer-events: none; }
+        .toast { background: #333; border-left: 5px solid var(--success); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-        .card { background: var(--card-bg); padding: 30px; border-radius: 24px; max-width: 600px; margin: 20px auto; border: 1px solid #333; transition: all 0.3s ease; }
-        #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 12px; margin: 20px 0; }
+        .card { background: var(--card-bg); padding: 25px; border-radius: 20px; max-width: 600px; margin: 10px auto; border: 1px solid #333; }
+        #qrcode { background: white; padding: 10px; display: inline-block; border-radius: 10px; }
         
-        .waiting-msg { display: none; padding: 40px 0; }
-        .spinner { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Galería Estilo Naipes */
-        #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; margin-top: 30px; }
-        .img-card { background: #2a2a2a; border-radius: 12px; padding: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transform: rotate(calc(var(--r) * 1deg)); transition: transform 0.2s; position: relative; }
-        .img-card:hover { transform: rotate(0deg) scale(1.05); z-index: 10; }
-        .img-card img { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; }
+        #waiting-area { padding: 20px; color: #888; border: 2px dashed #333; border-radius: 15px; margin-top: 10px; }
         
-        .btn { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 14px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; }
+        #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
+        .img-card { background: #2a2a2a; border-radius: 10px; padding: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); position: relative; }
+        .img-card img { width: 100%; height: 150px; object-fit: cover; border-radius: 6px; }
+        
+        .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; }
         input[type="file"] { display: none; }
-        #status { font-weight: 600; color: var(--primary); margin-bottom: 20px; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -39,32 +32,30 @@
 
     <div id="notification-container"></div>
 
-    <h2>⚡ Transferencia Directa</h2>
-    <div id="status">Iniciando sistema...</div>
-
     <div id="pc-view" class="card" style="display:none;">
+        <div id="status-tag" style="font-size: 12px; color: var(--primary);">Iniciando...</div>
+        
         <div id="qr-section">
-            <p>Escanea este código para empezar a enviar imágenes:</p>
+            <p>Escanea para vincular:</p>
             <div id="qrcode"></div>
         </div>
         
-        <div id="waiting-section" class="waiting-msg">
-            <div class="spinner"></div>
+        <div id="waiting-area" class="hidden">
             <h3>Dispositivo conectado ✅</h3>
-            <p>Esperando que envíes fotos desde tu celular...</p>
+            <p>Envía fotos desde el celular para verlas aquí.</p>
         </div>
 
         <div id="gallery"></div>
     </div>
 
     <div id="mobile-view" class="card" style="display:none;">
-        <div id="conn-status">Buscando PC...</div>
+        <div id="conn-status">Buscando conexión...</div>
         <br>
-        <label class="btn" id="upload-label" style="opacity: 0.5; pointer-events: none;">
+        <label class="btn" id="upload-label" style="opacity: 0.4; pointer-events: none;">
             SELECCIONAR FOTOS
             <input type="file" id="file-input" accept="image/*" multiple>
         </label>
-        <p id="send-log" style="margin-top: 20px; font-size: 14px; color: #aaa;"></p>
+        <p id="send-log" style="font-size: 12px; color: #777; margin-top: 15px;"></p>
     </div>
 
     <script>
@@ -75,77 +66,99 @@
         }
 
         const isMobile = /iPhone|Android/i.test(navigator.userAgent);
-        const myID = isMobile ? 'mob-' + baseID + Math.floor(Math.random()*100) : 'pc-' + baseID;
-        const targetPCID = 'pc-' + baseID;
-
-        const peer = new Peer(myID);
+        const pcPeerID = 'pc-' + baseID;
+        const mobilePeerID = 'mob-' + baseID + Math.floor(Math.random() * 1000);
+        
+        const peer = new Peer(isMobile ? mobilePeerID : pcPeerID);
 
         peer.on('open', () => {
-            document.getElementById('status').innerText = "Sistema Listo";
             if (isMobile) setupMobile(); else setupPC();
         });
 
-        function showNotification(text) {
-            const container = document.getElementById('notification-container');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.innerText = text;
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 4000);
+        function notify(msg) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.innerText = msg;
+            document.getElementById('notification-container').appendChild(t);
+            setTimeout(() => t.remove(), 3000);
         }
 
+        // --- LÓGICA PC ---
         function setupPC() {
             document.getElementById('pc-view').style.display = 'block';
-            new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 200, height: 200 });
+            document.getElementById('status-tag').innerText = "ESPERANDO VÍNCULO";
+            new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 180, height: 180 });
 
             peer.on('connection', (conn) => {
-                // Esconder QR y mostrar mensaje de espera
                 document.getElementById('qr-section').classList.add('hidden');
-                document.getElementById('waiting-section').style.display = 'block';
-                document.getElementById('status').innerText = "Vínculo Establecido";
+                document.getElementById('waiting-area').classList.remove('hidden');
+                document.getElementById('status-tag').innerText = "CONECTADO";
 
                 conn.on('data', (data) => {
+                    // Si llega la primera imagen, ocultar el cuadro de "Esperando"
+                    document.getElementById('waiting-area').classList.add('hidden');
+                    
                     const blob = new Blob([data.file], { type: data.type });
                     const url = URL.createObjectURL(blob);
                     
-                    // Crear naipe visual
                     const card = document.createElement('div');
                     card.className = 'img-card';
-                    card.style.setProperty('--r', (Math.random() * 6 - 3).toFixed(2));
                     card.innerHTML = `<img src="${url}">`;
                     document.getElementById('gallery').prepend(card);
                     
-                    // Descarga automática
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = data.name || "transfer_" + Date.now();
+                    a.download = data.name || "foto.jpg";
                     a.click();
+                    notify("📥 Imagen descargada");
+                });
 
-                    showNotification("📸 ¡IMAGEN CARGADA CON ÉXITO!");
+                conn.on('close', () => {
+                    document.getElementById('qr-section').classList.remove('hidden');
+                    document.getElementById('waiting-area').classList.add('hidden');
+                    document.getElementById('status-tag').innerText = "DESCONECTADO";
                 });
             });
         }
 
+        // --- LÓGICA MÓVIL ---
         function setupMobile() {
             document.getElementById('mobile-view').style.display = 'block';
-            const connStatus = document.getElementById('conn-status');
-            const conn = peer.connect(targetPCID);
-            
-            conn.on('open', () => {
-                connStatus.innerText = "Conectado a PC ✅";
-                const label = document.getElementById('upload-label');
-                label.style.opacity = "1";
-                label.style.pointerEvents = "auto";
+            const log = document.getElementById('send-log');
+            let activeConn = null;
 
-                document.getElementById('file-input').onchange = async (e) => {
-                    const files = Array.from(e.target.files);
-                    document.getElementById('send-log').innerText = `Enviando ${files.length} fotos...`;
-                    for (let file of files) {
-                        await conn.send({ file: file, type: file.type, name: file.name });
-                    }
-                    document.getElementById('send-log').innerText = "¡Enviado!";
-                };
-            });
+            function connect() {
+                const conn = peer.connect(pcPeerID);
+                
+                conn.on('open', () => {
+                    activeConn = conn;
+                    document.getElementById('conn-status').innerText = "Conectado a PC ✅";
+                    document.getElementById('upload-label').style.opacity = "1";
+                    document.getElementById('upload-label').style.pointerEvents = "auto";
+                });
+
+                conn.on('close', () => {
+                    activeConn = null;
+                    document.getElementById('conn-status').innerText = "PC desconectada. Reintentando...";
+                    setTimeout(connect, 2000); // Reintentar conectar si la PC se cerró o recargó
+                });
+                
+                // Fallback por si la PC recarga y el socket muere sin avisar
+                conn.on('error', () => setTimeout(connect, 2000));
+            }
+
+            connect();
+
+            document.getElementById('file-input').onchange = async (e) => {
+                if (!activeConn) return alert("No hay conexión con la PC");
+                const files = Array.from(e.target.files);
+                log.innerText = `Enviando ${files.length} archivos...`;
+                
+                for (let file of files) {
+                    await activeConn.send({ file: file, type: file.type, name: file.name });
+                }
+                log.innerText = "¡Enviado con éxito!";
+            };
         }
     </script>
 </body>
