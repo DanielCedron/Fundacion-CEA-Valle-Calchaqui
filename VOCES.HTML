@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformador de Voz Profesional</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #16213e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h2 { color: #0f3460; text-shadow: 1px 1px 2px #fff; margin-top: 0; }
+        .control-group {
+            margin: 20px 0;
+            text-align: left;
+            background: #0f3460;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        label { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; }
+        input[type="range"] { width: 100%; cursor: pointer; }
+        input[type="file"] { margin-bottom: 20px; width: 100%; }
+        .btn-group { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #e94560;
+            color: white;
+        }
+        button:hover { background-color: #d13b53; transform: translateY(-2px); }
+        button:disabled { background-color: #555; cursor: not-allowed; transform: none; }
+        #download-link { display: none; margin-top: 20px; color: #4ecca3; font-weight: bold; text-decoration: none; }
+        #download-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>🎙️ Voice Shifter Pro</h2>
+        
+        <input type="file" id="audio-upload" accept="audio/*">
+        
+        <div class="control-group">
+            <label>Subir Tono (Semitonos): <span id="pitch-val">4</span></label>
+            <input type="range" id="pitch-slider" min="0" max="12" step="1" value="4">
+        </div>
+
+        <div class="control-group">
+            <label>Reducción de Graves (EQ): <span id="eq-val">-15 dB</span></label>
+            <input type="range" id="eq-slider" min="-30" max="0" step="1" value="-15">
+        </div>
+
+        <div class="btn-group">
+            <button id="btn-play" disabled>▶️ Reproducir</button>
+            <button id="btn-record" disabled>🔴 Grabar Transformación</button>
+        </div>
+        
+        <a id="download-link" href="#" download="voz_modificada.webm">⬇️ Descargar Audio Procesado</a>
+    </div>
+
+    <script>
+        // Variables globales para Tone.js
+        let player, pitchShift, eq, recorder;
+        let isRecording = false;
+
+        const uploadInput = document.getElementById('audio-upload');
+        const playBtn = document.getElementById('btn-play');
+        const recordBtn = document.getElementById('btn-record');
+        const downloadLink = document.getElementById('download-link');
+        
+        const pitchSlider = document.getElementById('pitch-slider');
+        const pitchVal = document.getElementById('pitch-val');
+        const eqSlider = document.getElementById('eq-slider');
+        const eqVal = document.getElementById('eq-val');
+
+        // 1. Inicializar los nodos de audio de Tone.js
+        function initAudio() {
+            // PitchShift: Cambia el tono SIN cambiar la velocidad
+            pitchShift = new Tone.PitchShift({
+                pitch: parseInt(pitchSlider.value),
+                windowSize: 0.1,
+                delayTime: 0,
+                feedback: 0
+            });
+
+            // EQ3: Ecualizador de 3 bandas para quitar la "profundidad" de la voz de hombre
+            eq = new Tone.EQ3({
+                low: parseInt(eqSlider.value), // Cortamos graves
+                mid: 2,                        // Resaltamos un poco los medios
+                high: 3                        // Damos "aire" a los agudos
+            });
+
+            recorder = new Tone.Recorder();
+        }
+
+        // 2. Cargar el archivo de audio
+        uploadInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Tone.js requiere que el contexto se inicie tras una interacción del usuario
+            await Tone.start(); 
+            initAudio();
+
+            const fileURL = URL.createObjectURL(file);
+            
+            // Si ya había un player, lo destruimos
+            if (player) player.dispose();
+
+            // Cargamos el audio en el Player
+            player = new Tone.Player(fileURL).chain(pitchShift, eq, Tone.Destination);
+            
+            // Conectamos el final de la cadena al grabador también
+            eq.connect(recorder);
+
+            player.autostart = false;
+            
+            // Habilitar botones cuando cargue
+            Tone.loaded().then(() => {
+                playBtn.disabled = false;
+                recordBtn.disabled = false;
+                alert("Audio cargado y procesado. Listo para reproducir.");
+            });
+        });
+
+        // 3. Controles en tiempo real
+        pitchSlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            pitchVal.innerText = val;
+            if (pitchShift) pitchShift.pitch = val;
+        });
+
+        eqSlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            eqVal.innerText = val + " dB";
+            if (eq) eq.low.value = val;
+        });
+
+        // 4. Reproducir / Pausar
+        playBtn.addEventListener('click', async () => {
+            await Tone.start();
+            if (player.state === "started") {
+                player.stop();
+                playBtn.innerText = "▶️ Reproducir";
+            } else {
+                player.start();
+                playBtn.innerText = "⏸️ Detener";
+            }
+        });
+
+        // 5. Grabar y exportar
+        recordBtn.addEventListener('click', async () => {
+            await Tone.start();
+            
+            if (!isRecording) {
+                // Empezar a grabar
+                recorder.start();
+                player.start();
+                isRecording = true;
+                recordBtn.innerText = "⏹️ Detener Grabación";
+                recordBtn.style.backgroundColor = "#ff4757";
+                playBtn.disabled = true;
+                downloadLink.style.display = "none";
+            } else {
+                // Detener grabación y exportar
+                player.stop();
+                const recording = await recorder.stop();
+                isRecording = false;
+                recordBtn.innerText = "🔴 Grabar Transformación";
+                recordBtn.style.backgroundColor = "#e94560";
+                playBtn.disabled = false;
+                playBtn.innerText = "▶️ Reproducir";
+
+                // Crear link de descarga (el formato suele ser webm por defecto en navegadores)
+                const url = URL.createObjectURL(recording);
+                downloadLink.href = url;
+                downloadLink.style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>
