@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SyncDrop P2P</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --panel-bg: #1a1a1a;
+            --text-color: #e0e0e0;
+            --accent: #00ff88;
+            --accent-dim: #005522;
+            --error: #ff4444;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Pantalla de Conexión (QR) */
+        #setup-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #qr-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 0 20px var(--accent-dim);
+        }
+
+        /* Pantalla de Transferencia */
+        #chat-screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        #header {
+            background: var(--panel-bg);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9em;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: var(--error);
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .dot.connected { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+        #messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .msg {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 8px;
+            background: #2a2a2a;
+            word-wrap: break-word;
+        }
+
+        .msg.self { align-self: flex-end; background: var(--accent-dim); border: 1px solid var(--accent); }
+        .msg.other { align-self: flex-start; border: 1px solid #444; }
+
+        .file-link { color: var(--accent); text-decoration: none; font-weight: bold; }
+        .file-link:hover { text-decoration: underline; }
+
+        /* Controles inferiores */
+        #controls {
+            background: var(--panel-bg);
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid #333;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            background: #222;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 5px;
+        }
+
+        button, label.btn-file {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+            text-align: center;
+        }
+
+        button:hover, label.btn-file:hover { opacity: 0.8; }
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="setup-screen">
+        <h2>Esperando conexión...</h2>
+        <p>Abre la cámara de tu celular y escanea este QR</p>
+        <div id="qr-container"></div>
+        <p id="my-id-text" style="color: #888; font-size: 0.8em;"></p>
+    </div>
+
+    <div id="chat-screen">
+        <div id="header">
+            <strong>SyncDrop WebRTC</strong>
+            <div class="status">
+                <span id="status-text">Conectando...</span>
+                <div class="dot" id="status-dot"></div>
+            </div>
+        </div>
+        
+        <div id="messages"></div>
+        
+        <div id="controls">
+            <label class="btn-file">
+                📎 Archivo
+                <input type="file" id="file-input" multiple>
+            </label>
+            <input type="text" id="msg-input" placeholder="Escribe un texto o enlace...">
+            <button id="btn-send">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        // Lógica Principal
+        const setupScreen = document.getElementById('setup-screen');
+        const chatScreen = document.getElementById('chat-screen');
+        const messagesDiv = document.getElementById('messages');
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const msgInput = document.getElementById('msg-input');
+        const fileInput = document.getElementById('file-input');
+
+        let peer;
+        let connection;
+        let heartbeatInterval;
+        let lastPing = Date.now();
+
+        // 1. Inicializar PeerJS
+        // Usamos un ID guardado en localStorage para "sesión permanente" o creamos uno nuevo
+        const savedId = localStorage.getItem('mi_peer_id');
+        peer = new Peer(savedId || null);
+
+        peer.on('open', (id) => {
+            localStorage.setItem('mi_peer_id', id);
+            
+            // Revisar si venimos de escanear un QR (si hay ?connect=XYZ en la URL)
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetId = urlParams.get('connect');
+
+            if (targetId) {
+                // Somos el CELULAR. Conectamos al PC.
+                setupScreen.style.display = 'none';
+                chatScreen.style.display = 'flex';
+                connectToPeer(targetId);
+            } else {
+                // Somos la PC. Generamos el QR.
+                document.getElementById('my-id-text').innerText = "ID: " + id;
+                const connectUrl = window.location.href.split('?')[0] + '?connect=' + id;
+                
+                new QRCode(document.getElementById("qr-container"), {
+                    text: connectUrl,
+                    width: 200,
+                    height: 200,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            }
+        });
+
+        // 2. Recibir conexión entrante (La PC acepta al Celular)
+        peer.on('connection', (conn) => {
+            setupScreen.style.display = 'none';
+            chatScreen.style.display = 'flex';
+            setupConnectionLogic(conn);
+        });
+
+        function connectToPeer(targetId) {
+            const conn = peer.connect(targetId, { reliable: true });
+            setupConnectionLogic(conn);
+        }
+
+        // 3. Lógica de la conexión (Enviar/Recibir y Latido)
+        function setupConnectionLogic(conn) {
+            connection = conn;
+
+            conn.on('open', () => {
+                setStatus(true);
+                addMessage('Sistema', '¡Dispositivos sincronizados con éxito!', 'other');
+                
+                // Iniciar el latido (Heartbeat) cada 3 segundos
+                heartbeatInterval = setInterval(() => {
+                    if(conn.open) {
+                        conn.send({ type: 'ping' });
+                        // Si pasaron más de 8 segundos sin respuesta, se cayó
+                        if(Date.now() - lastPing > 8000) setStatus(false);
+                    }
+                }, 3000);
+            });
+
+            conn.on('data', (data) => {
+                if (data.type === 'ping') {
+                    conn.send({ type: 'pong' });
+                    return;
+                }
+                if (data.type === 'pong') {
+                    lastPing = Date.now();
+                    setStatus(true);
+                    return;
+                }
+
+                // Si recibimos texto
+                if (data.type === 'text') {
+                    addMessage('Recibido', data.content, 'other');
+                }
+                
+                // Si recibimos un archivo
+                if (data.type === 'file') {
+                    const blob = new Blob([data.fileData], { type: data.mimeType });
+                    const url = URL.createObjectURL(blob);
+                    addMessage('Archivo Recibido', `<a href="${url}" download="${data.fileName}" class="file-link">💾 Descargar: ${data.fileName}</a>`, 'other');
+                }
+            });
+
+            conn.on('close', () => {
+                setStatus(false);
+                clearInterval(heartbeatInterval);
+            });
+        }
+
+        // 4. Funciones de interfaz
+        function setStatus(isConnected) {
+            if(isConnected) {
+                statusDot.classList.add('connected');
+                statusText.innerText = "Sincronizado";
+            } else {
+                statusDot.classList.remove('connected');
+                statusText.innerText = "Desconectado";
+            }
+        }
+
+        function addMessage(sender, htmlContent, typeClass) {
+            const div = document.createElement('div');
+            div.className = `msg ${typeClass}`;
+            div.innerHTML = `<small style="color:#888;">${sender}</small><br>${htmlContent}`;
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // 5. Envío de datos (Eventos)
+        document.getElementById('btn-send').addEventListener('click', () => {
+            const text = msgInput.value.trim();
+            if (text && connection && connection.open) {
+                connection.send({ type: 'text', content: text });
+                addMessage('Tú', text, 'self');
+                msgInput.value = '';
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            if (!connection || !connection.open || files.length === 0) return;
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const arrayBuffer = event.target.result;
+                    connection.send({
+                        type: 'file',
+                        fileName: file.name,
+                        mimeType: file.type,
+                        fileData: arrayBuffer
+                    });
+                    addMessage('Tú', `Enviando archivo: ${file.name}...`, 'self');
+                };
+                reader.readAsArrayBuffer(file);
+            });
+            fileInput.value = ''; // Limpiar input
+        });
+
+        // Enviar con tecla Enter
+        msgInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') document.getElementById('btn-send').click();
+        });
+    </script>
+</body>
+</html>
