@@ -177,23 +177,42 @@
         }
 
         function paintAtMouse(event) {
+            if (!mainModel) return;
+            
             raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObject(mainModel, true);
+            // Cast recursivo contra el grupo del modelo GLTF
+            const intersects = raycaster.intersectObject(mainModel, true); 
 
             if (intersects.length > 0) {
                 const it = intersects[0];
-                if (it.uv) {
-                    const x = it.uv.x * TX_RES;
-                    const y = (1 - it.uv.y) * TX_RES; // Invertir Y para Canvas
-
-                    // Pintado dinámico
-                    paintCtx.beginPath();
-                    // Tamaño del pincel (15)
-                    paintCtx.arc(x, y, 15, 0, Math.PI * 2);
-                    paintCtx.fillStyle = 'rgba(239, 68, 68, 0.9)'; // Rojo intenso
-                    paintCtx.fill();
-                    paintTexture.needsUpdate = true;
+                
+                // --- CHECK DEFINITIVO DE UVs EN CONSOLA PARA TU MODELO .GLB ---
+                if (!it.uv) {
+                    console.warn("⚠️ ALERTA BELÉN: Tu archivo .glb NO TIENE COORDENADAS UV. El código no puede pintar. Asegúrate de que el modelo GLB fue desarmado (unwrapped) correctamente en un programa 3D (como Blender) antes de subirlo.");
+                    document.getElementById('status').innerText = "Error: El modelo no tiene UVs válidas para pintar.";
+                    return; // Detener aquí si no hay UVs
                 }
+                
+                // Si llegamos aquí, el modelo SÍ tiene UVs y pintamos.
+                document.getElementById('status').innerText = "Pintando área seleccionada...";
+
+                const x = it.uv.x * TX_RES;
+                // HTML Canvas origin is top-left, while UV origin is bottom-left (flipY:false)
+                const y = (1 - it.uv.y) * TX_RES; // accounting for flipY:false
+
+                // Pintado dinámico
+                paintCtx.beginPath();
+                // Tamaño del pincel (15)
+                paintCtx.arc(x, y, 15, 0, Math.PI * 2);
+                // Rojo intenso totalmente opaco para máxima visibilidad (1.0)
+                paintCtx.fillStyle = 'rgb(239, 68, 68)'; 
+                paintCtx.fill();
+                
+                // IMPORTANT: Tell Three.js the canvas texture has changed!
+                paintTexture.needsUpdate = true;
+            } else {
+                // Opcional: Console log si el rayo no toca el modelo
+                // console.log("El rayo no toca el modelo");
             }
         }
 
@@ -203,18 +222,35 @@
         // --- CARGA DE ARCHIVOS ---
         document.getElementById('model-input').addEventListener('change', (e) => {
             const file = e.target.files[0];
+            if(!file) return;
+
             const url = URL.createObjectURL(file);
-            new GLTFLoader().load(url, (gltf) => {
+            document.getElementById('status').innerText = "Cargando geometría...";
+
+            loader.load(url, (gltf) => {
                 if(mainModel) scene.remove(mainModel);
                 mainModel = gltf.scene;
                 
+                // CRUCIAL: Teñir y aplicar la textura dinámica a CADA pieza del modelo
                 mainModel.traverse(node => {
-                    if(node.isMesh) {
+                    // Nos aseguramos de aplicar el material que permite mapas
+                    if(node.isMesh && node.material) {
+                        // El motor gráfico del navegador debe saber que usamos esta textura dinámica
                         node.material.map = paintTexture;
                         node.material.needsUpdate = true;
                     }
                 });
+
+                // Centrar automáticamente el modelo
+                const box = new THREE.Box3().setFromObject(mainModel);
+                const center = box.getCenter(new THREE.Vector3());
+                mainModel.position.sub(center);
+                
                 scene.add(mainModel);
+                document.getElementById('status').innerText = "Modelo cargado. Activa 'Modo Pintar' para dibujar áreas rojas.";
+            }, undefined, (error) => {
+                console.error("Error cargando GLTF:", error);
+                document.getElementById('status').innerText = "Error: Intenta usar un archivo .GLB binario único.";
             });
         });
 
