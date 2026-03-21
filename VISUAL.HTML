@@ -80,11 +80,13 @@
 
         let scene, camera, renderer, controls, raycaster, mouse;
         let mainModel, paintCanvas, paintCtx, paintTexture;
-        let isPainting = false;
+        
+        // ESTADOS DE LA APP
+        let currentMode = 'ROTATE'; // Puede ser 'ROTATE' o 'PAINT'
+        let isMouseDown = false;
         let logoTexture = null;
 
-        // Configuración de resolución de textura (4K para detalle)
-        const TX_RES = 1024;
+        const TX_RES = 1024; // Resolución de textura
 
         init();
         animate();
@@ -101,18 +103,21 @@
             renderer.outputEncoding = THREE.sRGBEncoding;
             document.body.appendChild(renderer.domElement);
 
-            // Luces pro
             const ambient = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambient);
             const spot = new THREE.SpotLight(0xffffff, 1);
             spot.position.set(5, 10, 5);
             scene.add(spot);
 
+            // Setup OrbitControls (Modo rotación activo por defecto)
             controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.enabled = true; // <--- Importante empezar aquí
+
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
 
-            // Setup Paint Canvas (La textura dinámica)
+            // Setup Paint Canvas
             paintCanvas = document.createElement('canvas');
             paintCanvas.width = paintCanvas.height = TX_RES;
             paintCtx = paintCanvas.getContext('2d');
@@ -122,24 +127,56 @@
             paintTexture = new THREE.CanvasTexture(paintCanvas);
             paintTexture.flipY = false;
 
-            // Eventos
-            window.addEventListener('mousedown', () => { isPainting = true; });
-            window.addEventListener('mouseup', () => { isPainting = false; });
-            window.addEventListener('mousemove', onMouseMove);
+            // --- LÓGICA DE EVENTOS REPARADA ---
+            renderer.domElement.addEventListener('mousedown', (e) => { 
+                isMouseDown = true; 
+                // Si estamos en modo pintar, ejecutamos un pintado instantáneo al hacer clic
+                if(currentMode === 'PAINT') paintAtMouse(e); 
+            });
+            window.addEventListener('mouseup', () => { isMouseDown = false; });
             
+            // Usamos el evento del elemento canvas, no de window, para mejor precisión
+            renderer.domElement.addEventListener('mousemove', onMouseMove);
+            
+            // Botón de Modo Pintar
+            const paintBtn = document.getElementById('mode-paint');
+            paintBtn.addEventListener('click', togglePaintMode);
+
             setupUVEditor();
         }
 
-        function onMouseMove(event) {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        function togglePaintMode() {
+            const paintBtn = document.getElementById('mode-paint');
+            const statusDot = document.querySelector('.status-dot');
 
-            if (isPainting && mainModel) {
-                paintAtMouse();
+            if (currentMode === 'ROTATE') {
+                currentMode = 'PAINT';
+                controls.enabled = false; // !!! DESACTIVAR ROTACIÓN DE CÁMARA !!!
+                paintBtn.innerText = "Modo Rotación (Activo)";
+                paintBtn.style.background = "#475569"; // Cambiar color visual
+                statusDot.style.background = "#ef4444"; // Punto rojo indicando "grabando/pintando"
+            } else {
+                currentMode = 'ROTATE';
+                controls.enabled = true; // !!! ACTIVAR ROTACIÓN DE CÁMARA !!!
+                paintBtn.innerText = "Modo Pintar (Click + Arrastrar)";
+                paintBtn.style.background = "#ef4444";
+                statusDot.style.background = "#10b981"; // Punto verde indicando OK
             }
         }
 
-        function paintAtMouse() {
+        function onMouseMove(event) {
+            // Actualizar coordenadas del mouse
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            // SOLO pintar si el mouse está presionado Y estamos en modo PAINT
+            if (isMouseDown && currentMode === 'PAINT' && mainModel) {
+                paintAtMouse(event);
+            }
+        }
+
+        function paintAtMouse(event) {
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObject(mainModel, true);
 
@@ -149,19 +186,19 @@
                     const x = it.uv.x * TX_RES;
                     const y = (1 - it.uv.y) * TX_RES; // Invertir Y para Canvas
 
+                    // Pintado dinámico
                     paintCtx.beginPath();
+                    // Tamaño del pincel (15)
                     paintCtx.arc(x, y, 15, 0, Math.PI * 2);
-                    paintCtx.fillStyle = 'rgba(239, 68, 68, 0.8)'; // Rojo para "seleccionar"
+                    paintCtx.fillStyle = 'rgba(239, 68, 68, 0.9)'; // Rojo intenso
                     paintCtx.fill();
                     paintTexture.needsUpdate = true;
-                    
-                    // Si hay un logo cargado, también lo pintamos allí si quieres efecto de calcomanía
-                    if (logoTexture) {
-                        // Aquí podrías aplicar el logo directamente en la posición UV
-                    }
                 }
             }
         }
+
+        // --- EL RESTO DEL CÓDIGO (CARGA DE ARCHIVOS, UV EDITOR, ANIMATE) SIGUE IGUAL ---
+        // Asegúrate de copiar todo el bloque GLTFLoader, setupUVEditor, etc.
 
         // --- CARGA DE ARCHIVOS ---
         document.getElementById('model-input').addEventListener('change', (e) => {
