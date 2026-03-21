@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belén 3D - Paint & UV Editor</title>
+    <style>
+        :root { --accent: #ef4444; --bg: #0f172a; --panel: rgba(30, 41, 59, 0.9); }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; overflow: hidden; }
+        
+        #ui { position: absolute; top: 20px; left: 20px; width: 280px; background: var(--panel); padding: 20px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; border: 1px solid rgba(255,255,255,0.1); }
+        
+        /* Ventana UV Emergente */
+        #uv-editor {
+            position: absolute; bottom: 20px; right: 20px; width: 350px; height: 350px;
+            background: #1e293b; border: 2px solid var(--accent); border-radius: 8px;
+            display: none; flex-direction: column; z-index: 20;
+        }
+        #uv-canvas-container { position: relative; flex-grow: 1; background: #000; overflow: hidden; cursor: move; }
+        #uv-map-img { width: 100%; height: 100%; opacity: 0.5; pointer-events: none; }
+        #logo-gizmo { 
+            position: absolute; border: 2px dashed #fff; width: 50px; height: 50px; 
+            top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: rgba(239, 68, 68, 0.2); pointer-events: none;
+        }
+
+        .section { margin-bottom: 15px; }
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 5px; transition: 0.2s; }
+        .btn-paint { background: var(--accent); color: white; }
+        .btn-uv { background: #3b82f6; color: white; }
+        
+        .toolbar { display: flex; gap: 5px; }
+        .status-dot { width: 10px; height: 10px; background: #10b981; border-radius: 50%; display: inline-block; margin-right: 5px; }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <h3><span class="status-dot"></span>Editor Dinámico</h3>
+        
+        <div class="section">
+            <label style="font-size: 11px; opacity: 0.6;">1. GEOMETRÍA</label>
+            <input type="file" id="model-input" accept=".glb" style="width:100%; font-size:10px; margin-top:5px;">
+        </div>
+
+        <div class="section">
+            <button class="btn btn-paint" id="mode-paint">Modo Pintar (Click + Arrastrar)</button>
+            <p style="font-size: 10px; opacity: 0.7;">Pinta áreas rojas sobre el modelo para definir la zona del logo.</p>
+        </div>
+
+        <div class="section">
+            <label style="font-size: 11px; opacity: 0.6;">2. LOGO / ESTAMPA</label>
+            <input type="file" id="logo-input" accept="image/*" style="width:100%; font-size:10px;">
+            <button class="btn btn-uv" id="open-uv" style="margin-top:10px;">Abrir Editor UV de Logo</button>
+        </div>
+
+        <button class="btn" style="background:#475569; color:white;" onclick="saveDesign()">Descargar Final</button>
+    </div>
+
+    <!-- VENTANA UV EMERGENTE -->
+    <div id="uv-editor">
+        <div style="padding: 10px; background: #334155; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; font-weight: bold;">AJUSTE DE LOGO EN MAPA UV</span>
+            <button onclick="document.getElementById('uv-editor').style.display='none'" style="background:none; border:none; color:white; cursor:pointer;">X</button>
+        </div>
+        <div id="uv-canvas-container">
+            <img id="uv-map-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
+            <div id="logo-gizmo"></div>
+        </div>
+        <div style="padding: 10px; background: #334155;">
+            <input type="range" id="gizmo-size" min="10" max="150" value="50" style="width: 100%;">
+            <label style="font-size: 9px;">ARRASTRA DENTRO DEL CUADRADO PARA MOVER EL LOGO</label>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'https://cdn.skypack.dev/three@0.132.2';
+        import { OrbitControls } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js';
+        import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/GLTFLoader.js';
+
+        let scene, camera, renderer, controls, raycaster, mouse;
+        let mainModel, paintCanvas, paintCtx, paintTexture;
+        let isPainting = false;
+        let logoTexture = null;
+
+        // Configuración de resolución de textura (4K para detalle)
+        const TX_RES = 1024;
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050505);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 0, 3);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            document.body.appendChild(renderer.domElement);
+
+            // Luces pro
+            const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambient);
+            const spot = new THREE.SpotLight(0xffffff, 1);
+            spot.position.set(5, 10, 5);
+            scene.add(spot);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            // Setup Paint Canvas (La textura dinámica)
+            paintCanvas = document.createElement('canvas');
+            paintCanvas.width = paintCanvas.height = TX_RES;
+            paintCtx = paintCanvas.getContext('2d');
+            paintCtx.fillStyle = 'white';
+            paintCtx.fillRect(0, 0, TX_RES, TX_RES);
+            
+            paintTexture = new THREE.CanvasTexture(paintCanvas);
+            paintTexture.flipY = false;
+
+            // Eventos
+            window.addEventListener('mousedown', () => { isPainting = true; });
+            window.addEventListener('mouseup', () => { isPainting = false; });
+            window.addEventListener('mousemove', onMouseMove);
+            
+            setupUVEditor();
+        }
+
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            if (isPainting && mainModel) {
+                paintAtMouse();
+            }
+        }
+
+        function paintAtMouse() {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(mainModel, true);
+
+            if (intersects.length > 0) {
+                const it = intersects[0];
+                if (it.uv) {
+                    const x = it.uv.x * TX_RES;
+                    const y = (1 - it.uv.y) * TX_RES; // Invertir Y para Canvas
+
+                    paintCtx.beginPath();
+                    paintCtx.arc(x, y, 15, 0, Math.PI * 2);
+                    paintCtx.fillStyle = 'rgba(239, 68, 68, 0.8)'; // Rojo para "seleccionar"
+                    paintCtx.fill();
+                    paintTexture.needsUpdate = true;
+                    
+                    // Si hay un logo cargado, también lo pintamos allí si quieres efecto de calcomanía
+                    if (logoTexture) {
+                        // Aquí podrías aplicar el logo directamente en la posición UV
+                    }
+                }
+            }
+        }
+
+        // --- CARGA DE ARCHIVOS ---
+        document.getElementById('model-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const url = URL.createObjectURL(file);
+            new GLTFLoader().load(url, (gltf) => {
+                if(mainModel) scene.remove(mainModel);
+                mainModel = gltf.scene;
+                
+                mainModel.traverse(node => {
+                    if(node.isMesh) {
+                        node.material.map = paintTexture;
+                        node.material.needsUpdate = true;
+                    }
+                });
+                scene.add(mainModel);
+            });
+        });
+
+        // --- EDITOR UV LOGO ---
+        function setupUVEditor() {
+            const container = document.getElementById('uv-canvas-container');
+            const gizmo = document.getElementById('logo-gizmo');
+            const sizeSlider = document.getElementById('gizmo-size');
+            let isDragging = false;
+
+            document.getElementById('open-uv').onclick = () => {
+                document.getElementById('uv-editor').style.display = 'flex';
+            };
+
+            container.onmousedown = () => isDragging = true;
+            window.onmouseup = () => isDragging = false;
+
+            container.onmousemove = (e) => {
+                if (!isDragging) return;
+                const rect = container.getBoundingClientRect();
+                let x = e.clientX - rect.left;
+                let y = e.clientY - rect.top;
+
+                // Restringir al contenedor
+                x = Math.max(0, Math.min(x, rect.width));
+                y = Math.max(0, Math.min(y, rect.height));
+
+                gizmo.style.left = x + 'px';
+                gizmo.style.top = y + 'px';
+
+                updateLogoOnModel(x/rect.width, y/rect.height, sizeSlider.value/rect.width);
+            };
+
+            sizeSlider.oninput = () => {
+                gizmo.style.width = sizeSlider.value + 'px';
+                gizmo.style.height = sizeSlider.value + 'px';
+                // Trigger update...
+            };
+        }
+
+        function updateLogoOnModel(u, v, s) {
+            if (!logoTexture || !mainModel) return;
+            
+            // Re-pintamos el canvas principal: Fondo blanco + Logo en posición UV
+            paintCtx.fillStyle = 'white';
+            paintCtx.fillRect(0, 0, TX_RES, TX_RES);
+            
+            const drawSize = s * TX_RES;
+            const drawX = u * TX_RES - drawSize/2;
+            const drawY = v * TX_RES - drawSize/2;
+
+            if(logoTexture.image) {
+                paintCtx.drawImage(logoTexture.image, drawX, drawY, drawSize, drawSize);
+            }
+            paintTexture.needsUpdate = true;
+        }
+
+        document.getElementById('logo-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    logoTexture = { image: img };
+                    document.getElementById('logo-gizmo').style.backgroundImage = `url(${ev.target.result})`;
+                    document.getElementById('logo-gizmo').style.backgroundSize = 'contain';
+                    updateLogoOnModel(0.5, 0.5, 50/350);
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls) controls.update();
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
