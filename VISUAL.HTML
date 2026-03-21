@@ -2,75 +2,25 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Belén 3D - Paint & UV Editor</title>
+    <title>Editor Textil Pro - Versión Final</title>
     <style>
-        :root { --accent: #ef4444; --bg: #0f172a; --panel: rgba(30, 41, 59, 0.9); }
-        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; overflow: hidden; }
-        
-        #ui { position: absolute; top: 20px; left: 20px; width: 280px; background: var(--panel); padding: 20px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; border: 1px solid rgba(255,255,255,0.1); }
-        
-        /* Ventana UV Emergente */
-        #uv-editor {
-            position: absolute; bottom: 20px; right: 20px; width: 350px; height: 350px;
-            background: #1e293b; border: 2px solid var(--accent); border-radius: 8px;
-            display: none; flex-direction: column; z-index: 20;
-        }
-        #uv-canvas-container { position: relative; flex-grow: 1; background: #000; overflow: hidden; cursor: move; }
-        #uv-map-img { width: 100%; height: 100%; opacity: 0.5; pointer-events: none; }
-        #logo-gizmo { 
-            position: absolute; border: 2px dashed #fff; width: 50px; height: 50px; 
-            top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: rgba(239, 68, 68, 0.2); pointer-events: none;
-        }
-
-        .section { margin-bottom: 15px; }
-        .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 5px; transition: 0.2s; }
-        .btn-paint { background: var(--accent); color: white; }
-        .btn-uv { background: #3b82f6; color: white; }
-        
-        .toolbar { display: flex; gap: 5px; }
-        .status-dot { width: 10px; height: 10px; background: #10b981; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        body { margin: 0; overflow: hidden; background: #111; font-family: sans-serif; color: white; }
+        #ui { position: absolute; top: 10px; left: 10px; z-index: 10; background: rgba(0,0,0,0.85); padding: 15px; border-radius: 8px; width: 260px; border: 1px solid #333; }
+        .btn { display: block; width: 100%; margin: 8px 0; padding: 12px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; transition: 0.3s; }
+        #status { font-size: 11px; color: #ffc107; margin-top: 10px; line-height: 1.4; }
+        input[type="file"] { background: #333; color: white; }
     </style>
 </head>
 <body>
-
     <div id="ui">
-        <h3><span class="status-dot"></span>Editor Dinámico</h3>
+        <h3 style="margin-top:0">🎨 Diseñador Textil</h3>
+        <label style="font-size: 12px;">1. Cargar modelo .GLB:</label>
+        <input type="file" id="model-input" accept=".glb" class="btn">
         
-        <div class="section">
-            <label style="font-size: 11px; opacity: 0.6;">1. GEOMETRÍA</label>
-            <input type="file" id="model-input" accept=".glb" style="width:100%; font-size:10px; margin-top:5px;">
-        </div>
-
-        <div class="section">
-            <button class="btn btn-paint" id="mode-paint">Modo Pintar (Click + Arrastrar)</button>
-            <p style="font-size: 10px; opacity: 0.7;">Pinta áreas rojas sobre el modelo para definir la zona del logo.</p>
-        </div>
-
-        <div class="section">
-            <label style="font-size: 11px; opacity: 0.6;">2. LOGO / ESTAMPA</label>
-            <input type="file" id="logo-input" accept="image/*" style="width:100%; font-size:10px;">
-            <button class="btn btn-uv" id="open-uv" style="margin-top:10px;">Abrir Editor UV de Logo</button>
-        </div>
-
-        <button class="btn" style="background:#475569; color:white;" onclick="saveDesign()">Descargar Final</button>
-    </div>
-
-    <!-- VENTANA UV EMERGENTE -->
-    <div id="uv-editor">
-        <div style="padding: 10px; background: #334155; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 12px; font-weight: bold;">AJUSTE DE LOGO EN MAPA UV</span>
-            <button onclick="document.getElementById('uv-editor').style.display='none'" style="background:none; border:none; color:white; cursor:pointer;">X</button>
-        </div>
-        <div id="uv-canvas-container">
-            <img id="uv-map-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
-            <div id="logo-gizmo"></div>
-        </div>
-        <div style="padding: 10px; background: #334155;">
-            <input type="range" id="gizmo-size" min="10" max="150" value="50" style="width: 100%;">
-            <label style="font-size: 9px;">ARRASTRA DENTRO DEL CUADRADO PARA MOVER EL LOGO</label>
-        </div>
+        <label style="font-size: 12px;">2. Interacción:</label>
+        <button id="mode-toggle" class="btn" style="background: #28a745; color: white;">Modo: Rotar Cámara</button>
+        
+        <div id="status">Carga un modelo para comenzar.</div>
     </div>
 
     <script type="module">
@@ -80,21 +30,14 @@
 
         let scene, camera, renderer, controls, raycaster, mouse;
         let mainModel, paintCanvas, paintCtx, paintTexture;
-        
-        // ESTADOS DE LA APP
-        let currentMode = 'ROTATE'; // Puede ser 'ROTATE' o 'PAINT'
         let isMouseDown = false;
-        let logoTexture = null;
+        let mode = 'ROTATE'; 
 
-        const TX_RES = 1024; // Resolución de textura
-
-        init();
-        animate();
+        const TX_RES = 1024; // Resolución de la textura de pintado
 
         function init() {
+            // Escena y Cámara
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x050505);
-
             camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.set(0, 0, 3);
 
@@ -103,232 +46,113 @@
             renderer.outputEncoding = THREE.sRGBEncoding;
             document.body.appendChild(renderer.domElement);
 
-            const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambient);
-            const spot = new THREE.SpotLight(0xffffff, 1);
-            spot.position.set(5, 10, 5);
-            scene.add(spot);
+            // Iluminación
+            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+            const light = new THREE.DirectionalLight(0xffffff, 0.6);
+            light.position.set(1, 1, 2);
+            scene.add(light);
 
-            // Setup OrbitControls (Modo rotación activo por defecto)
+            // Controles y Raycaster
             controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.enabled = true; // <--- Importante empezar aquí
-
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
 
-            // Setup Paint Canvas
+            // Setup del Canvas para pintar
             paintCanvas = document.createElement('canvas');
             paintCanvas.width = paintCanvas.height = TX_RES;
             paintCtx = paintCanvas.getContext('2d');
-            paintCtx.fillStyle = 'white';
+            paintCtx.fillStyle = 'white'; // Color base de la tela
             paintCtx.fillRect(0, 0, TX_RES, TX_RES);
-            
+
             paintTexture = new THREE.CanvasTexture(paintCanvas);
-            paintTexture.flipY = false;
+            paintTexture.flipY = false; // Necesario para que coincida con el estándar GLTF
 
-            // --- LÓGICA DE EVENTOS REPARADA ---
-            renderer.domElement.addEventListener('mousedown', (e) => { 
-                isMouseDown = true; 
-                // Si estamos en modo pintar, ejecutamos un pintado instantáneo al hacer clic
-                if(currentMode === 'PAINT') paintAtMouse(e); 
+            // Eventos de Mouse
+            renderer.domElement.addEventListener('mousedown', (e) => {
+                isMouseDown = true;
+                if (mode === 'PAINT') paintAtMouse();
             });
-            window.addEventListener('mouseup', () => { isMouseDown = false; });
-            
-            // Usamos el evento del elemento canvas, no de window, para mejor precisión
+            window.addEventListener('mouseup', () => isMouseDown = false);
             renderer.domElement.addEventListener('mousemove', onMouseMove);
-            
-            // Botón de Modo Pintar
-            const paintBtn = document.getElementById('mode-paint');
-            paintBtn.addEventListener('click', togglePaintMode);
 
-            setupUVEditor();
-        }
+            // Lógica del Botón de Modo
+            document.getElementById('mode-toggle').onclick = (e) => {
+                mode = mode === 'ROTATE' ? 'PAINT' : 'ROTATE';
+                const btn = e.target;
+                btn.innerText = mode === 'ROTATE' ? 'Modo: Rotar Cámara' : 'Modo: Pintar Tela';
+                btn.style.background = mode === 'ROTATE' ? '#28a745' : '#dc3545';
+                controls.enabled = (mode === 'ROTATE');
+            };
 
-        function togglePaintMode() {
-            const paintBtn = document.getElementById('mode-paint');
-            const statusDot = document.querySelector('.status-dot');
-
-            if (currentMode === 'ROTATE') {
-                currentMode = 'PAINT';
-                controls.enabled = false; // !!! DESACTIVAR ROTACIÓN DE CÁMARA !!!
-                paintBtn.innerText = "Modo Rotación (Activo)";
-                paintBtn.style.background = "#475569"; // Cambiar color visual
-                statusDot.style.background = "#ef4444"; // Punto rojo indicando "grabando/pintando"
-            } else {
-                currentMode = 'ROTATE';
-                controls.enabled = true; // !!! ACTIVAR ROTACIÓN DE CÁMARA !!!
-                paintBtn.innerText = "Modo Pintar (Click + Arrastrar)";
-                paintBtn.style.background = "#ef4444";
-                statusDot.style.background = "#10b981"; // Punto verde indicando OK
-            }
+            // Cargador de Modelos
+            document.getElementById('model-input').onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const url = URL.createObjectURL(file);
+                
+                new GLTFLoader().load(url, (gltf) => {
+                    if (mainModel) scene.remove(mainModel);
+                    mainModel = gltf.scene;
+                    
+                    mainModel.traverse(node => {
+                        if (node.isMesh) {
+                            // Aplicamos nuestra textura dinámica al modelo
+                            node.material.map = paintTexture;
+                            node.material.needsUpdate = true;
+                        }
+                    });
+                    
+                    scene.add(mainModel);
+                    document.getElementById('status').innerText = "Modelo cargado. Activa el modo pintar para dibujar.";
+                });
+            };
         }
 
         function onMouseMove(event) {
-            // Actualizar coordenadas del mouse
             const rect = renderer.domElement.getBoundingClientRect();
             mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
             mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-            // SOLO pintar si el mouse está presionado Y estamos en modo PAINT
-            if (isMouseDown && currentMode === 'PAINT' && mainModel) {
-                paintAtMouse(event);
+            if (isMouseDown && mode === 'PAINT') {
+                paintAtMouse();
             }
         }
 
-        function paintAtMouse(event) {
+        function paintAtMouse() {
             if (!mainModel) return;
-            
+
             raycaster.setFromCamera(mouse, camera);
-            // Cast recursivo contra el grupo del modelo GLTF
-            const intersects = raycaster.intersectObject(mainModel, true); 
+            const intersects = raycaster.intersectObject(mainModel, true);
 
             if (intersects.length > 0) {
-                const it = intersects[0];
-                
-                // --- CHECK DEFINITIVO DE UVs EN CONSOLA PARA TU MODELO .GLB ---
-                if (!it.uv) {
-                    console.warn("⚠️ ALERTA BELÉN: Tu archivo .glb NO TIENE COORDENADAS UV. El código no puede pintar. Asegúrate de que el modelo GLB fue desarmado (unwrapped) correctamente en un programa 3D (como Blender) antes de subirlo.");
-                    document.getElementById('status').innerText = "Error: El modelo no tiene UVs válidas para pintar.";
-                    return; // Detener aquí si no hay UVs
+                const hit = intersects[0];
+                if (hit.uv) {
+                    const x = hit.uv.x * TX_RES;
+                    const y = (1 - hit.uv.y) * TX_RES; // Invertimos Y para el canvas
+
+                    // Dibujar círculo rojo
+                    paintCtx.fillStyle = '#ef4444';
+                    paintCtx.beginPath();
+                    paintCtx.arc(x, y, 10, 0, Math.PI * 2);
+                    paintCtx.fill();
+
+                    // Avisar a Three.js que la textura cambió
+                    paintTexture.needsUpdate = true;
+                } else {
+                    console.warn("El modelo no tiene coordenadas UV.");
+                    document.getElementById('status').innerText = "Error: El modelo no tiene mapa UV para pintar.";
                 }
-                
-                // Si llegamos aquí, el modelo SÍ tiene UVs y pintamos.
-                document.getElementById('status').innerText = "Pintando área seleccionada...";
-
-                const x = it.uv.x * TX_RES;
-                // HTML Canvas origin is top-left, while UV origin is bottom-left (flipY:false)
-                const y = (1 - it.uv.y) * TX_RES; // accounting for flipY:false
-
-                // Pintado dinámico
-                paintCtx.beginPath();
-                // Tamaño del pincel (15)
-                paintCtx.arc(x, y, 15, 0, Math.PI * 2);
-                // Rojo intenso totalmente opaco para máxima visibilidad (1.0)
-                paintCtx.fillStyle = 'rgb(239, 68, 68)'; 
-                paintCtx.fill();
-                
-                // IMPORTANT: Tell Three.js the canvas texture has changed!
-                paintTexture.needsUpdate = true;
-            } else {
-                // Opcional: Console log si el rayo no toca el modelo
-                // console.log("El rayo no toca el modelo");
             }
         }
-
-        // --- EL RESTO DEL CÓDIGO (CARGA DE ARCHIVOS, UV EDITOR, ANIMATE) SIGUE IGUAL ---
-        // Asegúrate de copiar todo el bloque GLTFLoader, setupUVEditor, etc.
-
-        // --- CARGA DE ARCHIVOS ---
-        document.getElementById('model-input').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if(!file) return;
-
-            const url = URL.createObjectURL(file);
-            document.getElementById('status').innerText = "Cargando geometría...";
-
-            loader.load(url, (gltf) => {
-                if(mainModel) scene.remove(mainModel);
-                mainModel = gltf.scene;
-                
-                // CRUCIAL: Teñir y aplicar la textura dinámica a CADA pieza del modelo
-                mainModel.traverse(node => {
-                    // Nos aseguramos de aplicar el material que permite mapas
-                    if(node.isMesh && node.material) {
-                        // El motor gráfico del navegador debe saber que usamos esta textura dinámica
-                        node.material.map = paintTexture;
-                        node.material.needsUpdate = true;
-                    }
-                });
-
-                // Centrar automáticamente el modelo
-                const box = new THREE.Box3().setFromObject(mainModel);
-                const center = box.getCenter(new THREE.Vector3());
-                mainModel.position.sub(center);
-                
-                scene.add(mainModel);
-                document.getElementById('status').innerText = "Modelo cargado. Activa 'Modo Pintar' para dibujar áreas rojas.";
-            }, undefined, (error) => {
-                console.error("Error cargando GLTF:", error);
-                document.getElementById('status').innerText = "Error: Intenta usar un archivo .GLB binario único.";
-            });
-        });
-
-        // --- EDITOR UV LOGO ---
-        function setupUVEditor() {
-            const container = document.getElementById('uv-canvas-container');
-            const gizmo = document.getElementById('logo-gizmo');
-            const sizeSlider = document.getElementById('gizmo-size');
-            let isDragging = false;
-
-            document.getElementById('open-uv').onclick = () => {
-                document.getElementById('uv-editor').style.display = 'flex';
-            };
-
-            container.onmousedown = () => isDragging = true;
-            window.onmouseup = () => isDragging = false;
-
-            container.onmousemove = (e) => {
-                if (!isDragging) return;
-                const rect = container.getBoundingClientRect();
-                let x = e.clientX - rect.left;
-                let y = e.clientY - rect.top;
-
-                // Restringir al contenedor
-                x = Math.max(0, Math.min(x, rect.width));
-                y = Math.max(0, Math.min(y, rect.height));
-
-                gizmo.style.left = x + 'px';
-                gizmo.style.top = y + 'px';
-
-                updateLogoOnModel(x/rect.width, y/rect.height, sizeSlider.value/rect.width);
-            };
-
-            sizeSlider.oninput = () => {
-                gizmo.style.width = sizeSlider.value + 'px';
-                gizmo.style.height = sizeSlider.value + 'px';
-                // Trigger update...
-            };
-        }
-
-        function updateLogoOnModel(u, v, s) {
-            if (!logoTexture || !mainModel) return;
-            
-            // Re-pintamos el canvas principal: Fondo blanco + Logo en posición UV
-            paintCtx.fillStyle = 'white';
-            paintCtx.fillRect(0, 0, TX_RES, TX_RES);
-            
-            const drawSize = s * TX_RES;
-            const drawX = u * TX_RES - drawSize/2;
-            const drawY = v * TX_RES - drawSize/2;
-
-            if(logoTexture.image) {
-                paintCtx.drawImage(logoTexture.image, drawX, drawY, drawSize, drawSize);
-            }
-            paintTexture.needsUpdate = true;
-        }
-
-        document.getElementById('logo-input').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const img = new Image();
-                img.onload = () => {
-                    logoTexture = { image: img };
-                    document.getElementById('logo-gizmo').style.backgroundImage = `url(${ev.target.result})`;
-                    document.getElementById('logo-gizmo').style.backgroundSize = 'contain';
-                    updateLogoOnModel(0.5, 0.5, 50/350);
-                };
-                img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
 
         function animate() {
             requestAnimationFrame(animate);
-            if (controls) controls.update();
+            if (controls.enabled) controls.update();
             renderer.render(scene, camera);
         }
+
+        init();
+        animate();
     </script>
 </body>
 </html>
