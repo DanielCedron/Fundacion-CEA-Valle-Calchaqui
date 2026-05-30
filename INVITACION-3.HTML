@@ -261,17 +261,18 @@
       <strong>Titular:</strong> Mario Daniel Hoornaert<br>
       <strong>Alias:</strong> TESOREROMARIO<br>
       <strong>Banco:</strong> Banco Nación<br>
-	  <strong>Monto:</strong> $20 mil (pesos Argentinos)
+	  <strong>Monto:</strong> $10 mil (pesos Argentinos) por persona<br>
+	  <strong>Descuento del 30% por invitar a otra persona</strong>
     </div>
 
-    <a href="https://mpago.li/2CpMmzL" target="_blank" class="btn-mp">Pagar con MercadoPago</a>
+    <a href="https://mpago.li/2T7hwU4" target="_blank" class="btn-mp">Pagar con MercadoPago</a>
     <button id="btnCambiarPresencial" class="close">Volver y pagar en presencial</button>
   </div>
 
   <div id="thankPanel" class="panel hidden">
     <div class="thank">
       <h1 id="gracias">Muchas gracias por tu valioso tiempo</h1>
-      <p>La fecha del encuentro es el 11 y 12 de junio. Recibirás los detalles al número de whatsapp que nos dejaste.</p>
+      <p>La fecha del encuentro es el 11 y 12 y 13 de junio. Recibirás los detalles al número de whatsapp que nos dejaste.</p>
     </div>
     <div class="image-placeholder">
         <img src="INVITACIONES/inv1/logo.jpg" alt="Logo de la Fundación" onerror="this.style.display='none'">
@@ -289,7 +290,9 @@
 
 <script>
 (function(){
-  const LS_KEY = 'foro_metodo_pago'; // Puede ser 'presencial' o 'pagar_ahora'
+  // Claves para el localStorage
+  const LS_KEY = 'foro_metodo_pago'; 
+  const LS_FORM_DATA = 'foro_form_data'; // Guardaremos los datos del form temporalmente
   
   const intro = document.getElementById('introContainer');
   const formPanel = document.getElementById('formPanel');
@@ -310,7 +313,7 @@
   } else {
       // Flujo normal de Introducción
       typeWriter(document.getElementById('text1'), '¡ Bienvenidos !');
-      typeWriter(document.getElementById('sub1'), 'A la Capacitación\nde Desregulaciónes en Neurodivergentes', () => document.getElementById('next1').classList.add('show'));
+      typeWriter(document.getElementById('sub1'), 'A la Capacitación Presencial\nde Desregulaciónes en Neurodivergentes', () => document.getElementById('next1').classList.add('show'));
   }
 
   // --- 2. FUNCIONES DE INTERFAZ (MÁQUINA DE ESCRIBIR Y BOTONES) ---
@@ -329,72 +332,104 @@
     typeWriter(sc.querySelector('p') || sc.querySelector('h1'), text, () => btn.classList.add('show'));
   }
 
-  document.getElementById('next1').onclick = () => showScreen('screen2', 'En esta Capacitación, buscamos crear consciencia y enseñar estrategias\nEn casos de Desregulaciónes en personas Neurodivergentes', document.getElementById('next2'));
+  document.getElementById('next1').onclick = () => showScreen('screen2', 'En esta Capacitación Presencial, buscamos crear consciencia y enseñar estrategias\nEn casos de Desregulaciónes en personas Neurodivergentes\nFecha de inicio: 11,12 y 13 de junio\nModalidad Presencial\nTurno Mañana 9 a 12, Turno Tarde 16 a 19\nCiudad de Belén - Catamarca', document.getElementById('next2'));
   document.getElementById('next2').onclick = () => showScreen('screen3', 'Por favor completa el formulario para confirmar tu participación', document.getElementById('toForm'));
   document.getElementById('toForm').onclick = () => { intro.classList.add('hidden'); formPanel.classList.remove('hidden'); };
 
   // --- 3. INTERCEPCIÓN DEL FORMULARIO Y MODAL ---
   fm3.addEventListener('submit', function(e) {
-    e.preventDefault(); // Evita que recargue la página
-    // Como tiene e.preventDefault(), los campos 'required' ya fueron validados por el navegador
+    e.preventDefault(); 
+    
+    // Guardamos los datos del formulario temporalmente en localStorage antes de elegir pago
+    const formDataObj = {};
+    const formData = new FormData(fm3);
+    formData.forEach((value, key) => (formDataObj[key] = value));
+    localStorage.setItem(LS_FORM_DATA, JSON.stringify(formDataObj));
+
     modalPago.classList.remove('hidden');
   });
 
-  // Ocultar modal si toca fuera de la caja
   modalPago.addEventListener('click', function(e) {
     if(e.target === modalPago) { modalPago.classList.add('hidden'); }
   });
 
   // --- 4. DECISIÓN DE PAGO ---
-  document.getElementById('btnPresencial').onclick = () => procesarInscripcion('presencial');
-  document.getElementById('btnPagarAhora').onclick = () => procesarInscripcion('pagar_ahora');
+  document.getElementById('btnPresencial').onclick = () => procesarDecision('presencial');
+  document.getElementById('btnPagarAhora').onclick = () => procesarDecision('pagar_ahora');
 
-  function procesarInscripcion(metodo) {
-    // Esconder modal
+  function procesarDecision(metodo) {
     modalPago.classList.add('hidden');
-    
-    // Asignar el método al input oculto
-    document.getElementById('metodoPagoInput').value = metodo;
-
-    // Enviar datos silenciosamente usando Fetch API
-    const formData = new FormData(fm3);
-    fetch(fm3.action, {
-        method: 'POST',
-        body: formData,
-        headers: { 'Accept': 'application/json' }
-    }).catch(error => console.error('Error al enviar:', error));
-
-    // Guardar en memoria local
-    localStorage.setItem(LS_KEY, metodo);
-
-    // Cambiar de pantalla
     formPanel.classList.add('hidden');
-    if(metodo === 'presencial') {
+
+    if (metodo === 'presencial') {
+        // Si elige presencial, enviamos el correo inmediatamente
+        enviarFormulario('presencial');
+        localStorage.setItem(LS_KEY, 'presencial');
         thank.classList.remove('hidden');
     } else {
+        // Si elige pagar ahora, solo mostramos la pantalla de transferencia
+        // NO enviamos el correo todavía.
+        localStorage.setItem(LS_KEY, 'pagar_ahora');
         transferPanel.classList.remove('hidden');
     }
   }
 
-  // --- 5. CAMBIAR DE OPINIÓN (DE PAGAR AHORA A PRESENCIAL) ---
+  // --- 5. FUNCIÓN PARA ENVIAR EL CORREO ---
+  function enviarFormulario(metodoPago) {
+      const dataGuardada = localStorage.getItem(LS_FORM_DATA);
+      if(!dataGuardada) return;
+
+      const formDataObj = JSON.parse(dataGuardada);
+      const formData = new FormData();
+      
+      // Reconstruimos el FormData
+      for (const key in formDataObj) {
+          formData.append(key, formDataObj[key]);
+      }
+      // Sobrescribimos el método de pago con la decisión final
+      formData.set('Metodo_De_Pago', metodoPago);
+
+      fetch(fm3.action, {
+          method: 'POST',
+          body: formData,
+          headers: { 'Accept': 'application/json' }
+      }).then(() => {
+          // Limpiamos los datos temporales tras enviarlos
+          localStorage.removeItem(LS_FORM_DATA);
+      }).catch(error => console.error('Error al enviar:', error));
+  }
+
+  // --- 6. EVENTOS EN LA PANTALLA DE TRANSFERENCIA ---
+
+  // Si hace clic en "Pagar con MercadoPago" -> Asumimos que finalizó el pago y enviamos el correo.
+  document.querySelector('.btn-mp[href="https://mpago.li/2T7hwU4"]').addEventListener('click', function() {
+      // Envía el correo confirmando "pagar_ahora"
+      enviarFormulario('pagar_ahora');
+  });
+
+  // Si cambia de opinión y vuelve a presencial
   document.getElementById('btnCambiarPresencial').onclick = () => {
+    // Envía el correo confirmando "presencial"
+    enviarFormulario('presencial');
+    
     localStorage.setItem(LS_KEY, 'presencial');
     transferPanel.classList.add('hidden');
     thank.classList.remove('hidden');
   };
 
-  // --- 6. RESETEAR MEMORIA (Para pruebas) ---
+  // --- 7. RESETEAR MEMORIA ---
   let clicks = 0;
   document.getElementById('gracias').onclick = () => {
     clicks++;  
     if(clicks >= 5){
       localStorage.removeItem(LS_KEY);
+      localStorage.removeItem(LS_FORM_DATA);
       alert('Se ha reseteado el estado del formulario.');
       window.location.reload();  
     }
   };
 
-  // Carrusel automático
+  // Carrusel
   const imgs = document.querySelectorAll('.carousel img'); 
   if(imgs.length > 0) {
       let idx = 0;
