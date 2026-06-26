@@ -2,51 +2,209 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Transferencia Flash Pro - Bidireccional</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        :root { --primary: #007aff; --success: #00ff88; --bg: #121212; --card-bg: #1e1e1e; --border: #333; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #e0e0e0; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh;}
+        :root { 
+            --primary: #007aff; 
+            --success: #00ff88; 
+            --bg: #121212; 
+            --card-bg: #1e1e1e; 
+            --border: #333; 
+        }
         
-        #notification-container { position: fixed; top: 20px; right: 20px; z-index: 1000; pointer-events: none; }
-        .toast { background: #333; border-left: 5px solid var(--success); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); animation: slideIn 0.3s ease-out; }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        * { box-sizing: border-box; }
 
-        .card { background: var(--card-bg); padding: 25px; border-radius: 20px; width: 100%; max-width: 600px; box-sizing: border-box; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background: var(--bg); 
+            color: #e0e0e0; 
+            margin: 0; 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
         
-        h2 { margin-top: 0; color: white; text-align: center; }
+        #notification-container { position: fixed; top: 15px; right: 15px; left: 15px; z-index: 10000; pointer-events: none; }
+        .toast { background: #2d2d2d; border-left: 6px solid var(--success); color: white; padding: 16px 20px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-size: 16px; font-weight: 500; text-align: center; }
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* --- PANTALLA DE SELECCIÓN DE ROL --- */
-        .role-selector { display: flex; gap: 15px; margin-top: 20px; }
-        .role-btn { flex: 1; padding: 20px; border-radius: 15px; border: 2px solid var(--border); background: #252525; color: white; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 10px;}
-        .role-btn:hover { border-color: var(--primary); background: #2a2a2a; }
-        .role-btn.active { border-color: var(--primary); background: rgba(0, 122, 255, 0.1); }
+        /* --- DISEÑO RESPONSIVE OPTIMIZADO PARA CELULARES --- */
+        .card { 
+            background: var(--card-bg); 
+            padding: 25px 20px; 
+            border-radius: 24px; 
+            width: 100%; 
+            max-width: 550px; 
+            border: 1px solid var(--border); 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6); 
+        }
         
-        /* --- ESTILOS COMUNES --- */
-        #qrcode { background: white; padding: 10px; display: inline-block; border-radius: 10px; margin: 15px 0;}
-        .hidden { display: none !important; }
-        .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; box-sizing: border-box; font-size: 16px; margin-top: 10px;}
+        h2 { margin-top: 0; margin-bottom: 25px; color: white; text-align: center; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+        h3 { font-size: 20px; margin-bottom: 10px; }
+        h4 { font-size: 18px; margin-bottom: 12px; color: #fff; }
+        p { font-size: 16px; line-height: 1.5; color: #b0b0b0; }
+
+        /* --- SELECCIÓN DE ROL --- */
+        .role-selector { display: flex; flex-direction: column; gap: 15px; margin-top: 25px; }
+        .role-btn { 
+            width: 100%; 
+            padding: 24px; 
+            border-radius: 18px; 
+            border: 2px solid var(--border); 
+            background: #252525; 
+            color: white; 
+            font-size: 20px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            gap: 15px;
+        }
+        .role-btn:active { transform: scale(0.98); background: #2d2d2d; border-color: var(--primary); }
+        
+        /* --- CÓDIGO DE SINCRONIZACIÓN GRANDE --- */
+        .code-container {
+            background: #111;
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+            border: 2px solid #2d2d2d;
+        }
+        .code-number {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 36px;
+            font-weight: bold;
+            color: var(--success);
+            letter-spacing: 6px;
+            text-align: center;
+            margin: 5px 0;
+        }
+
+        /* --- ELEMENTOS DE ENTRADA GRANDE --- */
+        .large-input {
+            width: 100%;
+            background: #111;
+            color: white;
+            border: 2px solid #444;
+            border-radius: 16px;
+            padding: 18px;
+            font-size: 22px;
+            text-align: center;
+            box-sizing: border-box;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 15px;
+            transition: border-color 0.2s;
+        }
+        .large-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        textarea.large-input {
+            font-family: inherit;
+            text-align: left;
+            font-size: 16px;
+            letter-spacing: normal;
+            text-transform: none;
+            font-weight: normal;
+            min-height: 110px;
+            resize: none;
+        }
+
+        .btn { 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 18px; 
+            border-radius: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            width: 100%; 
+            font-size: 18px; 
+            margin-top: 5px;
+            transition: background 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn:active { transform: scale(0.98); background: #0066d6; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
-        /* --- ÁREA DE ENVÍO --- */
-        .send-area { background: #252525; border-radius: 15px; padding: 15px; margin-top: 15px; border: 1px dashed #555;}
+        /* --- ANIMACIÓN LATIDO DE CONFIRMACIÓN --- */
+        .pulse-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(0, 255, 136, 0.12);
+            border: 2px solid var(--success);
+            padding: 14px 24px;
+            border-radius: 50px;
+            color: var(--success);
+            font-weight: bold;
+            font-size: 18px;
+            margin: 20px auto;
+            width: 100%;
+            animation: heartbeat 1.5s infinite ease-in-out;
+            box-sizing: border-box;
+        }
+        .pulse-dot {
+            width: 14px;
+            height: 14px;
+            background-color: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.7);
+            animation: pulse-ring 1.5s infinite cubic-bezier(0.66, 0, 0, 1);
+        }
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(0, 255, 136, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); }
+        }
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        /* --- SECCIONES DE CONTENIDO --- */
+        .send-area { background: #252525; border-radius: 18px; padding: 20px; margin-top: 20px; border: 1px dashed #555;}
         input[type="file"] { display: none; }
-        textarea { width: 100%; background: #111; color: white; border: 1px solid #444; border-radius: 8px; padding: 10px; box-sizing: border-box; resize: vertical; min-height: 80px; margin-bottom: 10px;}
+        .hidden { display: none !important; }
         
-        /* --- PROGRESO --- */
-        .progress-container { width: 100%; background: #111; border-radius: 10px; height: 12px; margin-top: 10px; overflow: hidden; display: none;}
+        /* --- PROGRESO DE ENVÍO --- */
+        .progress-container { width: 100%; background: #111; border-radius: 12px; height: 16px; margin-top: 15px; overflow: hidden; display: none;}
         .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.1s; }
-        .progress-text { font-size: 12px; color: #aaa; text-align: center; margin-top: 5px; display: none;}
+        .progress-text { font-size: 14px; color: #fff; font-weight: bold; text-align: center; margin-top: 8px; display: none;}
 
-        /* --- GALERÍA / RECIBIDOS --- */
-        #received-content { margin-top: 20px; }
-        .received-item { background: #2a2a2a; border-radius: 10px; padding: 15px; margin-bottom: 10px; border-left: 4px solid var(--primary); word-break: break-all;}
-        .img-card { width: 100%; border-radius: 10px; overflow: hidden; margin-top: 10px; }
-        .img-card img { width: 100%; height: auto; display: block; }
-        .dl-btn { background: #444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; margin-top: 10px;}
+        /* --- CONTENEDOR RECIBIDOS --- */
+        #received-content { margin-top: 25px; }
+        .received-item { background: #2a2a2a; border-radius: 16px; padding: 18px; margin-bottom: 15px; border-left: 5px solid var(--primary); word-break: break-all; font-size: 16px;}
+        .img-card { width: 100%; border-radius: 12px; overflow: hidden; margin-top: 12px; }
+        .img-card img, .img-card video { width: 100%; height: auto; display: block; }
+        .dl-btn { background: #444; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 12px; font-weight: bold; width: 100%; }
 
+        /* --- ADAPTACIÓN ESPECIAL PARA MONITORES / PC --- */
+        @media (min-width: 600px) {
+            body { padding: 40px 20px; }
+            .card { padding: 35px 30px; border-radius: 28px; }
+            .role-selector { flex-direction: row; }
+            .role-btn { padding: 30px 20px; font-size: 18px; flex: 1; }
+            .dl-btn { width: auto; }
+        }
     </style>
 </head>
 <body>
@@ -57,27 +215,34 @@
         <h2 id="app-title">Transferencia Flash</h2>
         
         <div id="screen-role">
-            <p style="text-align: center; color: #aaa;">¿Qué deseas hacer en este dispositivo?</p>
+            <p style="text-align: center; margin-bottom: 5px;">¿Qué deseas hacer en este dispositivo?</p>
             <div class="role-selector">
                 <button class="role-btn" onclick="selectRole('receiver')">
-                    <span style="font-size: 24px;">📥</span> RECIBIR
+                    <span style="font-size: 28px;">📥</span> RECIBIR
                 </button>
                 <button class="role-btn" onclick="selectRole('sender')">
-                    <span style="font-size: 24px;">📤</span> ENVIAR
+                    <span style="font-size: 28px;">📤</span> ENVIAR
                 </button>
             </div>
         </div>
 
         <div id="screen-receiver" class="hidden" style="text-align: center;">
             <div id="rx-qr-section">
-                <p style="color: #aaa;">Escanea este código con el dispositivo que enviará los archivos:</p>
-                <div id="qrcode"></div>
-                <p style="font-size: 12px; color: #777;">Esperando conexión...</p>
+                <p>Escribe este código en la pantalla del emisor:</p>
+                <div class="code-container">
+                    <div class="code-number" id="code-text">------</div>
+                </div>
+                
+                <p style="font-size: 14px; margin-top: 25px; color: #777;">O también puedes escanear este QR:</p>
+                <div style="display: flex; justify-content: center; margin: 15px 0;"><div id="qrcode"></div></div>
+                <p style="font-size: 14px; color: #ffaa00; font-weight: 500;">Esperando conexión externa...</p>
             </div>
             
             <div id="rx-connected-section" class="hidden">
-                <h3 style="color: var(--success);">✅ Dispositivo Conectado</h3>
-                <p style="color: #aaa; font-size: 14px;">Esperando archivos o texto...</p>
+                <div class="pulse-badge">
+                    <span class="pulse-dot"></span> DISPOSITIVO VINCULADO
+                </div>
+                <p style="color: #aaa; font-size: 15px;">Listo para recibir archivos o enlaces de texto.</p>
                 <div class="progress-container" id="rx-progress-container">
                     <div class="progress-bar" id="rx-progress-bar"></div>
                 </div>
@@ -88,15 +253,22 @@
         </div>
 
         <div id="screen-sender" class="hidden">
-            <div id="tx-status" style="text-align: center; padding: 20px; border: 1px solid #444; border-radius: 10px; margin-bottom: 15px;">
-                Buscando dispositivo receptor... 🔄
+            <div id="tx-setup-section">
+                <p style="text-align: center;">Introduce el código del dispositivo receptor:</p>
+                <input type="text" id="join-code-input" class="large-input" placeholder="CÓDIGO" maxlength="6" autocomplete="off">
+                <button class="btn" onclick="startManualConnection()">CONECTAR Y VINCULAR</button>
+                <p id="tx-status" style="text-align: center; font-size: 14px; color: #aaa; margin-top: 15px;" class="hidden"></p>
             </div>
 
             <div id="tx-controls" class="hidden">
+                <div class="pulse-badge">
+                    <span class="pulse-dot"></span> CONEXIÓN EXITOSA
+                </div>
+
                 <div class="send-area">
-                    <h4 style="margin-top: 0;">Enviar Archivo</h4>
-                    <label class="btn" style="display: block; text-align: center;">
-                        SELECCIONAR ARCHIVO
+                    <h4 style="margin-top: 0;">📁 Enviar Multimedia o Archivo</h4>
+                    <label class="btn" style="display: block; text-align: center; background: #2d2d2d; border: 2px solid var(--primary);">
+                        📎 SELECCIONAR ARCHIVO
                         <input type="file" id="file-input">
                     </label>
                     <div class="progress-container" id="tx-progress-container">
@@ -106,51 +278,42 @@
                 </div>
 
                 <div class="send-area">
-                    <h4 style="margin-top: 0;">Enviar Texto / Link</h4>
-                    <textarea id="text-input" placeholder="Escribe aquí..."></textarea>
-                    <button class="btn" onclick="sendText()" style="background: #333;">ENVIAR TEXTO</button>
+                    <h4 style="margin-top: 0;">🔗 Enviar Texto o Enlace</h4>
+                    <textarea id="text-input" class="large-input" placeholder="Escribe o pega tu texto/link aquí..."></textarea>
+                    <button class="btn" onclick="sendText()">ENVIAR MENSAJE</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        const URL_PROYECTO = "https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/TRANSFENDER.HTML";
-        
-        let baseID = window.location.hash.substring(1);
-        let currentRole = null; // 'receiver' o 'sender'
+        let baseID = window.location.hash.substring(1).toUpperCase();
+        let currentRole = null; 
         let peer = null;
         let activeConn = null;
+        const CHUNK_SIZE = 16384; // Fragmentos de 16KB optimizados para canales WebRTC
 
-        // Gestión de ID
+        // Si no hay sesión previa ni hash, se genera un código corto limpio de 6 caracteres en mayúsculas
         if (!baseID) {
-            baseID = localStorage.getItem('transfender_session_v2');
+            baseID = localStorage.getItem('transfender_session_v3');
             if (!baseID) {
-                baseID = Math.random().toString(36).substring(2, 8);
-                localStorage.setItem('transfender_session_v2', baseID);
+                baseID = Math.random().toString(36).substring(2, 8).toUpperCase();
+                localStorage.setItem('transfender_session_v3', baseID);
             }
             window.location.hash = baseID;
         } else {
-            localStorage.setItem('transfender_session_v2', baseID);
+            localStorage.setItem('transfender_session_v3', baseID);
         }
 
-        // Redirección forzada a web para evitar problemas locales
-        if (!window.location.hostname.includes("github.io") && window.location.protocol !== "file:") {
-            console.log("Redirigiendo a entorno de producción...");
-            // window.location.href = URL_PROYECTO + "#" + baseID;
-        }
-
-        const receiverID = 'rx-' + baseID;
-        const senderID = 'tx-' + baseID + '-' + Math.floor(Math.random() * 1000);
-        
-        const CHUNK_SIZE = 16384; // 16KB por fragmento (óptimo para PeerJS)
+        const receiverID = 'RX-' + baseID;
+        const senderID = 'TX-' + baseID + '-' + Math.floor(Math.random() * 1000);
 
         function notify(msg) {
             const t = document.createElement('div');
             t.className = 'toast';
             t.innerText = msg;
             document.getElementById('notification-container').appendChild(t);
-            setTimeout(() => t.remove(), 3000);
+            setTimeout(() => t.remove(), 3500);
         }
 
         function selectRole(role) {
@@ -159,34 +322,38 @@
             
             if (role === 'receiver') {
                 document.getElementById('screen-receiver').classList.remove('hidden');
-                document.getElementById('app-title').innerText = "Modo Receptor";
+                document.getElementById('app-title').innerText = "Recibir Archivos";
                 initReceiver();
             } else {
                 document.getElementById('screen-sender').classList.remove('hidden');
-                document.getElementById('app-title').innerText = "Modo Emisor";
+                document.getElementById('app-title').innerText = "Enviar Archivos";
+                // Pre-rellenar input por comodidad si el enlace ya traía el hash original
+                document.getElementById('join-code-input').value = baseID;
                 initSender();
             }
         }
 
         // ==========================================
-        // LÓGICA RECEPTOR
+        // LÓGICA RECEPTOR (Muestra Código e Inicializa)
         // ==========================================
         let incomingFileInfo = null;
         let incomingFileData = [];
         let receivedBytes = 0;
 
         function initReceiver() {
+            document.getElementById('code-text').innerText = baseID;
             peer = new Peer(receiverID);
 
-            const qrUrl = window.location.href; // El que escanea abrirá la misma URL
-            new QRCode(document.getElementById("qrcode"), { text: qrUrl, width: 200, height: 200, colorDark : "#000000", colorLight : "#ffffff" });
+            // Generar código QR apuntando a la URL del proyecto completa
+            const qrUrl = window.location.origin + window.location.pathname + "#" + baseID;
+            new QRCode(document.getElementById("qrcode"), { text: qrUrl, width: 160, height: 160 });
 
-            peer.on('open', () => console.log("Receptor listo ID:", receiverID));
+            peer.on('open', () => console.log("ID del Receptor listo:", receiverID));
 
             peer.on('connection', (conn) => {
                 document.getElementById('rx-qr-section').classList.add('hidden');
                 document.getElementById('rx-connected-section').classList.remove('hidden');
-                notify("Dispositivo emisor conectado");
+                notify("¡Sincronización confirmada con el emisor!");
 
                 conn.on('data', (data) => {
                     handleIncomingData(data);
@@ -195,7 +362,7 @@
                 conn.on('close', () => {
                     document.getElementById('rx-qr-section').classList.remove('hidden');
                     document.getElementById('rx-connected-section').classList.add('hidden');
-                    notify("Emisor desconectado");
+                    notify("Dispositivo emisor desconectado");
                 });
             });
         }
@@ -203,7 +370,7 @@
         function handleIncomingData(data) {
             if (data.type === 'text') {
                 renderReceivedText(data.content);
-                notify("Texto recibido");
+                notify("Texto/Enlace recibido");
                 return;
             }
 
@@ -233,7 +400,7 @@
                 
                 const blob = new Blob(incomingFileData, { type: incomingFileInfo.mime });
                 renderReceivedFile(blob, incomingFileInfo.name, incomingFileInfo.mime);
-                notify("Archivo recibido");
+                notify("Archivo guardado con éxito");
                 
                 incomingFileInfo = null;
                 incomingFileData = [];
@@ -244,12 +411,11 @@
             const div = document.createElement('div');
             div.className = 'received-item';
             
-            // Detectar links básicos
             const isLink = text.startsWith('http://') || text.startsWith('https://');
             if (isLink) {
-                div.innerHTML = `<strong>Enlace:</strong> <br><a href="${text}" target="_blank" style="color: var(--primary);">${text}</a>`;
+                div.innerHTML = `<strong>Enlace recibido:</strong><br><a href="${text}" target="_blank" style="color: var(--success); font-weight: bold; text-decoration: underline; display: block; margin-top: 5px;">${text}</a>`;
             } else {
-                div.innerText = text;
+                div.innerHTML = `<strong>Texto recibido:</strong><br><span style="white-space: pre-wrap; display:block; margin-top:5px; color:#fff;">${text}</span>`;
             }
             
             document.getElementById('received-content').prepend(div);
@@ -260,15 +426,15 @@
             const div = document.createElement('div');
             div.className = 'received-item';
             
-            let contentHtml = `<strong>📁 ${name}</strong><br>`;
+            let contentHtml = `<strong>📁 Archivo:</strong> ${name}<br>`;
             
             if (mimeType.startsWith('image/')) {
                 contentHtml += `<div class="img-card"><img src="${url}"></div>`;
             } else if (mimeType.startsWith('video/')) {
-                contentHtml += `<div class="img-card"><video src="${url}" controls style="width:100%;"></video></div>`;
+                contentHtml += `<div class="img-card"><video src="${url}" controls></video></div>`;
             }
             
-            contentHtml += `<button class="dl-btn" onclick="descargar('${url}', '${name}')">⬇ Descargar / Guardar</button>`;
+            contentHtml += `<button class="dl-btn" onclick="descargar('${url}', '${name}')">⬇️ GUARDAR EN DISPOSITIVO</button>`;
             
             div.innerHTML = contentHtml;
             document.getElementById('received-content').prepend(div);
@@ -282,66 +448,68 @@
         }
 
         // ==========================================
-        // LÓGICA EMISOR
+        // LÓGICA EMISOR (Vincular Manualmente)
         // ==========================================
         function initSender() {
             peer = new Peer(senderID);
-
-            peer.on('open', () => {
-                connectToReceiver();
-            });
         }
 
-        function connectToReceiver() {
+        function startManualConnection() {
+            const codeInput = document.getElementById('join-code-input').value.trim().toUpperCase();
+            if (codeInput.length < 4) {
+                alert("Por favor introduce un código de receptor válido.");
+                return;
+            }
+
+            const targetReceiverID = 'RX-' + codeInput;
             const statusDiv = document.getElementById('tx-status');
-            
-            activeConn = peer.connect(receiverID, { reliable: true });
+            statusDiv.classList.remove('hidden');
+            statusDiv.innerHTML = "Estableciendo sincronización... 🔄";
+
+            if(activeConn) activeConn.close();
+
+            activeConn = peer.connect(targetReceiverID, { reliable: true });
 
             activeConn.on('open', () => {
-                statusDiv.classList.add('hidden');
+                document.getElementById('tx-setup-section').classList.add('hidden');
                 document.getElementById('tx-controls').classList.remove('hidden');
-                notify("Conectado al receptor ✅");
+                notify("Sincronización establecida. ¡Latido activado!");
             });
 
             activeConn.on('close', () => {
                 activeConn = null;
-                statusDiv.classList.remove('hidden');
+                document.getElementById('tx-setup-section').classList.remove('hidden');
                 document.getElementById('tx-controls').classList.add('hidden');
-                statusDiv.innerHTML = "Conexión perdida. Reintentando... 🔄";
-                setTimeout(connectToReceiver, 3000);
+                statusDiv.innerHTML = "❌ Conexión cerrada o fallida. Verifica el código.";
             });
             
             activeConn.on('error', () => {
-                setTimeout(connectToReceiver, 3000);
+                statusDiv.innerHTML = "❌ Error al intentar vincular. Asegúrate de que el receptor esté abierto.";
             });
         }
 
-        // Enviar Texto
         function sendText() {
-            if (!activeConn) return notify("No hay conexión");
+            if (!activeConn) return notify("No hay ningún dispositivo vinculado");
             const input = document.getElementById('text-input');
             const val = input.value.trim();
             if (!val) return;
 
             activeConn.send({ type: 'text', content: val });
             input.value = '';
-            notify("Texto enviado");
+            notify("Texto enviado con éxito");
         }
 
-        // Enviar Archivo en Chunks
+        // Envio Segmentado Automático con progreso exacto
         document.getElementById('file-input').addEventListener('change', async (e) => {
-            if (!activeConn) return notify("No hay conexión");
+            if (!activeConn) return notify("No estás conectado a ningún receptor");
             const file = e.target.files[0];
             if (!file) return;
 
-            // Bloquear input mientras envía
             document.getElementById('file-input').disabled = true;
-            
             document.getElementById('tx-progress-container').style.display = 'block';
             document.getElementById('tx-progress-text').style.display = 'block';
             updateProgress('tx', 0);
 
-            // Avisar inicio de archivo
             activeConn.send({
                 type: 'file-start',
                 name: file.name,
@@ -361,19 +529,16 @@
                     const percent = Math.min(100, Math.round((offset / file.size) * 100));
                     updateProgress('tx', percent);
                     
-                    // Usar setTimeout pequeño para no bloquear la UI y el buffer de WebRTC
-                    setTimeout(sendNextChunk, 0); 
+                    setTimeout(sendNextChunk, 1); 
                 } else {
-                    // Fin del archivo
                     activeConn.send({ type: 'file-end' });
                     document.getElementById('tx-progress-container').style.display = 'none';
                     document.getElementById('tx-progress-text').style.display = 'none';
                     document.getElementById('file-input').disabled = false;
-                    document.getElementById('file-input').value = ''; // Reset input
-                    notify("Archivo enviado con éxito");
+                    document.getElementById('file-input').value = ''; 
+                    notify("¡Archivo enviado con éxito!");
                 }
             }
-
             sendNextChunk();
         });
 
@@ -381,7 +546,6 @@
             document.getElementById(`${side}-progress-bar`).style.width = percent + '%';
             document.getElementById(`${side}-progress-text`).innerText = percent + '%';
         }
-
     </script>
 </body>
 </html>
