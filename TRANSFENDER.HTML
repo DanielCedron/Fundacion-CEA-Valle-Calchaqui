@@ -3,102 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transferencia Flash Pro</title>
+    <title>Transferencia Flash Pro - Bidireccional</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        :root { --primary: #007aff; --success: #00ff88; --bg: #121212; --card-bg: #1e1e1e; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #e0e0e0; margin: 0; padding: 20px; }
+        :root { --primary: #007aff; --success: #00ff88; --bg: #121212; --card-bg: #1e1e1e; --border: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #e0e0e0; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh;}
         
         #notification-container { position: fixed; top: 20px; right: 20px; z-index: 1000; pointer-events: none; }
         .toast { background: #333; border-left: 5px solid var(--success); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
-        .card { background: var(--card-bg); padding: 25px; border-radius: 20px; max-width: 600px; margin: 10px auto; border: 1px solid #333; }
-        #qrcode { background: white; padding: 10px; display: inline-block; border-radius: 10px; }
+        .card { background: var(--card-bg); padding: 25px; border-radius: 20px; width: 100%; max-width: 600px; box-sizing: border-box; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        #waiting-area { padding: 20px; color: #888; border: 2px dashed #333; border-radius: 15px; margin-top: 10px; }
+        h2 { margin-top: 0; color: white; text-align: center; }
+
+        /* --- PANTALLA DE SELECCIÓN DE ROL --- */
+        .role-selector { display: flex; gap: 15px; margin-top: 20px; }
+        .role-btn { flex: 1; padding: 20px; border-radius: 15px; border: 2px solid var(--border); background: #252525; color: white; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 10px;}
+        .role-btn:hover { border-color: var(--primary); background: #2a2a2a; }
+        .role-btn.active { border-color: var(--primary); background: rgba(0, 122, 255, 0.1); }
         
-        #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
-        .img-card { background: #2a2a2a; border-radius: 10px; padding: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); position: relative; }
-        .img-card img { width: 100%; height: 150px; object-fit: cover; border-radius: 6px; }
-        
-        .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; }
-        input[type="file"] { display: none; }
+        /* --- ESTILOS COMUNES --- */
+        #qrcode { background: white; padding: 10px; display: inline-block; border-radius: 10px; margin: 15px 0;}
         .hidden { display: none !important; }
+        .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; box-sizing: border-box; font-size: 16px; margin-top: 10px;}
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* --- ÁREA DE ENVÍO --- */
+        .send-area { background: #252525; border-radius: 15px; padding: 15px; margin-top: 15px; border: 1px dashed #555;}
+        input[type="file"] { display: none; }
+        textarea { width: 100%; background: #111; color: white; border: 1px solid #444; border-radius: 8px; padding: 10px; box-sizing: border-box; resize: vertical; min-height: 80px; margin-bottom: 10px;}
+        
+        /* --- PROGRESO --- */
+        .progress-container { width: 100%; background: #111; border-radius: 10px; height: 12px; margin-top: 10px; overflow: hidden; display: none;}
+        .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.1s; }
+        .progress-text { font-size: 12px; color: #aaa; text-align: center; margin-top: 5px; display: none;}
+
+        /* --- GALERÍA / RECIBIDOS --- */
+        #received-content { margin-top: 20px; }
+        .received-item { background: #2a2a2a; border-radius: 10px; padding: 15px; margin-bottom: 10px; border-left: 4px solid var(--primary); word-break: break-all;}
+        .img-card { width: 100%; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+        .img-card img { width: 100%; height: auto; display: block; }
+        .dl-btn { background: #444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; margin-top: 10px;}
+
     </style>
 </head>
 <body>
 
     <div id="notification-container"></div>
 
-    <div id="pc-view" class="card" style="display:none;">
-        <div id="status-tag" style="font-size: 12px; color: var(--primary);">Iniciando...</div>
+    <div class="card" id="main-card">
+        <h2 id="app-title">Transferencia Flash</h2>
         
-        <div id="qr-section">
-            <p>Escanea para vincular:</p>
-            <div id="qrcode"></div>
-        </div>
-        
-        <div id="waiting-area" class="hidden">
-            <h3>Dispositivo conectado ✅</h3>
-            <p>Envía fotos desde el celular para verlas aquí.</p>
+        <div id="screen-role">
+            <p style="text-align: center; color: #aaa;">¿Qué deseas hacer en este dispositivo?</p>
+            <div class="role-selector">
+                <button class="role-btn" onclick="selectRole('receiver')">
+                    <span style="font-size: 24px;">📥</span> RECIBIR
+                </button>
+                <button class="role-btn" onclick="selectRole('sender')">
+                    <span style="font-size: 24px;">📤</span> ENVIAR
+                </button>
+            </div>
         </div>
 
-        <div id="gallery"></div>
-    </div>
+        <div id="screen-receiver" class="hidden" style="text-align: center;">
+            <div id="rx-qr-section">
+                <p style="color: #aaa;">Escanea este código con el dispositivo que enviará los archivos:</p>
+                <div id="qrcode"></div>
+                <p style="font-size: 12px; color: #777;">Esperando conexión...</p>
+            </div>
+            
+            <div id="rx-connected-section" class="hidden">
+                <h3 style="color: var(--success);">✅ Dispositivo Conectado</h3>
+                <p style="color: #aaa; font-size: 14px;">Esperando archivos o texto...</p>
+                <div class="progress-container" id="rx-progress-container">
+                    <div class="progress-bar" id="rx-progress-bar"></div>
+                </div>
+                <div class="progress-text" id="rx-progress-text">0%</div>
+            </div>
 
-    <div id="mobile-view" class="card" style="display:none;">
-        <div id="conn-status">Buscando conexión...</div>
-        <br>
-        <label class="btn" id="upload-label" style="opacity: 0.4; pointer-events: none;">
-            SELECCIONAR FOTOS
-            <input type="file" id="file-input" accept="image/*" multiple>
-        </label>
-        <p id="send-log" style="font-size: 12px; color: #777; margin-top: 15px;"></p>
+            <div id="received-content" style="text-align: left;"></div>
+        </div>
+
+        <div id="screen-sender" class="hidden">
+            <div id="tx-status" style="text-align: center; padding: 20px; border: 1px solid #444; border-radius: 10px; margin-bottom: 15px;">
+                Buscando dispositivo receptor... 🔄
+            </div>
+
+            <div id="tx-controls" class="hidden">
+                <div class="send-area">
+                    <h4 style="margin-top: 0;">Enviar Archivo</h4>
+                    <label class="btn" style="display: block; text-align: center;">
+                        SELECCIONAR ARCHIVO
+                        <input type="file" id="file-input">
+                    </label>
+                    <div class="progress-container" id="tx-progress-container">
+                        <div class="progress-bar" id="tx-progress-bar"></div>
+                    </div>
+                    <div class="progress-text" id="tx-progress-text">0%</div>
+                </div>
+
+                <div class="send-area">
+                    <h4 style="margin-top: 0;">Enviar Texto / Link</h4>
+                    <textarea id="text-input" placeholder="Escribe aquí..."></textarea>
+                    <button class="btn" onclick="sendText()" style="background: #333;">ENVIAR TEXTO</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // --- CONFIGURACIÓN DE REDIRECCIÓN Y SESIÓN ---
         const URL_PROYECTO = "https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/TRANSFENDER.HTML";
-        const isMobile = /iPhone|Android/i.test(navigator.userAgent);
-
-        // 1. Gestión de ID Persistente
-        let baseID = window.location.hash.substring(1);
         
+        let baseID = window.location.hash.substring(1);
+        let currentRole = null; // 'receiver' o 'sender'
+        let peer = null;
+        let activeConn = null;
+
+        // Gestión de ID
         if (!baseID) {
-            // Si no hay ID en la URL, buscamos en la memoria del navegador
-            baseID = localStorage.getItem('transfender_session');
-            
+            baseID = localStorage.getItem('transfender_session_v2');
             if (!baseID) {
-                // Si es la primera vez absoluta, generamos uno nuevo
                 baseID = Math.random().toString(36).substring(2, 8);
-                localStorage.setItem('transfender_session', baseID);
+                localStorage.setItem('transfender_session_v2', baseID);
             }
-            // Asignamos el ID a la URL actual
             window.location.hash = baseID;
         } else {
-            // Si venía en la URL, actualizamos la memoria local para recordar esta sesión
-            localStorage.setItem('transfender_session', baseID);
+            localStorage.setItem('transfender_session_v2', baseID);
         }
 
-        // 2. Redirección Automática (Solo para PC ejecutando archivo local)
-        // Si NO estamos en GitHub Pages Y NO es un celular -> Redirigir a la web oficial con el ID correcto
-        if (!window.location.hostname.includes("github.io") && !isMobile) {
-            console.log("Redirigiendo a la versión online...");
-            window.location.href = URL_PROYECTO + "#" + baseID;
+        // Redirección forzada a web para evitar problemas locales
+        if (!window.location.hostname.includes("github.io") && window.location.protocol !== "file:") {
+            console.log("Redirigiendo a entorno de producción...");
+            // window.location.href = URL_PROYECTO + "#" + baseID;
         }
 
-        // --- INICIO DE PEERJS Y LÓGICA DE TRANSFERENCIA ---
+        const receiverID = 'rx-' + baseID;
+        const senderID = 'tx-' + baseID + '-' + Math.floor(Math.random() * 1000);
         
-        const pcPeerID = 'pc-' + baseID;
-        const mobilePeerID = 'mob-' + baseID + Math.floor(Math.random() * 1000);
-        
-        const peer = new Peer(isMobile ? mobilePeerID : pcPeerID);
-
-        peer.on('open', () => {
-            if (isMobile) setupMobile(); else setupPC();
-        });
+        const CHUNK_SIZE = 16384; // 16KB por fragmento (óptimo para PeerJS)
 
         function notify(msg) {
             const t = document.createElement('div');
@@ -108,84 +153,235 @@
             setTimeout(() => t.remove(), 3000);
         }
 
-        // --- LÓGICA PC ---
-        function setupPC() {
-            document.getElementById('pc-view').style.display = 'block';
-            document.getElementById('status-tag').innerText = "ESPERANDO VÍNCULO";
-            // Generar QR con la URL del proyecto + el ID actual
-            const qrUrl = URL_PROYECTO + "#" + baseID;
-            new QRCode(document.getElementById("qrcode"), { text: qrUrl, width: 180, height: 180 });
+        function selectRole(role) {
+            currentRole = role;
+            document.getElementById('screen-role').classList.add('hidden');
+            
+            if (role === 'receiver') {
+                document.getElementById('screen-receiver').classList.remove('hidden');
+                document.getElementById('app-title').innerText = "Modo Receptor";
+                initReceiver();
+            } else {
+                document.getElementById('screen-sender').classList.remove('hidden');
+                document.getElementById('app-title').innerText = "Modo Emisor";
+                initSender();
+            }
+        }
+
+        // ==========================================
+        // LÓGICA RECEPTOR
+        // ==========================================
+        let incomingFileInfo = null;
+        let incomingFileData = [];
+        let receivedBytes = 0;
+
+        function initReceiver() {
+            peer = new Peer(receiverID);
+
+            const qrUrl = window.location.href; // El que escanea abrirá la misma URL
+            new QRCode(document.getElementById("qrcode"), { text: qrUrl, width: 200, height: 200, colorDark : "#000000", colorLight : "#ffffff" });
+
+            peer.on('open', () => console.log("Receptor listo ID:", receiverID));
 
             peer.on('connection', (conn) => {
-                document.getElementById('qr-section').classList.add('hidden');
-                document.getElementById('waiting-area').classList.remove('hidden');
-                document.getElementById('status-tag').innerText = "CONECTADO";
+                document.getElementById('rx-qr-section').classList.add('hidden');
+                document.getElementById('rx-connected-section').classList.remove('hidden');
+                notify("Dispositivo emisor conectado");
 
                 conn.on('data', (data) => {
-                    // Si llega la primera imagen, ocultar el cuadro de "Esperando"
-                    document.getElementById('waiting-area').classList.add('hidden');
-                    
-                    const blob = new Blob([data.file], { type: data.type });
-                    const url = URL.createObjectURL(blob);
-                    
-                    const card = document.createElement('div');
-                    card.className = 'img-card';
-                    card.innerHTML = `<img src="${url}">`;
-                    document.getElementById('gallery').prepend(card);
-                    
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = data.name || "foto.jpg";
-                    a.click();
-                    notify("📥 Imagen descargada");
+                    handleIncomingData(data);
                 });
 
                 conn.on('close', () => {
-                    document.getElementById('qr-section').classList.remove('hidden');
-                    document.getElementById('waiting-area').classList.add('hidden');
-                    document.getElementById('status-tag').innerText = "DESCONECTADO";
+                    document.getElementById('rx-qr-section').classList.remove('hidden');
+                    document.getElementById('rx-connected-section').classList.add('hidden');
+                    notify("Emisor desconectado");
                 });
             });
         }
 
-        // --- LÓGICA MÓVIL ---
-        function setupMobile() {
-            document.getElementById('mobile-view').style.display = 'block';
-            const log = document.getElementById('send-log');
-            let activeConn = null;
-
-            function connect() {
-                const conn = peer.connect(pcPeerID);
-                
-                conn.on('open', () => {
-                    activeConn = conn;
-                    document.getElementById('conn-status').innerText = "Conectado a PC ✅";
-                    document.getElementById('upload-label').style.opacity = "1";
-                    document.getElementById('upload-label').style.pointerEvents = "auto";
-                });
-
-                conn.on('close', () => {
-                    activeConn = null;
-                    document.getElementById('conn-status').innerText = "PC desconectada. Reintentando...";
-                    setTimeout(connect, 2000); 
-                });
-                
-                conn.on('error', () => setTimeout(connect, 2000));
+        function handleIncomingData(data) {
+            if (data.type === 'text') {
+                renderReceivedText(data.content);
+                notify("Texto recibido");
+                return;
             }
 
-            connect();
-
-            document.getElementById('file-input').onchange = async (e) => {
-                if (!activeConn) return alert("No hay conexión con la PC");
-                const files = Array.from(e.target.files);
-                log.innerText = `Enviando ${files.length} archivos...`;
+            if (data.type === 'file-start') {
+                incomingFileInfo = data;
+                incomingFileData = [];
+                receivedBytes = 0;
                 
-                for (let file of files) {
-                    await activeConn.send({ file: file, type: file.type, name: file.name });
-                }
-                log.innerText = "¡Enviado con éxito!";
-            };
+                document.getElementById('rx-progress-container').style.display = 'block';
+                document.getElementById('rx-progress-text').style.display = 'block';
+                updateProgress('rx', 0);
+                return;
+            }
+
+            if (data.type === 'file-chunk') {
+                incomingFileData.push(data.chunk);
+                receivedBytes += data.chunk.byteLength;
+                
+                const percent = Math.round((receivedBytes / incomingFileInfo.size) * 100);
+                updateProgress('rx', percent);
+                return;
+            }
+
+            if (data.type === 'file-end') {
+                document.getElementById('rx-progress-container').style.display = 'none';
+                document.getElementById('rx-progress-text').style.display = 'none';
+                
+                const blob = new Blob(incomingFileData, { type: incomingFileInfo.mime });
+                renderReceivedFile(blob, incomingFileInfo.name, incomingFileInfo.mime);
+                notify("Archivo recibido");
+                
+                incomingFileInfo = null;
+                incomingFileData = [];
+            }
         }
+
+        function renderReceivedText(text) {
+            const div = document.createElement('div');
+            div.className = 'received-item';
+            
+            // Detectar links básicos
+            const isLink = text.startsWith('http://') || text.startsWith('https://');
+            if (isLink) {
+                div.innerHTML = `<strong>Enlace:</strong> <br><a href="${text}" target="_blank" style="color: var(--primary);">${text}</a>`;
+            } else {
+                div.innerText = text;
+            }
+            
+            document.getElementById('received-content').prepend(div);
+        }
+
+        function renderReceivedFile(blob, name, mimeType) {
+            const url = URL.createObjectURL(blob);
+            const div = document.createElement('div');
+            div.className = 'received-item';
+            
+            let contentHtml = `<strong>📁 ${name}</strong><br>`;
+            
+            if (mimeType.startsWith('image/')) {
+                contentHtml += `<div class="img-card"><img src="${url}"></div>`;
+            } else if (mimeType.startsWith('video/')) {
+                contentHtml += `<div class="img-card"><video src="${url}" controls style="width:100%;"></video></div>`;
+            }
+            
+            contentHtml += `<button class="dl-btn" onclick="descargar('${url}', '${name}')">⬇ Descargar / Guardar</button>`;
+            
+            div.innerHTML = contentHtml;
+            document.getElementById('received-content').prepend(div);
+        }
+
+        function descargar(url, name) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name;
+            a.click();
+        }
+
+        // ==========================================
+        // LÓGICA EMISOR
+        // ==========================================
+        function initSender() {
+            peer = new Peer(senderID);
+
+            peer.on('open', () => {
+                connectToReceiver();
+            });
+        }
+
+        function connectToReceiver() {
+            const statusDiv = document.getElementById('tx-status');
+            
+            activeConn = peer.connect(receiverID, { reliable: true });
+
+            activeConn.on('open', () => {
+                statusDiv.classList.add('hidden');
+                document.getElementById('tx-controls').classList.remove('hidden');
+                notify("Conectado al receptor ✅");
+            });
+
+            activeConn.on('close', () => {
+                activeConn = null;
+                statusDiv.classList.remove('hidden');
+                document.getElementById('tx-controls').classList.add('hidden');
+                statusDiv.innerHTML = "Conexión perdida. Reintentando... 🔄";
+                setTimeout(connectToReceiver, 3000);
+            });
+            
+            activeConn.on('error', () => {
+                setTimeout(connectToReceiver, 3000);
+            });
+        }
+
+        // Enviar Texto
+        function sendText() {
+            if (!activeConn) return notify("No hay conexión");
+            const input = document.getElementById('text-input');
+            const val = input.value.trim();
+            if (!val) return;
+
+            activeConn.send({ type: 'text', content: val });
+            input.value = '';
+            notify("Texto enviado");
+        }
+
+        // Enviar Archivo en Chunks
+        document.getElementById('file-input').addEventListener('change', async (e) => {
+            if (!activeConn) return notify("No hay conexión");
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Bloquear input mientras envía
+            document.getElementById('file-input').disabled = true;
+            
+            document.getElementById('tx-progress-container').style.display = 'block';
+            document.getElementById('tx-progress-text').style.display = 'block';
+            updateProgress('tx', 0);
+
+            // Avisar inicio de archivo
+            activeConn.send({
+                type: 'file-start',
+                name: file.name,
+                size: file.size,
+                mime: file.type
+            });
+
+            const arrayBuffer = await file.arrayBuffer();
+            let offset = 0;
+
+            function sendNextChunk() {
+                if (offset < file.size) {
+                    const chunk = arrayBuffer.slice(offset, offset + CHUNK_SIZE);
+                    activeConn.send({ type: 'file-chunk', chunk: chunk });
+                    
+                    offset += CHUNK_SIZE;
+                    const percent = Math.min(100, Math.round((offset / file.size) * 100));
+                    updateProgress('tx', percent);
+                    
+                    // Usar setTimeout pequeño para no bloquear la UI y el buffer de WebRTC
+                    setTimeout(sendNextChunk, 0); 
+                } else {
+                    // Fin del archivo
+                    activeConn.send({ type: 'file-end' });
+                    document.getElementById('tx-progress-container').style.display = 'none';
+                    document.getElementById('tx-progress-text').style.display = 'none';
+                    document.getElementById('file-input').disabled = false;
+                    document.getElementById('file-input').value = ''; // Reset input
+                    notify("Archivo enviado con éxito");
+                }
+            }
+
+            sendNextChunk();
+        });
+
+        function updateProgress(side, percent) {
+            document.getElementById(`${side}-progress-bar`).style.width = percent + '%';
+            document.getElementById(`${side}-progress-text`).innerText = percent + '%';
+        }
+
     </script>
 </body>
 </html>
