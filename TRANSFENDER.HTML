@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Transferencia Flash Pro - Bidireccional</title>
+    <script>
+        // REDIRECCIÓN AUTOMÁTICA SI SE ABRE OFFLINE
+        if (window.location.protocol === 'file:' || window.location.hostname === '') {
+            window.location.replace("https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/TRANSFENDER.HTML" + window.location.hash);
+        }
+    </script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -47,12 +53,13 @@
         }
         
         h2 { margin-top: 0; margin-bottom: 25px; color: white; text-align: center; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
-        h3 { font-size: 20px; margin-bottom: 10px; }
         h4 { font-size: 18px; margin-bottom: 12px; color: #fff; }
         p { font-size: 16px; line-height: 1.5; color: #b0b0b0; }
 
-        /* --- SELECCIÓN DE ROL --- */
+        /* --- SELECCIÓN DE ROL / PESTAÑAS --- */
         .role-selector { display: flex; flex-direction: column; gap: 15px; margin-top: 25px; }
+        .tab-selector { display: flex; flex-direction: row; gap: 10px; margin-bottom: 20px; }
+        
         .role-btn { 
             width: 100%; 
             padding: 24px; 
@@ -70,7 +77,10 @@
             gap: 15px;
         }
         .role-btn:active { transform: scale(0.98); background: #2d2d2d; border-color: var(--primary); }
+        .role-btn.active-tab { background: var(--primary); border-color: var(--primary); }
         
+        .tab-btn { padding: 15px; font-size: 16px; flex: 1; border-radius: 14px; gap: 8px;}
+
         /* --- CÓDIGO DE SINCRONIZACIÓN GRANDE --- */
         .code-container {
             background: #111;
@@ -155,7 +165,7 @@
             color: var(--success);
             font-weight: bold;
             font-size: 18px;
-            margin: 20px auto;
+            margin: 0 auto 20px auto;
             width: 100%;
             animation: heartbeat 1.5s infinite ease-in-out;
             box-sizing: border-box;
@@ -181,17 +191,16 @@
         }
 
         /* --- SECCIONES DE CONTENIDO --- */
-        .send-area { background: #252525; border-radius: 18px; padding: 20px; margin-top: 20px; border: 1px dashed #555;}
+        .send-area { background: #252525; border-radius: 18px; padding: 20px; margin-bottom: 20px; border: 1px dashed #555;}
         input[type="file"] { display: none; }
         .hidden { display: none !important; }
         
-        /* --- PROGRESO DE ENVÍO --- */
+        /* --- PROGRESO DE ENVÍO / RECEPCIÓN --- */
         .progress-container { width: 100%; background: #111; border-radius: 12px; height: 16px; margin-top: 15px; overflow: hidden; display: none;}
         .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.1s; }
         .progress-text { font-size: 14px; color: #fff; font-weight: bold; text-align: center; margin-top: 8px; display: none;}
 
         /* --- CONTENEDOR RECIBIDOS --- */
-        #received-content { margin-top: 25px; }
         .received-item { background: #2a2a2a; border-radius: 16px; padding: 18px; margin-bottom: 15px; border-left: 5px solid var(--primary); word-break: break-all; font-size: 16px;}
         .img-card { width: 100%; border-radius: 12px; overflow: hidden; margin-top: 12px; }
         .img-card img, .img-card video { width: 100%; height: auto; display: block; }
@@ -214,57 +223,53 @@
     <div class="card" id="main-card">
         <h2 id="app-title">Transferencia Flash</h2>
         
+        <!-- PANTALLA 1: SELECCIÓN INICIAL -->
         <div id="screen-role">
-            <p style="text-align: center; margin-bottom: 5px;">¿Qué deseas hacer en este dispositivo?</p>
+            <p style="text-align: center; margin-bottom: 5px;">¿Qué deseas hacer primero?</p>
             <div class="role-selector">
-                <button class="role-btn" onclick="selectRole('receiver')">
+                <button class="role-btn" onclick="selectInitialRole('receiver')">
                     <span style="font-size: 28px;">📥</span> RECIBIR
                 </button>
-                <button class="role-btn" onclick="selectRole('sender')">
+                <button class="role-btn" onclick="selectInitialRole('sender')">
                     <span style="font-size: 28px;">📤</span> ENVIAR
                 </button>
             </div>
         </div>
 
-        <div id="screen-receiver" class="hidden" style="text-align: center;">
-            <div id="rx-qr-section">
-                <p>Escribe este código en la pantalla del emisor:</p>
-                <div class="code-container">
-                    <div class="code-number" id="code-text">------</div>
-                </div>
-                
-                <p style="font-size: 14px; margin-top: 25px; color: #777;">O también puedes escanear este QR:</p>
-                <div style="display: flex; justify-content: center; margin: 15px 0;"><div id="qrcode"></div></div>
-                <p style="font-size: 14px; color: #ffaa00; font-weight: 500;">Esperando conexión externa...</p>
+        <!-- PANTALLA 2: ESPERANDO VINCULACIÓN (RECEPTOR) -->
+        <div id="screen-receiver-setup" class="hidden" style="text-align: center;">
+            <p>Escribe este código en la pantalla del emisor:</p>
+            <div class="code-container">
+                <div class="code-number" id="code-text">------</div>
             </div>
             
-            <div id="rx-connected-section" class="hidden">
-                <div class="pulse-badge">
-                    <span class="pulse-dot"></span> DISPOSITIVO VINCULADO
-                </div>
-                <p style="color: #aaa; font-size: 15px;">Listo para recibir archivos o enlaces de texto.</p>
-                <div class="progress-container" id="rx-progress-container">
-                    <div class="progress-bar" id="rx-progress-bar"></div>
-                </div>
-                <div class="progress-text" id="rx-progress-text">0%</div>
-            </div>
-
-            <div id="received-content" style="text-align: left;"></div>
+            <p style="font-size: 14px; margin-top: 25px; color: #777;">O también puedes escanear este QR:</p>
+            <div style="display: flex; justify-content: center; margin: 15px 0;"><div id="qrcode"></div></div>
+            <p style="font-size: 14px; color: #ffaa00; font-weight: 500;">Esperando conexión externa...</p>
         </div>
 
-        <div id="screen-sender" class="hidden">
-            <div id="tx-setup-section">
-                <p style="text-align: center;">Introduce el código del dispositivo receptor:</p>
-                <input type="text" id="join-code-input" class="large-input" placeholder="CÓDIGO" maxlength="6" autocomplete="off">
-                <button class="btn" onclick="startManualConnection()">CONECTAR Y VINCULAR</button>
-                <p id="tx-status" style="text-align: center; font-size: 14px; color: #aaa; margin-top: 15px;" class="hidden"></p>
+        <!-- PANTALLA 3: BUSCANDO VINCULACIÓN (EMISOR) -->
+        <div id="screen-sender-setup" class="hidden">
+            <p style="text-align: center;">Introduce el código del dispositivo receptor:</p>
+            <input type="text" id="join-code-input" class="large-input" placeholder="CÓDIGO" maxlength="6" autocomplete="off">
+            <button class="btn" onclick="startManualConnection()">CONECTAR Y VINCULAR</button>
+            <p id="tx-status" style="text-align: center; font-size: 14px; color: #aaa; margin-top: 15px;" class="hidden"></p>
+        </div>
+
+        <!-- PANTALLA 4: INTERFAZ UNIFICADA BIDIRECCIONAL (POST-CONEXIÓN) -->
+        <div id="connected-interface" class="hidden">
+            <div class="pulse-badge">
+                <span class="pulse-dot"></span> DISPOSITIVOS VINCULADOS
+            </div>
+            
+            <!-- CONTROLES PARA CAMBIAR MODO SIN RECARGAR -->
+            <div class="tab-selector">
+                <button id="tab-btn-send" class="role-btn tab-btn" onclick="switchMode('send')">📤 ENVIAR</button>
+                <button id="tab-btn-recv" class="role-btn tab-btn" onclick="switchMode('recv')">📥 RECIBIR</button>
             </div>
 
-            <div id="tx-controls" class="hidden">
-                <div class="pulse-badge">
-                    <span class="pulse-dot"></span> CONEXIÓN EXITOSA
-                </div>
-
+            <!-- CONTENIDO PESTAÑA: ENVIAR -->
+            <div id="tab-content-send" class="hidden">
                 <div class="send-area">
                     <h4 style="margin-top: 0;">📁 Enviar Multimedia o Archivo</h4>
                     <label class="btn" style="display: block; text-align: center; background: #2d2d2d; border: 2px solid var(--primary);">
@@ -277,13 +282,25 @@
                     <div class="progress-text" id="tx-progress-text">0%</div>
                 </div>
 
-                <div class="send-area">
+                <div class="send-area" style="margin-bottom: 0;">
                     <h4 style="margin-top: 0;">🔗 Enviar Texto o Enlace</h4>
                     <textarea id="text-input" class="large-input" placeholder="Escribe o pega tu texto/link aquí..."></textarea>
                     <button class="btn" onclick="sendText()">ENVIAR MENSAJE</button>
                 </div>
             </div>
+
+            <!-- CONTENIDO PESTAÑA: RECIBIR -->
+            <div id="tab-content-recv" class="hidden">
+                <p style="color: #aaa; font-size: 15px; text-align: center; margin-top: 0;">Esperando archivos o enlaces...</p>
+                <div class="progress-container" id="rx-progress-container">
+                    <div class="progress-bar" id="rx-progress-bar"></div>
+                </div>
+                <div class="progress-text" id="rx-progress-text">0%</div>
+                
+                <div id="received-content" style="text-align: left; margin-top: 15px;"></div>
+            </div>
         </div>
+
     </div>
 
     <script>
@@ -291,18 +308,17 @@
         let currentRole = null; 
         let peer = null;
         let activeConn = null;
-        const CHUNK_SIZE = 16384; // Fragmentos de 16KB optimizados para canales WebRTC
+        const CHUNK_SIZE = 16384; 
 
-        // Si no hay sesión previa ni hash, se genera un código corto limpio de 6 caracteres en mayúsculas
         if (!baseID) {
-            baseID = localStorage.getItem('transfender_session_v3');
+            baseID = localStorage.getItem('transfender_session_v4');
             if (!baseID) {
                 baseID = Math.random().toString(36).substring(2, 8).toUpperCase();
-                localStorage.setItem('transfender_session_v3', baseID);
+                localStorage.setItem('transfender_session_v4', baseID);
             }
             window.location.hash = baseID;
         } else {
-            localStorage.setItem('transfender_session_v3', baseID);
+            localStorage.setItem('transfender_session_v4', baseID);
         }
 
         const receiverID = 'RX-' + baseID;
@@ -316,61 +332,122 @@
             setTimeout(() => t.remove(), 3500);
         }
 
-        function selectRole(role) {
+        function selectInitialRole(role) {
             currentRole = role;
             document.getElementById('screen-role').classList.add('hidden');
             
             if (role === 'receiver') {
-                document.getElementById('screen-receiver').classList.remove('hidden');
-                document.getElementById('app-title').innerText = "Recibir Archivos";
-                initReceiver();
+                document.getElementById('screen-receiver-setup').classList.remove('hidden');
+                document.getElementById('app-title').innerText = "Esperando Conexión";
+                initPeer('receiver');
             } else {
-                document.getElementById('screen-sender').classList.remove('hidden');
-                document.getElementById('app-title').innerText = "Enviar Archivos";
-                // Pre-rellenar input por comodidad si el enlace ya traía el hash original
+                document.getElementById('screen-sender-setup').classList.remove('hidden');
+                document.getElementById('app-title').innerText = "Vincular Dispositivo";
                 document.getElementById('join-code-input').value = baseID;
-                initSender();
+                initPeer('sender');
             }
         }
 
         // ==========================================
-        // LÓGICA RECEPTOR (Muestra Código e Inicializa)
+        // INICIALIZACIÓN DE PEERJS Y CONEXIÓN
+        // ==========================================
+        function initPeer(role) {
+            peer = new Peer(role === 'receiver' ? receiverID : senderID);
+
+            if (role === 'receiver') {
+                document.getElementById('code-text').innerText = baseID;
+                const qrUrl = window.location.origin + window.location.pathname + "#" + baseID;
+                new QRCode(document.getElementById("qrcode"), { text: qrUrl, width: 160, height: 160 });
+
+                peer.on('connection', (conn) => {
+                    handleSuccessfulConnection(conn, 'recv');
+                });
+            }
+        }
+
+        function startManualConnection() {
+            const codeInput = document.getElementById('join-code-input').value.trim().toUpperCase();
+            if (codeInput.length < 4) {
+                alert("Por favor introduce un código de receptor válido.");
+                return;
+            }
+
+            const targetReceiverID = 'RX-' + codeInput;
+            const statusDiv = document.getElementById('tx-status');
+            statusDiv.classList.remove('hidden');
+            statusDiv.innerHTML = "Estableciendo sincronización... 🔄";
+
+            if(activeConn) activeConn.close();
+            
+            const tempConn = peer.connect(targetReceiverID, { reliable: true });
+
+            tempConn.on('open', () => {
+                handleSuccessfulConnection(tempConn, 'send');
+            });
+
+            tempConn.on('close', () => {
+                statusDiv.innerHTML = "❌ Conexión cerrada o fallida.";
+            });
+            tempConn.on('error', () => {
+                statusDiv.innerHTML = "❌ Error al intentar vincular.";
+            });
+        }
+
+        function handleSuccessfulConnection(conn, defaultTab) {
+            activeConn = conn;
+            notify("¡Dispositivos sincronizados exitosamente!");
+
+            // Ocultar pantallas de configuración
+            document.getElementById('screen-receiver-setup').classList.add('hidden');
+            document.getElementById('screen-sender-setup').classList.add('hidden');
+            document.getElementById('app-title').innerText = "Transferencia Flash";
+            
+            // Mostrar Interfaz Bidireccional
+            document.getElementById('connected-interface').classList.remove('hidden');
+            
+            // Configurar escucha de datos (AMBOS LADOS PUEDEN RECIBIR AHORA)
+            activeConn.on('data', handleIncomingData);
+            activeConn.on('close', () => {
+                notify("Conexión perdida.");
+                setTimeout(() => window.location.reload(), 2000); // Reset si se pierde
+            });
+
+            // Activar la pestaña según el rol inicial elegido
+            switchMode(defaultTab);
+        }
+
+        // ==========================================
+        // GESTIÓN DE PESTAÑAS (BIDIRECCIONAL)
+        // ==========================================
+        function switchMode(mode) {
+            // Limpiar estilos de botones
+            document.getElementById('tab-btn-send').classList.remove('active-tab');
+            document.getElementById('tab-btn-recv').classList.remove('active-tab');
+            
+            // Ocultar contenidos
+            document.getElementById('tab-content-send').classList.add('hidden');
+            document.getElementById('tab-content-recv').classList.add('hidden');
+
+            // Activar selección
+            document.getElementById(`tab-btn-${mode}`).classList.add('active-tab');
+            document.getElementById(`tab-content-${mode}`).classList.remove('hidden');
+        }
+
+
+        // ==========================================
+        // LÓGICA DE RECEPCIÓN (GLOBAL)
         // ==========================================
         let incomingFileInfo = null;
         let incomingFileData = [];
         let receivedBytes = 0;
 
-        function initReceiver() {
-            document.getElementById('code-text').innerText = baseID;
-            peer = new Peer(receiverID);
-
-            // Generar código QR apuntando a la URL del proyecto completa
-            const qrUrl = window.location.origin + window.location.pathname + "#" + baseID;
-            new QRCode(document.getElementById("qrcode"), { text: qrUrl, width: 160, height: 160 });
-
-            peer.on('open', () => console.log("ID del Receptor listo:", receiverID));
-
-            peer.on('connection', (conn) => {
-                document.getElementById('rx-qr-section').classList.add('hidden');
-                document.getElementById('rx-connected-section').classList.remove('hidden');
-                notify("¡Sincronización confirmada con el emisor!");
-
-                conn.on('data', (data) => {
-                    handleIncomingData(data);
-                });
-
-                conn.on('close', () => {
-                    document.getElementById('rx-qr-section').classList.remove('hidden');
-                    document.getElementById('rx-connected-section').classList.add('hidden');
-                    notify("Dispositivo emisor desconectado");
-                });
-            });
-        }
-
         function handleIncomingData(data) {
+            // Si recibimos datos, pasamos automáticamente a la pestaña de recibir
+            switchMode('recv');
+
             if (data.type === 'text') {
                 renderReceivedText(data.content);
-                notify("Texto/Enlace recibido");
+                notify("¡Nuevo mensaje recibido!");
                 return;
             }
 
@@ -400,7 +477,7 @@
                 
                 const blob = new Blob(incomingFileData, { type: incomingFileInfo.mime });
                 renderReceivedFile(blob, incomingFileInfo.name, incomingFileInfo.mime);
-                notify("Archivo guardado con éxito");
+                notify("¡Archivo recibido con éxito!");
                 
                 incomingFileInfo = null;
                 incomingFileData = [];
@@ -448,46 +525,8 @@
         }
 
         // ==========================================
-        // LÓGICA EMISOR (Vincular Manualmente)
+        // LÓGICA DE ENVÍO (GLOBAL)
         // ==========================================
-        function initSender() {
-            peer = new Peer(senderID);
-        }
-
-        function startManualConnection() {
-            const codeInput = document.getElementById('join-code-input').value.trim().toUpperCase();
-            if (codeInput.length < 4) {
-                alert("Por favor introduce un código de receptor válido.");
-                return;
-            }
-
-            const targetReceiverID = 'RX-' + codeInput;
-            const statusDiv = document.getElementById('tx-status');
-            statusDiv.classList.remove('hidden');
-            statusDiv.innerHTML = "Estableciendo sincronización... 🔄";
-
-            if(activeConn) activeConn.close();
-
-            activeConn = peer.connect(targetReceiverID, { reliable: true });
-
-            activeConn.on('open', () => {
-                document.getElementById('tx-setup-section').classList.add('hidden');
-                document.getElementById('tx-controls').classList.remove('hidden');
-                notify("Sincronización establecida. ¡Latido activado!");
-            });
-
-            activeConn.on('close', () => {
-                activeConn = null;
-                document.getElementById('tx-setup-section').classList.remove('hidden');
-                document.getElementById('tx-controls').classList.add('hidden');
-                statusDiv.innerHTML = "❌ Conexión cerrada o fallida. Verifica el código.";
-            });
-            
-            activeConn.on('error', () => {
-                statusDiv.innerHTML = "❌ Error al intentar vincular. Asegúrate de que el receptor esté abierto.";
-            });
-        }
-
         function sendText() {
             if (!activeConn) return notify("No hay ningún dispositivo vinculado");
             const input = document.getElementById('text-input');
@@ -496,10 +535,9 @@
 
             activeConn.send({ type: 'text', content: val });
             input.value = '';
-            notify("Texto enviado con éxito");
+            notify("Mensaje enviado");
         }
 
-        // Envio Segmentado Automático con progreso exacto
         document.getElementById('file-input').addEventListener('change', async (e) => {
             if (!activeConn) return notify("No estás conectado a ningún receptor");
             const file = e.target.files[0];
@@ -536,7 +574,7 @@
                     document.getElementById('tx-progress-text').style.display = 'none';
                     document.getElementById('file-input').disabled = false;
                     document.getElementById('file-input').value = ''; 
-                    notify("¡Archivo enviado con éxito!");
+                    notify("¡Archivo enviado al otro dispositivo!");
                 }
             }
             sendNextChunk();
