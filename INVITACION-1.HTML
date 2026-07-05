@@ -177,18 +177,17 @@
   .schedule{width:100%; border-collapse:collapse; margin-top:16px; font-size:14px;}
   .schedule th,.schedule td{border:1px solid rgba(0,0,0,0.1); padding:8px; text-align:center;}
 
-  /* --- Imagen final (CORREGIDO) --- */
+  /* --- Imagen final --- */
   .image-placeholder{
     width:100%;
     margin-top:16px;
     border-radius:12px;
-    overflow:hidden; /* Mantiene las esquinas redondeadas para la imagen */
-    /* Se elimina el padding y el fondo para que la imagen ocupe todo el espacio */
+    overflow:hidden; 
   }
   .image-placeholder img {
     width: 100%;
-    height: auto;  /* Mantiene la proporción original de la imagen */
-    display: block; /* Elimina espacios extra debajo de la imagen */
+    height: auto;  
+    display: block; 
   }
 </style>
 </head>
@@ -286,19 +285,20 @@
     <div class="image-placeholder">
         <img src="INVITACIONES/inv1/logo.jpg" alt="Logo de la Fundación CEA Valle Calchaquí">
     </div>
-    
-    <!-- Nuevo Botón Agregado -->
-    <button id="btnInscribirseSegundo" class="envi" style="margin-top: 20px;">Inscribirse al segundo Encuentro</button>
-    
   </div>
 </div>
 
 <script>
+// =========================================================================
+// VARIABLE MAESTRA: Cambia este número para cada nueva reunión (ej. 2, 3, 4)
+// =========================================================================
+const REUNION_ACTUAL = 2;
+
 (function(){
-  const LS_KEY='foro_done';
-  const intro=document.getElementById('introContainer');
-  const formPanel=document.getElementById('formPanel');
-  const thank=document.getElementById('thankPanel');
+  const LS_KEY = 'foro_reunion_registrada';
+  const intro = document.getElementById('introContainer');
+  const formPanel = document.getElementById('formPanel');
+  const thank = document.getElementById('thankPanel');
 
   function typeWriter(el,text,cb){
     el.textContent=''; let i=0;
@@ -314,13 +314,18 @@
     typeWriter(sc.querySelector('p')||sc.querySelector('h1'),text,()=>btn.classList.add('show'));
   }
 
-  // ----- LÓGICA DE INICIO CORREGIDA Y SIMPLIFICADA -----
-  if (localStorage.getItem(LS_KEY)) {
+  // ----- NUEVA LÓGICA DE VALIDACIÓN POR NÚMERO DE REUNIÓN -----
+  // Si el valor guardado coincide con el número de reunión actual, mostramos gracias.
+  // Si es diferente (o no existe), mostramos la intro para que se vuelvan a inscribir.
+  let reunionGuardada = localStorage.getItem(LS_KEY);
+
+  if (reunionGuardada == REUNION_ACTUAL) {
       intro.classList.add('hidden');
       formPanel.classList.add('hidden');
       thank.classList.remove('hidden');
   } else {
       typeWriter(document.getElementById('text1'),'¡ Bienvenidos !');
+      // Puedes adaptar el texto para que diga "Segundo", "Tercer", etc. 
       typeWriter(document.getElementById('sub1'),'Al Segundo encuentro del Foro Internacional de\nNeurodivergencia y Derechos Humanos',()=>document.getElementById('next1').classList.add('show'));
   }
 
@@ -328,11 +333,12 @@
   document.getElementById('next2').onclick=()=>showScreen('screen3','Por favor completa el formulario para confirmar tu participación',document.getElementById('toForm'));
   document.getElementById('toForm').onclick=()=>{intro.classList.add('hidden'); formPanel.classList.remove('hidden');};
 
+  // Al enviar el formulario, guardamos EL NÚMERO de esta reunión
   document.getElementById('fm3').onsubmit=e=>{
-    localStorage.setItem(LS_KEY,'true');
+    localStorage.setItem(LS_KEY, REUNION_ACTUAL);
   };
 
-  // ----- FUNCIÓN DE RESET CORREGIDA -----
+  // ----- FUNCIÓN DE RESET (Mantenida por seguridad, 5 clicks en el título) -----
   let clicks=0;
   document.getElementById('gracias').onclick=()=>{
     clicks++;  
@@ -352,27 +358,21 @@
     imgs[idx].classList.add('active');
   },3000);
 
-  // --- MODIFICACIÓN 3: LÓGICA PARA MOSTRAR/OCULTAR Y REQUERIR EL CAMPO DE CV ---
+  // LÓGICA PARA MOSTRAR/OCULTAR Y REQUERIR EL CAMPO DE CV
   const ponenteCheckbox = document.querySelector('input[name="participacion[]"][value="Ponente / Expositor"]');
   const cvContainer = document.getElementById('cvContainer');
   const cvFileInput = document.getElementById('cvFile');
 
   ponenteCheckbox.addEventListener('change', function() {
     if (this.checked) {
-      cvContainer.style.display = 'block'; // Muestra el campo de archivo
-      cvFileInput.required = true;         // Lo hace obligatorio
+      cvContainer.style.display = 'block'; 
+      cvFileInput.required = true;         
     } else {
-      cvContainer.style.display = 'none';  // Oculta el campo de archivo
-      cvFileInput.required = false;        // Le quita la obligatoriedad
-      cvFileInput.value = '';              // Limpia el valor si ya se había seleccionado un archivo
+      cvContainer.style.display = 'none';  
+      cvFileInput.required = false;        
+      cvFileInput.value = '';              
     }
   });
-
-  // --- NUEVO: LÓGICA DEL BOTÓN "Inscribirse al segundo Encuentro" ---
-  document.getElementById('btnInscribirseSegundo').onclick = function() {
-    localStorage.removeItem(LS_KEY);
-    window.location.href = 'https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/INVITACION-1.HTML';
-  };
 
 })();
 </script>
