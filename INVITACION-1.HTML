@@ -286,6 +286,10 @@
     <div class="image-placeholder">
         <img src="INVITACIONES/inv1/logo.jpg" alt="Logo de la Fundación CEA Valle Calchaquí">
     </div>
+    
+    <!-- Nuevo Botón Agregado -->
+    <button id="btnInscribirseSegundo" class="envi" style="margin-top: 20px;">Inscribirse al segundo Encuentro</button>
+    
   </div>
 </div>
 
@@ -363,6 +367,12 @@
       cvFileInput.value = '';              // Limpia el valor si ya se había seleccionado un archivo
     }
   });
+
+  // --- NUEVO: LÓGICA DEL BOTÓN "Inscribirse al segundo Encuentro" ---
+  document.getElementById('btnInscribirseSegundo').onclick = function() {
+    localStorage.removeItem(LS_KEY);
+    window.location.href = 'https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/INVITACION-1.HTML';
+  };
 
 })();
 </script>
