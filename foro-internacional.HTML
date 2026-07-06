@@ -45,8 +45,12 @@
 
         /* HERO SECTION */
         .hero-section { margin-top: var(--navbar-height); width: 100%; background: var(--primary-dark); color: white; display: flex; flex-direction: column; }
-        .hero-image-wrapper { width: 100%; height: 30vh; position: relative; }
-        .hero-image-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* NUEVO: Controles para el slider del Hero */
+        .hero-image-wrapper { width: 100%; height: 30vh; position: relative; overflow: hidden; cursor: pointer; }
+        .hero-slider-img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.6s ease-in-out; }
+        .hero-slider-img.fade-out { opacity: 0; }
+        
         .hero-content { padding: 30px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; }
         .hero-title { font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 800; margin-bottom: 15px; line-height: 1.1; text-align: center; }
         .hero-subtitle { font-size: 1.1rem; color: #d1f3f8; margin-bottom: 20px; text-align: center; max-width: 800px; }
@@ -64,10 +68,9 @@
         /* === NUEVA GALERÍA TIPO RED SOCIAL (FACEBOOK) === */
         .fb-gallery {
             display: grid;
-            /* El lado izquierdo (65%) para la imagen grande, derecho (35%) para los cuadrados */
             grid-template-columns: 65% calc(35% - 4px); 
-            grid-template-rows: 150px 150px; /* Dos filas de 150px */
-            gap: 4px; /* Espaciado fino estilo red social */
+            grid-template-rows: 150px 150px;
+            gap: 4px;
             border-radius: 12px;
             overflow: hidden;
             margin-bottom: 15px;
@@ -81,27 +84,14 @@
             text-decoration: none;
         }
 
-        .fb-gallery img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            transition: transform 0.3s;
-        }
+        .fb-gallery img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+        .fb-gallery .gallery-item:hover img { transform: scale(1.05); }
 
-        .fb-gallery .gallery-item:hover img {
-            transform: scale(1.05); /* Pequeño zoom al pasar el mouse */
-        }
-
-        /* Posicionamiento en el Grid */
-        .fb-gallery .item-1 { grid-row: 1 / 3; grid-column: 1 / 2; } /* Ocupa las dos filas */
-        .fb-gallery .item-2 { grid-row: 1 / 2; grid-column: 2 / 3; } /* Cuadrado superior derecho */
-        .fb-gallery .item-3 { grid-row: 2 / 3; grid-column: 2 / 3; } /* Cuadrado inferior derecho */
-        
-        /* Ocultar imágenes sobrantes en el DOM (pero siguen en Fancybox) */
+        .fb-gallery .item-1 { grid-row: 1 / 3; grid-column: 1 / 2; }
+        .fb-gallery .item-2 { grid-row: 1 / 2; grid-column: 2 / 3; }
+        .fb-gallery .item-3 { grid-row: 2 / 3; grid-column: 2 / 3; }
         .fb-gallery .hidden-item { display: none; }
 
-        /* Superposición para indicar más imágenes (+X) */
         .fb-gallery .more-images::after {
             content: attr(data-more);
             position: absolute;
@@ -117,7 +107,6 @@
             cursor: pointer;
         }
 
-        /* Otras filas de imágenes genéricas */
         .img-row { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
         .img-row img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; }
 
@@ -129,7 +118,6 @@
         .btn-participantes { background: var(--bg-light); border: 2px solid #ccc; color: var(--text-dark); transition: all 0.2s; }
         .btn-participantes:hover { background: #e2e2e2; }
 
-        /* INSCRIPCIONES */
         .btn-inscribirse { display: inline-block; background: var(--primary); color: white; text-decoration: none; padding: 15px 30px; border-radius: 30px; font-weight: 800; font-size: 1.2rem; margin: 20px 0; box-shadow: 0 4px 10px rgba(0, 107, 122, 0.3); transition: transform 0.2s; text-align: center; }
         .btn-inscribirse:hover { transform: scale(1.05); }
 
@@ -141,13 +129,19 @@
         .modal-close { position: absolute; top: 15px; right: 15px; background: #eee; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; }
         .modal-title { color: var(--primary); text-align: center; margin-bottom: 20px; font-weight: 800; font-size: 1.4rem; }
 
-        /* LISTA DE PARTICIPANTES EMERGENTE */
+        /* LISTA DE PARTICIPANTES EMERGENTE Y BANDERAS */
         .participantes-list { display: flex; flex-direction: column; gap: 10px; }
         .participante-row { display: flex; align-items: center; gap: 15px; padding: 10px; border-radius: 8px; background: #f9f9f9; cursor: pointer; transition: background 0.2s; border: 1px solid #eee; }
         .participante-row:hover { background: #ececec; border-color: var(--primary); }
-        .participante-row img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
+        .participante-row img.perfil-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
         .participante-info h4 { margin: 0; font-size: 1rem; color: var(--text-dark); }
-        .participante-info p { margin: 0; font-size: 0.8rem; color: #777; }
+        .participante-info p { margin: 0; font-size: 0.8rem; color: #777; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
+        
+        /* NUEVO: Estilos para Banderas y Redes Sociales */
+        .flag-icon { width: 22px; height: 16px; object-fit: cover; border-radius: 2px; border: 1px solid #ccc; }
+        .social-container { display: flex; gap: 15px; justify-content: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
+        .social-icon { width: 32px; height: 32px; object-fit: contain; cursor: pointer; transition: transform 0.2s; }
+        .social-icon:hover { transform: scale(1.15); }
 
         /* FORMS Y DONACIONES */
         .form-group { margin-bottom: 15px; text-align: left; }
@@ -170,7 +164,7 @@
     <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
     <nav class="navbar">
-        <div class="nav-brand">🧠 Foro Neurodiversidad</div>
+        <div class="nav-brand">🧠 Foro Internacional</div>
         <button class="btn-navbar-donar" onclick="openModal('modal-donacion-avanzada')">
             ❤️ Apoyar / Donar
         </button>
@@ -178,20 +172,21 @@
 
     <header class="hero-section">
         <div class="hero-content">
-            <h1 class="hero-title">Foro Internacional de Neurodiversidad</h1>
+            <h1 class="hero-title">Foro de Neurodiversidad y Neurodivergencia</h1>
             <p class="hero-subtitle">Construyendo una sociedad más inclusiva mediante la educación, la ciencia y la innovación.</p>
         </div>
-        <div class="hero-image-wrapper">
-            <a data-fancybox="gallery" src="recursos/imagenes/foro/logo-foro.jpeg">
-                <img src="recursos/imagenes/foro/logo-foro.jpeg" alt="Evento principal">
-            </a>
+        <!-- NUEVO: Wrapper dinámico para el Slider -->
+        <div class="hero-image-wrapper" onclick="ejecutarAccionHero()" title="Haz clic para saber más">
+            <img id="hero-slider-img" class="hero-slider-img" src="recursos/imagenes/foro/logo-foro.jpeg" alt="Evento principal">
         </div>
     </header>
 
     <main class="content-area">
 
         <article class="post-card">
-            <div class="pin-location" title="Ver ubicación" onclick="abrirUbicacion('Sede Principal', 'Nuestras oficionas se encuentran actualmente trabajando en la ciudad de Belen, Catamarca, Argentina. La Valle 174')">📍</div>
+            <!-- NUEVO: Ahora puedes pasar links de Facebook e Instagram al final -->
+            <div class="pin-location" title="Ver ubicación" onclick="abrirUbicacion('Sede Principal', 'Nuestras oficinas se encuentran actualmente trabajando en la ciudad de Belen, Catamarca, Argentina.\nLa Valle 174\nCodigo Postal K4750\nCelular: +54 3835 433833\nCorreo: fundacionceavallecalchaqui@gmail.com', 'https://www.facebook.com/cecilia.cedron.77', 'https://www.instagram.com/cea_valle_calchaqui/')">Ubicacion 📍</div>
+            
             <h2 class="post-title">¿Qué es el Foro y para qué sirve?</h2>
             <p class="post-text">
                 El Foro Internacional de Neurodiversidad es un espacio dedicado a visibilizar y promover los derechos de las personas neurodivergentes. Conecta a profesionales, educadores y familias para compartir herramientas que impulsen la inclusión real.
@@ -202,46 +197,11 @@
                 </button>
             </div>
         </article>
-
-        <article class="post-card">
-            <div class="pin-location" title="Ver ubicación" onclick="abrirUbicacion('Sede UNCA', 'Universidad, en la ciudad de Belén, Catamarca.\nFecha: 20,21,22 Noviembre 2025')">📍</div>
-            <h2 class="post-title">Primera reunion del Foro</h2>
-            
-            <div class="fb-gallery">
-                <a data-fancybox="gallery" src="recursos/imagenes/foro/escena2.jpeg" class="gallery-item item-1">
-                    <img src="recursos/imagenes/foro/escena2.jpeg" alt="Reunión 1">
-                </a>
-                
-                <a data-fancybox="gallery" src="recursos/imagenes/foro/escena1.jpeg" class="gallery-item item-2">
-                    <img src="recursos/imagenes/foro/escena1.jpeg" alt="Reunión 2">
-                </a>
-                
-                <a data-fancybox="gallery" src="recursos/imagenes/foro/escena3.jpeg" class="gallery-item item-3 more-images" data-more="+2">
-                    <img src="recursos/imagenes/foro/escena3.jpeg" alt="Reunión 3">
-                </a>
-
-                <a data-fancybox="gallery" src="recursos/imagenes/foro/escena4.jpeg" class="gallery-item hidden-item">
-                    <img src="recursos/imagenes/foro/escena4.jpeg" alt="Reunión 4">
-                </a>
-                <a data-fancybox="gallery" src="recursos/imagenes/foro/escena5.jpeg" class="gallery-item hidden-item">
-                    <img src="recursos/imagenes/foro/escena5.jpeg" alt="Reunión 5">
-                </a>
-            </div>
-
-            <div class="post-actions">
-                <button class="action-btn btn-like" data-post="Historial de Reuniones" onclick="iniciarLike('Primer reunion del Foro', this)">
-                    ❤️ <span class="like-text">Me Gusta</span>
-                </button>
-                <button class="action-btn btn-participantes" onclick="abrirListaParticipantes()">
-                    👥 Participantes
-                </button>
-            </div>
-        </article>
-
-        <article class="post-card" style="text-align: center; border: 2px dashed var(--primary); background: #f0fbfa;">
-            <div class="pin-location" title="Ver ubicación" onclick="abrirUbicacion('Plataforma Virtual & Presencial', 'El próximo foro contará con asistencia mixta. Presencial en el Auditorio de Belén, y salas de streaming para inscriptos remotos.')">📍</div>
+		
+		<article class="post-card" style="text-align: center; border: 2px dashed var(--primary); background: #f0fbfa;">
+            <div class="pin-location" title="Ver ubicación" onclick="abrirUbicacion('Plataforma Virtual & Presencial', 'Directora Cecilia Elizabeth Cedron\nEl próximo foro contará con asistencia mixta. Presencial en el Auditorio de Belén, y salas de streaming para inscriptos remotos.', '')">Leer mas..</div>
             <h2 class="post-title" style="padding-right: 0;">¡Inscripciones Abiertas!</h2>
-            <p class="post-text">Asegura tu lugar en la próxima edición. Los cupos son limitados.</p>
+            <p class="post-text">Fecha aun por confirmar, Noviembre 2026.</p>
             
             <a href="https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/INVITACION-1.HTML" class="btn-inscribirse">
                 📝 Inscribirse al próximo foro
@@ -266,60 +226,136 @@
             </div>
         </article>
 
+        <article class="post-card">
+            <div class="pin-location" title="Ver ubicación" onclick="abrirUbicacion('Sede UNCA', 'Universidad, en la ciudad de Belén, Catamarca.\nParticipantes 133\nSeguidores 2.501\nFecha: 20,21,22 Noviembre 2025', '', '')">Leer mas..</div>
+            <h2 class="post-title">Primera reunion del Foro</h2>
+            
+            <div class="fb-gallery">
+                <a data-fancybox="gallery" src="recursos/imagenes/foro/escena2.jpeg" class="gallery-item item-1">
+                    <img src="recursos/imagenes/foro/escena2.jpeg" alt="Reunión 1">
+                </a>
+                
+                <a data-fancybox="gallery" src="recursos/imagenes/foro/escena1.jpeg" class="gallery-item item-2">
+                    <img src="recursos/imagenes/foro/escena1.jpeg" alt="Reunión 2">
+                </a>
+                
+                <a data-fancybox="gallery" src="recursos/imagenes/foro/escena3.jpeg" class="gallery-item item-3 more-images" data-more="+2">
+                    <img src="recursos/imagenes/foro/escena3.jpeg" alt="Reunión 3">
+                </a>
+
+                <a data-fancybox="gallery" src="recursos/imagenes/foro/escena4.jpeg" class="gallery-item hidden-item">
+                    <img src="recursos/imagenes/foro/escena4.jpeg" alt="Reunión 4">
+                </a>
+                <a data-fancybox="gallery" src="recursos/imagenes/foro/escena5.jpeg" class="gallery-item hidden-item">
+                    <img src="recursos/imagenes/foro/escena5.jpeg" alt="Reunión 5">
+                </a>
+            </div>
+
+            <div class="post-actions">
+                <button class="action-btn btn-like" data-post="Primer reunion del Foro" onclick="iniciarLike('Primer reunion del Foro', this)">
+                    ❤️ <span class="like-text">Me Gusta</span>
+                </button>
+                <button class="action-btn btn-participantes" onclick="abrirListaParticipantes()">
+                    👥 Participantes
+                </button>
+            </div>
+        </article>
     </main>
 
+    <!-- MODAL UBICACIÓN -->
     <div id="modal-ubicacion" class="modal-overlay" onclick="closeModal(event)">
         <div class="modal-box" onclick="event.stopPropagation()">
             <button class="modal-close" onclick="closeModalId('modal-ubicacion')">×</button>
             <h3 class="modal-title">📍 Información de Ubicación</h3>
             <h4 id="ubicacion-titulo" style="color: var(--text-dark); margin-bottom: 10px; font-size: 1.1rem;">Lugar</h4>
-            <p id="ubicacion-desc" style="color: #555; line-height: 1.5;">Descripción...</p>
+            <p id="ubicacion-desc" style="color: #555; line-height: 1.5; white-space: pre-line;">Descripción...</p>
+            
+            <!-- NUEVO: Contenedor Redes de Ubicación -->
+            <div id="ubicacion-sociales" class="social-container"></div>
         </div>
     </div>
 
+    <!-- MODAL LISTA DE PARTICIPANTES -->
     <div id="modal-lista-participantes" class="modal-overlay" onclick="closeModal(event)">
         <div class="modal-box" onclick="event.stopPropagation()">
             <button class="modal-close" onclick="closeModalId('modal-lista-participantes')">×</button>
             <h3 class="modal-title">👥 Expositores y Participantes</h3>
             
             <div class="participantes-list">
-                <div class="participante-row" onclick="verPerfil('Dra. Elena Costa', 'España', 'Especialista en desarrollo cognitivo e investigadora sobre herramientas de software inclusivo.', 'elena.costa@email.com', 'https://i.pravatar.cc/150?img=1')">
-                    <img src="https://i.pravatar.cc/150?img=1" alt="Perfil">
+                <!-- NUEVO: Ahora la función de verPerfil acepta: nombre, pais, bandera, desc, contacto, img, fbLink, igLink -->
+                <div class="participante-row" onclick="verPerfil('Cecilia Elizabeth Cedron', 'Argentina', 'recursos/imagenes/banderas/arg.png', 'Directora de la fundacion CEA Valle Calchaqui\nDirectora del Foro Internacional de Neurodiversidad y Neurodivergencia\nPoliglota', 'fundacionceavallecalchaqui@gmail.com', 'recursos/imagenes/foro/cecilia.jpeg', 'https://www.facebook.com/cecilia.cedron.77', 'https://www.instagram.com/cea_valle_calchaqui/')">
+                    <img src="recursos/imagenes/foro/cecilia.jpeg" alt="Perfil" class="perfil-avatar">
                     <div class="participante-info">
-                        <h4>Dra. Elena Costa</h4>
-                        <p>🇪🇸 España</p>
+                        <h4>Cecilia Elizabeth Cedron (Directora)</h4>
+                        <p><img src="recursos/imagenes/banderas/arg.png" class="flag-icon" alt="Bandera"> Argentina</p>
                     </div>
                 </div>
-                
-                <div class="participante-row" onclick="verPerfil('Lic. Martín Suárez', 'Argentina', 'Psicólogo especializado en el espectro autista y organizador principal del evento.', 'martin.s@email.com', 'https://i.pravatar.cc/150?img=11')">
-                    <img src="https://i.pravatar.cc/150?img=11" alt="Perfil">
+				
+				<div class="participante-row" onclick="verPerfil('Mario Daniel Hoornaert', 'Argentina', 'recursos/imagenes/banderas/arg.png', 'Desarrollador de software y sitios web\nCelular: +54 3835 433833\nVive en la ciudad de Belen, Catamarca', 'danielcedron8@gmail.com', 'recursos/imagenes/foro/mario.jpg', '')">
+					<img src="recursos/imagenes/foro/mario.jpg" alt="Perfil" class="perfil-avatar">
+					<div class="participante-info">
+						<h4>Mario Hoornaert (Tecnico)</h4>
+                        <p><img src="recursos/imagenes/banderas/arg.png" class="flag-icon" alt="Bandera"> Argentina</p>
+					</div>
+				</div>
+				
+                <div class="participante-row" onclick="verPerfil('Leticia Di Marzo', 'Argentina', 'recursos/imagenes/banderas/arg.png', 'Docente y Disertante\nActivista', 'fundacionceavallecalchaqui@gmail.com', 'recursos/imagenes/foro/leticia.jpg', '', '')">
+                    <img src="recursos/imagenes/foro/leticia.jpg" alt="Perfil" class="perfil-avatar">
                     <div class="participante-info">
-                        <h4>Lic. Martín Suárez</h4>
-                        <p>🇦🇷 Argentina</p>
+                        <h4>Leticia Di Marzo (Ponencia)</h4>
+                        <p><img src="recursos/imagenes/banderas/arg.png" class="flag-icon" alt="Bandera"> Argentina</p>
                     </div>
                 </div>
+				
+				<div class="participante-row" onclick="verPerfil('André Agramont', 'Bolivia', 'recursos/imagenes/banderas/bo.png', 'Director Ejecutivo OTEA\nPresidente de la Red Boliviana de Padres de personas con Autismo', 'fundacionceavallecalchaqui@gmail.com', 'recursos/imagenes/foro/andre.jpg', '', '')">
+					<img src="recursos/imagenes/foro/andre.jpg" alt="Perfil" class="perfil-avatar">
+					<div class="participante-info">
+						<h4>André Agramont (Ponencia)</h4>
+                        <p><img src="recursos/imagenes/banderas/bo.png" class="flag-icon" alt="Bandera"> Bolivia</p>
+					</div>
+				</div>
+				
+				<div class="participante-row" onclick="verPerfil('Alicia Valdez', 'Argentina', 'recursos/imagenes/banderas/arg.png', 'Abogada\nActivista', 'fundacionceavallecalchaqui@gmail.com', 'recursos/imagenes/foro/alicia.jpg', '', '')">
+					<img src="recursos/imagenes/foro/alicia.jpg" alt="Perfil" class="perfil-avatar">
+					<div class="participante-info">
+						<h4>Alicia Valdez (Ponencia)</h4>
+                        <p><img src="recursos/imagenes/banderas/arg.png" class="flag-icon" alt="Bandera"> Argentina</p>
+					</div>
+				</div>
                 
-                <div class="participante-row" onclick="verPerfil('Ing. Sofía Reyes', 'México', 'Desarrolladora de software enfocado en accesibilidad y neurotecnología.', 's.reyes@email.com', 'https://i.pravatar.cc/150?img=5')">
-                    <img src="https://i.pravatar.cc/150?img=5" alt="Perfil">
+                <div class="participante-row" onclick="verPerfil('Roberto Erosa', 'Mexico', 'recursos/imagenes/banderas/mx.png', 'Psicólogo especializado en el espectro autista y organizador principal del evento.\nActivista y Referente', 'fundacionceavallecalchaqui@gmail.com', 'recursos/imagenes/foro/roberto.jpg', '', '')">
+                    <img src="recursos/imagenes/foro/roberto.jpg" alt="Perfil" class="perfil-avatar">
                     <div class="participante-info">
-                        <h4>Ing. Sofía Reyes</h4>
-                        <p>🇲🇽 México</p>
+                        <h4>Roberto Erosa (Ponencia)</h4>
+                        <p><img src="recursos/imagenes/banderas/mx.png" class="flag-icon" alt="Bandera"> Mexico</p>
+                    </div>
+                </div>
+
+                <div class="participante-row" onclick="verPerfil('Gabriela Nohor', 'Dinamarca', 'recursos/imagenes/banderas/dk.png', 'Filosofa y Referente Mundial\nActivista', 'fundacionceavallecalchaqui@gmail.com', 'recursos/imagenes/foro/nhor.jpg', '', '')">
+                    <img src="recursos/imagenes/foro/nhor.jpg" alt="Perfil" class="perfil-avatar">
+                    <div class="participante-info">
+                        <h4>Gabriela Nohor (Ponencia)</h4>
+                        <p><img src="recursos/imagenes/banderas/dk.png" class="flag-icon" alt="Bandera"> Dinamarca</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- MODAL PERFIL INDIVIDUAL -->
     <div id="modal-perfil-expositor" class="modal-overlay" onclick="closeModal(event)">
         <div class="modal-box" onclick="event.stopPropagation()" style="text-align: center;">
             <button class="modal-close" onclick="volverListaParticipantes()">←</button>
             <img id="perfil-foto" src="" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 4px solid var(--primary);" alt="Foto">
             <h3 id="perfil-nombre" style="color: var(--primary); font-size: 1.5rem; margin-bottom: 5px;">Nombre</h3>
-            <p id="perfil-pais" style="color: #777; font-weight: bold; margin-bottom: 15px;">País</p>
-            <p id="perfil-desc" style="font-size: 0.95rem; color: #444; margin-bottom: 15px; line-height: 1.5;">Descripción...</p>
+            <p id="perfil-pais" style="color: #777; font-weight: bold; margin-bottom: 15px; display:flex; justify-content:center; align-items:center; gap:8px;">País</p>
+            <p id="perfil-desc" style="font-size: 0.95rem; color: #444; margin-bottom: 15px; line-height: 1.5; white-space: pre-line;">Descripción...</p>
             <div style="background: var(--bg-light); padding: 10px; border-radius: 8px;">
                 <strong>Contacto:</strong> <span id="perfil-contacto"></span>
             </div>
+            
+            <!-- NUEVO: Contenedor Redes de Perfil -->
+            <div id="perfil-sociales" class="social-container"></div>
         </div>
     </div>
 
@@ -390,24 +426,45 @@
             }
         }
 
-        /* --- PINES DE UBICACIÓN --- */
-        function abrirUbicacion(titulo, descripcion) {
+        /* --- NUEVO: SISTEMA DE REDES SOCIALES --- */
+        function crearIconosSociales(contenedorId, fbLink, igLink) {
+            const container = document.getElementById(contenedorId);
+            container.innerHTML = '';
+            
+            if (fbLink) {
+                container.innerHTML += `<a href="${fbLink}" target="_blank" onclick="event.stopPropagation()"><img src="recursos/imagenes/redes/face.png" class="social-icon" alt="Facebook"></a>`;
+            }
+            if (igLink) {
+                container.innerHTML += `<a href="${igLink}" target="_blank" onclick="event.stopPropagation()"><img src="recursos/imagenes/redes/ig.png" class="social-icon" alt="Instagram"></a>`;
+            }
+            
+            // Si no hay redes, oculta el contenedor para que no sobre espacio
+            container.style.display = (fbLink || igLink) ? 'flex' : 'none';
+        }
+
+        /* --- PINES DE UBICACIÓN (MODIFICADO) --- */
+        function abrirUbicacion(titulo, descripcion, fbLink, igLink) {
             document.getElementById('ubicacion-titulo').innerText = titulo;
             document.getElementById('ubicacion-desc').innerText = descripcion;
+            crearIconosSociales('ubicacion-sociales', fbLink, igLink);
             openModal('modal-ubicacion');
         }
 
-        /* --- SISTEMA DE PARTICIPANTES EMERGENTE --- */
+        /* --- SISTEMA DE PARTICIPANTES EMERGENTE (MODIFICADO) --- */
         function abrirListaParticipantes() {
             openModal('modal-lista-participantes');
         }
         
-        function verPerfil(nombre, pais, desc, contacto, imgUrl) {
+        function verPerfil(nombre, pais, banderaUrl, desc, contacto, imgUrl, fbLink, igLink) {
             document.getElementById('perfil-foto').src = imgUrl;
             document.getElementById('perfil-nombre').innerText = nombre;
-            document.getElementById('perfil-pais').innerText = '📍 ' + pais;
+            // Interpola la imagen de la bandera dentro del país
+            document.getElementById('perfil-pais').innerHTML = `<img src="${banderaUrl}" class="flag-icon" alt="Bandera"> ${pais}`;
             document.getElementById('perfil-desc').innerText = desc;
             document.getElementById('perfil-contacto').innerText = contacto;
+            
+            crearIconosSociales('perfil-sociales', fbLink, igLink);
+            
             document.getElementById('modal-lista-participantes').classList.remove('active');
             document.getElementById('modal-perfil-expositor').classList.add('active');
         }
@@ -415,6 +472,43 @@
         function volverListaParticipantes() {
             document.getElementById('modal-perfil-expositor').classList.remove('active');
             document.getElementById('modal-lista-participantes').classList.add('active');
+        }
+
+        /* --- NUEVO: HERO SLIDER INTERPOLADO --- */
+        const heroSlides = [
+            { // Abre un enlace externo
+                src: "recursos/imagenes/foro/logo-foro.jpeg",
+                action: () => window.open("https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/INVITACION-1.HTML", "_blank")
+            },
+            { // Abre un perfil especifico (Ejemplo: Cecilia Cedron)
+                src: "recursos/imagenes/foro/escena6.jpg",
+                action: () => verPerfil('Cecilia Elizabeth Cedron', 'Argentina', 'recursos/banderas/ar.png', 'Directora de la fundacion CEA Valle Calchaqui\nDirectora del Foro Internacional de Neurodiversidad y Neurodivergencia\nPoliglota', 'fundacionceavallecalchaqui@gmail.com', 'recursos/imagenes/foro/cecilia.jpeg', 'https://facebook.com', 'https://instagram.com')
+            },
+            { // Abre la lista de participantes general
+                src: "recursos/imagenes/foro/escena2.jpeg",
+                action: () => abrirListaParticipantes()
+            }
+        ];
+        
+        let currentSlideIdx = 0;
+        const heroImg = document.getElementById('hero-slider-img');
+        
+        function cambiarImagenHero() {
+            heroImg.classList.add('fade-out'); // Inicia la transición CSS de desaparición
+            
+            setTimeout(() => {
+                currentSlideIdx = (currentSlideIdx + 1) % heroSlides.length; // Avanza el índice
+                heroImg.src = heroSlides[currentSlideIdx].src; // Cambia la imagen
+                heroImg.classList.remove('fade-out'); // Inicia la transición CSS de aparición
+            }, 600); // 600ms coinciden con el transition del CSS
+        }
+        
+        setInterval(cambiarImagenHero, 4000); // Rota la imagen cada 4 segundos
+        
+        function ejecutarAccionHero() {
+            if (heroSlides[currentSlideIdx].action) {
+                heroSlides[currentSlideIdx].action(); // Ejecuta la función según la imagen actual
+            }
         }
 
         /* --- SISTEMA DE DONACIONES --- */
