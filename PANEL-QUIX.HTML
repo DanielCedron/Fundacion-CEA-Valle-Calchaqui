@@ -53,7 +53,7 @@
             font-size: 14px;
         }
 
-        input {
+        input[type="text"], input[type="file"] {
             width: 100%;
             padding: 12px;
             margin-bottom: 15px;
@@ -63,6 +63,11 @@
             border-radius: 6px;
             box-sizing: border-box;
             font-size: 14px;
+        }
+        
+        input[type="file"] {
+            padding: 8px;
+            cursor: pointer;
         }
         
         input:focus {
@@ -107,103 +112,139 @@
         <!-- SECCIÓN: Novedad 1 -->
         <div class="section">
             <h3>Cartel: Novedad 1</h3>
-            <label>Link de la Imagen (Nov 1):</label>
-            <input type="text" id="imgNov1" placeholder="Ej: https://misitio.com/oferta.jpg">
+            <label>Seleccionar Imagen desde la PC (Nov 1):</label>
+            <input type="file" id="fileNov1" accept="image/*">
             
             <label>Link de Destino (Al hacer clic):</label>
             <input type="text" id="urlNov1" placeholder="Ej: https://store.steampowered.com/app/123">
             
-            <button onclick="actualizarDatos('nov1', 'imgNov1', 'urlNov1', 'statusNov1')">Actualizar Novedad 1</button>
+            <button onclick="actualizarDatos('nov1', 'fileNov1', 'urlNov1', 'statusNov1')">Subir y Actualizar Novedad 1</button>
             <div id="statusNov1" class="status"></div>
         </div>
 
         <!-- SECCIÓN: Novedad 2 -->
         <div class="section">
             <h3>Cartel: Novedad 2</h3>
-            <label>Link de la Imagen (Nov 2):</label>
-            <input type="text" id="imgNov2" placeholder="Ej: https://misitio.com/torneo.jpg">
+            <label>Seleccionar Imagen desde la PC (Nov 2):</label>
+            <input type="file" id="fileNov2" accept="image/*">
             
             <label>Link de Destino (Al hacer clic):</label>
             <input type="text" id="urlNov2" placeholder="Ej: https://youtube.com/video">
             
-            <button onclick="actualizarDatos('nov2', 'imgNov2', 'urlNov2', 'statusNov2')">Actualizar Novedad 2</button>
+            <button onclick="actualizarDatos('nov2', 'fileNov2', 'urlNov2', 'statusNov2')">Subir y Actualizar Novedad 2</button>
             <div id="statusNov2" class="status"></div>
         </div>
 
-        <!-- SECCIÓN: Botón Juegos (Próximamente / Actualizable) -->
+        <!-- SECCIÓN: Botón Juegos -->
         <div class="section">
             <h3>Sección: Juegos</h3>
-            <label>Link de la Imagen (Fondo Juegos):</label>
-            <input type="text" id="imgJuegos" placeholder="Ej: https://misitio.com/juegos_bg.jpg">
+            <label>Seleccionar Imagen (Fondo Juegos):</label>
+            <input type="file" id="fileJuegos" accept="image/*">
             
             <label>Link de Destino (Web de Juegos):</label>
             <input type="text" id="urlJuegos" placeholder="Ej: https://tusitio.com/juegos">
             
-            <button onclick="actualizarDatos('juegos', 'imgJuegos', 'urlJuegos', 'statusJuegos')">Actualizar Sección Juegos</button>
+            <button onclick="actualizarDatos('juegos', 'fileJuegos', 'urlJuegos', 'statusJuegos')">Subir y Actualizar Juegos</button>
             <div id="statusJuegos" class="status"></div>
         </div>
 
         <!-- SECCIÓN: Botón Tienda -->
         <div class="section">
             <h3>Sección: Tienda</h3>
-            <label>Link de la Imagen (Fondo Tienda):</label>
-            <input type="text" id="imgTienda" placeholder="Ej: https://misitio.com/tienda_bg.jpg">
+            <label>Seleccionar Imagen (Fondo Tienda):</label>
+            <input type="file" id="fileTienda" accept="image/*">
             
             <label>Link de Destino (Web de la Tienda):</label>
             <input type="text" id="urlTienda" placeholder="Ej: https://tusitio.com/tienda">
             
-            <button onclick="actualizarDatos('tienda', 'imgTienda', 'urlTienda', 'statusTienda')">Actualizar Sección Tienda</button>
+            <button onclick="actualizarDatos('tienda', 'fileTienda', 'urlTienda', 'statusTienda')">Subir y Actualizar Tienda</button>
             <div id="statusTienda" class="status"></div>
         </div>
 
     </div>
 
-    <!-- SDK de Firebase (Modular) -->
+    <!-- SDK de Firebase (Solo Database) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref as dbRef, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // Conexión con tu base de datos
+        // ==========================================
+        // 1. PON TU CLAVE DE IMGBB AQUÍ
+        // ==========================================
+        const IMGBB_API_KEY = "PEGA_AQUI_TU_CLAVE_DE_IMGBB";
+
+        // ==========================================
+        // 2. CONEXIÓN A TU FIREBASE (Igual que antes)
+        // ==========================================
         const firebaseConfig = {
             databaseURL: "https://quix-ce6d9-default-rtdb.firebaseio.com/"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Función global y reutilizable para enviar datos
-        window.actualizarDatos = function(rutaDB, idInputImg, idInputUrl, idStatus) {
-            const linkImagen = document.getElementById(idInputImg).value.trim();
+        // Función de subida
+        window.actualizarDatos = async function(rutaDB, idInputFile, idInputUrl, idStatus) {
+            const fileInput = document.getElementById(idInputFile);
             const linkDestino = document.getElementById(idInputUrl).value.trim();
             const statusElement = document.getElementById(idStatus);
 
-            if (linkImagen === "" || linkDestino === "") {
-                statusElement.textContent = "Error: Debes rellenar ambos campos.";
+            if (fileInput.files.length === 0 || linkDestino === "") {
+                statusElement.textContent = "Error: Debes seleccionar una imagen y poner un link de destino.";
                 statusElement.className = "status error";
                 return;
             }
 
-            statusElement.textContent = "Enviando a Firebase...";
+            if (IMGBB_API_KEY === "68faba876c6a75e2a3569b6467f976d1") {
+                statusElement.textContent = "Error: No has puesto tu clave de ImgBB en el código HTML.";
+                statusElement.className = "status error";
+                return;
+            }
+
+            const archivoFisico = fileInput.files[0];
+            statusElement.textContent = "Subiendo imagen a ImgBB... (espera unos segundos)";
             statusElement.className = "status";
 
-            // Sobrescribe o crea los datos en la ruta indicada (ej: novedades/nov1)
-            set(ref(db, 'novedades/' + rutaDB), {
-                imagen: linkImagen,
-                url: linkDestino
-            })
-            .then(() => {
-                statusElement.textContent = "¡Contenido actualizado correctamente!";
+            try {
+                // 1. Preparamos la imagen para enviarla a ImgBB
+                const formData = new FormData();
+                formData.append("image", archivoFisico);
+
+                // 2. Subimos la imagen usando la API de ImgBB
+                const respuestaImgbb = await fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
+                    method: "POST",
+                    body: formData
+                });
+                
+                const datosImgbb = await respuestaImgbb.json();
+
+                if (!datosImgbb.success) {
+                    throw new Error("ImgBB rechazó la imagen. Comprueba tu API Key.");
+                }
+
+                // 3. Obtenemos el link público directo de la imagen subida
+                const linkImagenDescarga = datosImgbb.data.url;
+
+                statusElement.textContent = "¡Imagen subida! Guardando en Firebase...";
+
+                // 4. Guardamos todo en tu Realtime Database
+                await set(dbRef(db, 'novedades/' + rutaDB), {
+                    imagen: linkImagenDescarga,
+                    url: linkDestino
+                });
+
+                statusElement.textContent = "¡Actualizado con éxito en el Launcher!";
                 statusElement.className = "status success";
                 
-                // Borrar el mensaje de éxito después de 3 segundos
+                fileInput.value = "";
+                
                 setTimeout(() => {
                     statusElement.textContent = "";
-                }, 3000);
-            })
-            .catch((error) => {
-                statusElement.textContent = "Error de conexión: " + error.message;
+                }, 4000);
+
+            } catch (error) {
+                statusElement.textContent = "Error: " + error.message;
                 statusElement.className = "status error";
-            });
+            }
         };
     </script>
 
