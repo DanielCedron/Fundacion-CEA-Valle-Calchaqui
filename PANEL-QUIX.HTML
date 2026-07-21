@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - QuixLauncher</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            margin: 0;
+        }
+        
+        .container {
+            background-color: #2a2a2a;
+            padding: 30px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        h1 {
+            text-align: center;
+            border-bottom: 2px solid #444;
+            padding-bottom: 15px;
+            margin-top: 0;
+            color: #f1f1f1;
+        }
+
+        .section {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .section h3 {
+            margin-top: 0;
+            color: #4CAF50;
+            font-size: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #bbb;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background-color: #1f1f1f;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .status {
+            margin-top: 12px;
+            font-size: 14px;
+            text-align: center;
+            font-weight: bold;
+            min-height: 20px;
+        }
+
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>QuixLauncher Admin</h1>
+
+        <!-- SECCIÓN: Novedad 1 -->
+        <div class="section">
+            <h3>Cartel: Novedad 1</h3>
+            <label>Link de la Imagen (Nov 1):</label>
+            <input type="text" id="imgNov1" placeholder="Ej: https://misitio.com/oferta.jpg">
+            
+            <label>Link de Destino (Al hacer clic):</label>
+            <input type="text" id="urlNov1" placeholder="Ej: https://store.steampowered.com/app/123">
+            
+            <button onclick="actualizarDatos('nov1', 'imgNov1', 'urlNov1', 'statusNov1')">Actualizar Novedad 1</button>
+            <div id="statusNov1" class="status"></div>
+        </div>
+
+        <!-- SECCIÓN: Novedad 2 -->
+        <div class="section">
+            <h3>Cartel: Novedad 2</h3>
+            <label>Link de la Imagen (Nov 2):</label>
+            <input type="text" id="imgNov2" placeholder="Ej: https://misitio.com/torneo.jpg">
+            
+            <label>Link de Destino (Al hacer clic):</label>
+            <input type="text" id="urlNov2" placeholder="Ej: https://youtube.com/video">
+            
+            <button onclick="actualizarDatos('nov2', 'imgNov2', 'urlNov2', 'statusNov2')">Actualizar Novedad 2</button>
+            <div id="statusNov2" class="status"></div>
+        </div>
+
+        <!-- SECCIÓN: Botón Juegos (Próximamente / Actualizable) -->
+        <div class="section">
+            <h3>Sección: Juegos</h3>
+            <label>Link de la Imagen (Fondo Juegos):</label>
+            <input type="text" id="imgJuegos" placeholder="Ej: https://misitio.com/juegos_bg.jpg">
+            
+            <label>Link de Destino (Web de Juegos):</label>
+            <input type="text" id="urlJuegos" placeholder="Ej: https://tusitio.com/juegos">
+            
+            <button onclick="actualizarDatos('juegos', 'imgJuegos', 'urlJuegos', 'statusJuegos')">Actualizar Sección Juegos</button>
+            <div id="statusJuegos" class="status"></div>
+        </div>
+
+        <!-- SECCIÓN: Botón Tienda -->
+        <div class="section">
+            <h3>Sección: Tienda</h3>
+            <label>Link de la Imagen (Fondo Tienda):</label>
+            <input type="text" id="imgTienda" placeholder="Ej: https://misitio.com/tienda_bg.jpg">
+            
+            <label>Link de Destino (Web de la Tienda):</label>
+            <input type="text" id="urlTienda" placeholder="Ej: https://tusitio.com/tienda">
+            
+            <button onclick="actualizarDatos('tienda', 'imgTienda', 'urlTienda', 'statusTienda')">Actualizar Sección Tienda</button>
+            <div id="statusTienda" class="status"></div>
+        </div>
+
+    </div>
+
+    <!-- SDK de Firebase (Modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        // Conexión con tu base de datos
+        const firebaseConfig = {
+            databaseURL: "https://quix-ce6d9-default-rtdb.firebaseio.com/"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Función global y reutilizable para enviar datos
+        window.actualizarDatos = function(rutaDB, idInputImg, idInputUrl, idStatus) {
+            const linkImagen = document.getElementById(idInputImg).value.trim();
+            const linkDestino = document.getElementById(idInputUrl).value.trim();
+            const statusElement = document.getElementById(idStatus);
+
+            if (linkImagen === "" || linkDestino === "") {
+                statusElement.textContent = "Error: Debes rellenar ambos campos.";
+                statusElement.className = "status error";
+                return;
+            }
+
+            statusElement.textContent = "Enviando a Firebase...";
+            statusElement.className = "status";
+
+            // Sobrescribe o crea los datos en la ruta indicada (ej: novedades/nov1)
+            set(ref(db, 'novedades/' + rutaDB), {
+                imagen: linkImagen,
+                url: linkDestino
+            })
+            .then(() => {
+                statusElement.textContent = "¡Contenido actualizado correctamente!";
+                statusElement.className = "status success";
+                
+                // Borrar el mensaje de éxito después de 3 segundos
+                setTimeout(() => {
+                    statusElement.textContent = "";
+                }, 3000);
+            })
+            .catch((error) => {
+                statusElement.textContent = "Error de conexión: " + error.message;
+                statusElement.className = "status error";
+            });
+        };
+    </script>
+
+</body>
+</html>
