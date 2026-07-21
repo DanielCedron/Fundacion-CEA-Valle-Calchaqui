@@ -164,17 +164,18 @@
     </div>
 
     <!-- SDK de Firebase (Solo Database) -->
+    <!-- SDK de Firebase (Solo Database) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref as dbRef, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         // ==========================================
-        // 1. PON TU CLAVE DE IMGBB AQUÍ
+        // 1. TU CLAVE DE IMGBB
         // ==========================================
         const IMGBB_API_KEY = "68faba876c6a75e2a3569b6467f976d1";
 
         // ==========================================
-        // 2. CONEXIÓN A TU FIREBASE (Igual que antes)
+        // 2. CONEXIÓN A TU FIREBASE
         // ==========================================
         const firebaseConfig = {
             databaseURL: "https://quix-ce6d9-default-rtdb.firebaseio.com/"
@@ -194,8 +195,9 @@
                 return;
             }
 
-            if (IMGBB_API_KEY === "68faba876c6a75e2a3569b6467f976d1") {
-                statusElement.textContent = "Error: No has puesto tu clave de ImgBB en el código HTML.";
+            // Validación corregida (comprueba si olvidaste cambiar el texto predeterminado)
+            if (IMGBB_API_KEY === "" || IMGBB_API_KEY.includes("PEGA_AQUI")) {
+                statusElement.textContent = "Error: No has puesto tu clave de ImgBB válida en el código HTML.";
                 statusElement.className = "status error";
                 return;
             }
@@ -205,11 +207,9 @@
             statusElement.className = "status";
 
             try {
-                // 1. Preparamos la imagen para enviarla a ImgBB
                 const formData = new FormData();
                 formData.append("image", archivoFisico);
 
-                // 2. Subimos la imagen usando la API de ImgBB
                 const respuestaImgbb = await fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
                     method: "POST",
                     body: formData
@@ -221,12 +221,10 @@
                     throw new Error("ImgBB rechazó la imagen. Comprueba tu API Key.");
                 }
 
-                // 3. Obtenemos el link público directo de la imagen subida
                 const linkImagenDescarga = datosImgbb.data.url;
 
                 statusElement.textContent = "¡Imagen subida! Guardando en Firebase...";
 
-                // 4. Guardamos todo en tu Realtime Database
                 await set(dbRef(db, 'novedades/' + rutaDB), {
                     imagen: linkImagenDescarga,
                     url: linkDestino
