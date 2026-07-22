@@ -4,211 +4,289 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Control - QuixLauncher</title>
+    
+    <!-- Cargar estilos de Cropper.js -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+
     <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
         body {
-            background-color: #1a1a1a;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            padding: 40px 20px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         
-        .container {
-            background-color: #2a2a2a;
-            padding: 30px;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 600px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 {
+            font-size: 2.5rem; margin: 0;
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        
-        h1 {
-            text-align: center;
-            border-bottom: 2px solid #444;
-            padding-bottom: 15px;
-            margin-top: 0;
-            color: #f1f1f1;
+        .header p { color: var(--text-muted); }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px; width: 100%; max-width: 1100px;
         }
 
-        .section {
-            background-color: #333;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #4CAF50;
+        .card {
+            background-color: var(--card-bg); padding: 25px;
+            border-radius: 16px; border: 1px solid var(--border-color);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
-        .section h3 {
-            margin-top: 0;
-            color: #4CAF50;
-            font-size: 18px;
+        .card h3 {
+            margin-top: 0; color: var(--primary); font-size: 1.2rem;
+            border-bottom: 1px solid var(--border-color); padding-bottom: 10px;
         }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #bbb;
-            font-size: 14px;
+        label { display: block; margin: 15px 0 5px; color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
+
+        input[type="text"], input[type="number"], input[type="file"] {
+            width: 100%; padding: 12px; background-color: var(--bg-color);
+            border: 1px solid var(--border-color); color: var(--text-main);
+            border-radius: 8px; box-sizing: border-box; font-size: 0.95rem;
         }
 
-        input[type="text"], input[type="file"] {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            background-color: #1f1f1f;
-            border: 1px solid #555;
-            color: #fff;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 14px;
+        input[type="file"]::file-selector-button {
+            background-color: var(--border-color); color: white; border: none;
+            padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-right: 10px;
         }
-        
-        input[type="file"] {
-            padding: 8px;
-            cursor: pointer;
+
+        .preview-container {
+            width: 100%; height: 160px; background-color: #000;
+            border-radius: 8px; margin-top: 15px; display: flex;
+            align-items: center; justify-content: center; border: 1px dashed var(--border-color);
         }
-        
-        input:focus {
-            outline: none;
-            border-color: #4CAF50;
-        }
+        .preview-img { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
 
         button {
-            width: 100%;
-            padding: 12px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background-color 0.3s;
+            width: 100%; padding: 12px; margin-top: 20px; background-color: var(--primary);
+            color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600;
         }
+        button:hover { background-color: var(--primary-hover); }
 
-        button:hover {
-            background-color: #45a049;
+        .status { margin-top: 15px; font-size: 0.9rem; text-align: center; font-weight: 500; min-height: 20px; }
+        .success { color: var(--success); } .error { color: var(--error); } .loading { color: var(--primary); }
+
+        /* ESTILOS DEL MODAL DE RECORTE */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center;
         }
-
-        .status {
-            margin-top: 12px;
-            font-size: 14px;
-            text-align: center;
-            font-weight: bold;
-            min-height: 20px;
+        .modal-content {
+            background: var(--card-bg); padding: 25px; border-radius: 12px;
+            width: 90%; max-width: 700px; border: 1px solid var(--border-color);
         }
-
-        .success { color: #4CAF50; }
-        .error { color: #f44336; }
+        .modal-content h3 { margin-top: 0; color: white; }
+        .cropper-container-wrapper {
+            width: 100%; height: 50vh; background: #000; margin-bottom: 20px;
+        }
+        .modal-actions { display: flex; gap: 10px; }
+        .btn-secondary { background-color: #475569; }
+        .btn-secondary:hover { background-color: #334155; }
+        .btn-success { background-color: var(--success); }
+        .btn-success:hover { background-color: #059669; }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="header">
         <h1>QuixLauncher Admin</h1>
+        <p>Panel de control en tiempo real</p>
+    </div>
 
+    <div class="dashboard">
+        
         <!-- SECCIÓN: Novedad 1 -->
-        <div class="section">
-            <h3>Cartel: Novedad 1</h3>
-            <label>Seleccionar Imagen desde la PC (Nov 1):</label>
-            <input type="file" id="fileNov1" accept="image/*">
+        <div class="card">
+            <h3>📢 Novedad 1 (Cartel Vertical)</h3>
+            <!-- 24/35 es la proporción equivalente a 240x350 -->
+            <label>Seleccionar Imagen:</label>
+            <input type="file" id="fileNov1" accept="image/*" onchange="abrirRecorte(this, 'prevNov1', 24/35)">
+            <div class="preview-container"><img id="prevNov1" class="preview-img" alt="Vista previa"></div>
             
-            <label>Link de Destino (Al hacer clic):</label>
+            <label>Link de Destino:</label>
             <input type="text" id="urlNov1" placeholder="Ej: https://store.steampowered.com/app/123">
             
-            <button onclick="actualizarDatos('nov1', 'fileNov1', 'urlNov1', 'statusNov1')">Subir y Actualizar Novedad 1</button>
+            <button onclick="actualizarDatos('nov1', 'fileNov1', 'urlNov1', 'statusNov1')">Subir Novedad 1</button>
             <div id="statusNov1" class="status"></div>
         </div>
 
         <!-- SECCIÓN: Novedad 2 -->
-        <div class="section">
-            <h3>Cartel: Novedad 2</h3>
-            <label>Seleccionar Imagen desde la PC (Nov 2):</label>
-            <input type="file" id="fileNov2" accept="image/*">
+        <div class="card">
+            <h3>📢 Novedad 2 (Cartel Vertical)</h3>
+            <label>Seleccionar Imagen:</label>
+            <input type="file" id="fileNov2" accept="image/*" onchange="abrirRecorte(this, 'prevNov2', 24/35)">
+            <div class="preview-container"><img id="prevNov2" class="preview-img" alt="Vista previa"></div>
             
-            <label>Link de Destino (Al hacer clic):</label>
+            <label>Link de Destino:</label>
             <input type="text" id="urlNov2" placeholder="Ej: https://youtube.com/video">
             
-            <button onclick="actualizarDatos('nov2', 'fileNov2', 'urlNov2', 'statusNov2')">Subir y Actualizar Novedad 2</button>
+            <button onclick="actualizarDatos('nov2', 'fileNov2', 'urlNov2', 'statusNov2')">Subir Novedad 2</button>
             <div id="statusNov2" class="status"></div>
         </div>
 
-        <!-- SECCIÓN: Botón Juegos -->
-        <div class="section">
-            <h3>Sección: Juegos</h3>
-            <label>Seleccionar Imagen (Fondo Juegos):</label>
-            <input type="file" id="fileJuegos" accept="image/*">
+        <!-- SECCIÓN: Club 1 -->
+        <div class="card">
+            <h3>🕹️ Club 1 (Cuadrado)</h3>
+            <!-- 1/1 es la proporción cuadrada 150x150 -->
+            <label>Seleccionar Imagen:</label>
+            <input type="file" id="fileClub1" accept="image/*" onchange="abrirRecorte(this, 'prevClub1', 1/1)">
+            <div class="preview-container"><img id="prevClub1" class="preview-img" alt="Vista previa"></div>
             
-            <label>Link de Destino (Web de Juegos):</label>
-            <input type="text" id="urlJuegos" placeholder="Ej: https://tusitio.com/juegos">
+            <label>Link de Destino:</label>
+            <input type="text" id="urlClub1" placeholder="Ej: https://discord.gg/...">
             
-            <button onclick="actualizarDatos('juegos', 'fileJuegos', 'urlJuegos', 'statusJuegos')">Subir y Actualizar Juegos</button>
-            <div id="statusJuegos" class="status"></div>
+            <button onclick="actualizarDatos('club1', 'fileClub1', 'urlClub1', 'statusClub1')">Subir Item Club 1</button>
+            <div id="statusClub1" class="status"></div>
         </div>
 
-        <!-- SECCIÓN: Botón Tienda -->
-        <div class="section">
-            <h3>Sección: Tienda</h3>
-            <label>Seleccionar Imagen (Fondo Tienda):</label>
-            <input type="file" id="fileTienda" accept="image/*">
-            
-            <label>Link de Destino (Web de la Tienda):</label>
-            <input type="text" id="urlTienda" placeholder="Ej: https://tusitio.com/tienda">
-            
-            <button onclick="actualizarDatos('tienda', 'fileTienda', 'urlTienda', 'statusTienda')">Subir y Actualizar Tienda</button>
-            <div id="statusTienda" class="status"></div>
+        <!-- SECCIÓN: Configuración -->
+        <div class="card" style="border-color: #8b5cf6;">
+            <h3 style="color: #8b5cf6;">⚙️ Configuración del Launcher</h3>
+            <label>Actualización Automática (Minutos):</label>
+            <input type="number" id="updateTimer" placeholder="Ej: 60" min="1">
+            <button style="background-color: #8b5cf6; margin-top: 35px;" onclick="actualizarConfig('statusConfig')">Guardar Configuración</button>
+            <div id="statusConfig" class="status"></div>
         </div>
-
     </div>
 
-    <!-- SDK de Firebase (Solo Database) -->
-    <!-- SDK de Firebase (Solo Database) -->
+    <!-- MODAL DE RECORTE (Oculto por defecto) -->
+    <div id="cropModal" class="modal">
+        <div class="modal-content">
+            <h3>Ajustar Imagen</h3>
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-top: -10px;">Usa la rueda del ratón para Zoom. Arrastra para mover.</p>
+            
+            <div class="cropper-container-wrapper">
+                <img id="imageToCrop" src="" style="max-width: 100%;">
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn-secondary" style="flex: 0.5;" onclick="rotarImagen(-90)">↺ Rotar</button>
+                <button class="btn-secondary" style="flex: 0.5;" onclick="rotarImagen(90)">↻ Rotar</button>
+                <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                <button class="btn-success" onclick="confirmarRecorte()">Aplicar Recorte (OK)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts: Cropper.js y Firebase -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref as dbRef, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // ==========================================
-        // 1. TU CLAVE DE IMGBB
-        // ==========================================
         const IMGBB_API_KEY = "68faba876c6a75e2a3569b6467f976d1";
-
-        // ==========================================
-        // 2. CONEXIÓN A TU FIREBASE
-        // ==========================================
-        const firebaseConfig = {
-            databaseURL: "https://quix-ce6d9-default-rtdb.firebaseio.com/"
-        };
+        const firebaseConfig = { databaseURL: "https://quix-ce6d9-default-rtdb.firebaseio.com/" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Función de subida
+        // --- SISTEMA DE RECORTE ---
+        let cropper = null;
+        let currentInputId = null;
+        let currentPreviewId = null;
+        
+        // Objeto para almacenar las imágenes ya recortadas temporalmente
+        window.imagenesRecortadas = {};
+
+        window.abrirRecorte = function(input, prevId, ratio) {
+            if (input.files && input.files[0]) {
+                currentInputId = input.id;
+                currentPreviewId = prevId;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imageToCrop').src = e.target.result;
+                    document.getElementById('cropModal').style.display = 'flex';
+                    
+                    if (cropper) cropper.destroy(); // Limpiar cropper anterior
+                    
+                    const imageElement = document.getElementById('imageToCrop');
+                    cropper = new Cropper(imageElement, {
+                        aspectRatio: ratio,
+                        viewMode: 2, // Restringe la imagen a no salirse del contenedor
+                        dragMode: 'move', // Permite arrastrar la imagen
+                        background: false
+                    });
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
+
+        window.rotarImagen = function(grados) {
+            if (cropper) cropper.rotate(grados);
+        };
+
+        window.cerrarModal = function() {
+            document.getElementById('cropModal').style.display = 'none';
+            document.getElementById(currentInputId).value = ""; // Resetea el input si cancela
+            if (cropper) cropper.destroy();
+        };
+
+        window.confirmarRecorte = function() {
+            if (!cropper) return;
+            
+            // Extraer la porción seleccionada como imagen (Canvas)
+            const canvas = cropper.getCroppedCanvas({
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high'
+            });
+
+            // Convertir a Blob (Archivo)
+            canvas.toBlob(function(blob) {
+                // Guardar el Blob en memoria asociado al ID del input
+                window.imagenesRecortadas[currentInputId] = blob;
+                
+                // Mostrar en la vista previa del dashboard
+                const prevImg = document.getElementById(currentPreviewId);
+                prevImg.src = URL.createObjectURL(blob);
+                prevImg.style.display = 'block';
+                
+                // Cerrar modal
+                document.getElementById('cropModal').style.display = 'none';
+                cropper.destroy();
+            }, 'image/jpeg', 0.9);
+        };
+        // -------------------------
+
+        // --- SISTEMA DE SUBIDA ---
         window.actualizarDatos = async function(rutaDB, idInputFile, idInputUrl, idStatus) {
-            const fileInput = document.getElementById(idInputFile);
+            // Verificar si tenemos el BLOB recortado en memoria
+            const archivoListo = window.imagenesRecortadas[idInputFile];
             const linkDestino = document.getElementById(idInputUrl).value.trim();
             const statusElement = document.getElementById(idStatus);
 
-            if (fileInput.files.length === 0 || linkDestino === "") {
-                statusElement.textContent = "Error: Debes seleccionar una imagen y poner un link de destino.";
+            if (!archivoListo || linkDestino === "") {
+                statusElement.textContent = "Error: Faltan datos (Selecciona y recorta una imagen, y pon un Link).";
                 statusElement.className = "status error";
                 return;
             }
 
-            // Validación corregida (comprueba si olvidaste cambiar el texto predeterminado)
-            if (IMGBB_API_KEY === "" || IMGBB_API_KEY.includes("PEGA_AQUI")) {
-                statusElement.textContent = "Error: No has puesto tu clave de ImgBB válida en el código HTML.";
-                statusElement.className = "status error";
-                return;
-            }
-
-            const archivoFisico = fileInput.files[0];
-            statusElement.textContent = "Subiendo imagen a ImgBB... (espera unos segundos)";
-            statusElement.className = "status";
+            statusElement.textContent = "Subiendo imagen ajustada... ⏳";
+            statusElement.className = "status loading";
 
             try {
                 const formData = new FormData();
-                formData.append("image", archivoFisico);
+                // Subimos el blob (la imagen recortada), pasándole un nombre virtual
+                formData.append("image", archivoListo, "recorte.jpg"); 
 
                 const respuestaImgbb = await fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
                     method: "POST",
@@ -216,35 +294,45 @@
                 });
                 
                 const datosImgbb = await respuestaImgbb.json();
-
-                if (!datosImgbb.success) {
-                    throw new Error("ImgBB rechazó la imagen. Comprueba tu API Key.");
-                }
+                if (!datosImgbb.success) throw new Error("Error en ImgBB");
 
                 const linkImagenDescarga = datosImgbb.data.url;
-
-                statusElement.textContent = "¡Imagen subida! Guardando en Firebase...";
+                statusElement.textContent = "Guardando en Firebase... ☁️";
 
                 await set(dbRef(db, 'novedades/' + rutaDB), {
                     imagen: linkImagenDescarga,
                     url: linkDestino
                 });
 
-                statusElement.textContent = "¡Actualizado con éxito en el Launcher!";
+                statusElement.textContent = "¡Actualizado con éxito! ✅";
                 statusElement.className = "status success";
                 
-                fileInput.value = "";
-                
-                setTimeout(() => {
-                    statusElement.textContent = "";
-                }, 4000);
+                // Limpieza tras subir
+                delete window.imagenesRecortadas[idInputFile];
+                setTimeout(() => { statusElement.textContent = ""; }, 4000);
 
             } catch (error) {
                 statusElement.textContent = "Error: " + error.message;
                 statusElement.className = "status error";
             }
         };
-    </script>
 
+        window.actualizarConfig = async function(idStatus) {
+            const timer = document.getElementById('updateTimer').value;
+            const statusElement = document.getElementById(idStatus);
+            if(!timer) {
+                statusElement.textContent = "Ingresa un número válido.";
+                statusElement.className = "status error"; return;
+            }
+            statusElement.textContent = "Actualizando..."; statusElement.className = "status loading";
+            try {
+                await set(dbRef(db, 'novedades/update_time_minutes'), parseInt(timer));
+                statusElement.textContent = "¡Temporizador actualizado!"; statusElement.className = "status success";
+                setTimeout(() => { statusElement.textContent = ""; }, 4000);
+            } catch (error) {
+                statusElement.textContent = "Error: " + error.message; statusElement.className = "status error";
+            }
+        };
+    </script>
 </body>
 </html>
