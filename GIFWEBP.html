@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Creador de Animaciones (GIF / WebP Animado)</title>
+    <!-- Solución al error 404 del favicon -->
+    <link rel="icon" href="data:,">
+    
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #1e1e1e; color: #fff; padding: 20px; display: flex; justify-content: center; }
         .container { background: #2d2d2d; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 100%; max-width: 500px; text-align: center; }
@@ -121,7 +124,7 @@
         buf[0] = val & 0xff;
         buf[1] = (val >> 8) & 0xff;
         buf[2] = (val >> 16) & 0xff;
-        buf[3] = (val >> 24) & 0xff;
+        buf[3] = (val >>> 24) & 0xff; // Corrección de signo
         return buf;
     }
 
@@ -165,7 +168,8 @@
         while (offset < bytes.length) {
             if (offset + 8 > bytes.length) break;
             const tag = String.fromCharCode(bytes[offset], bytes[offset+1], bytes[offset+2], bytes[offset+3]);
-            const size = bytes[offset+4] | (bytes[offset+5] << 8) | (bytes[offset+6] << 16) | (bytes[offset+7] << 24);
+            // Convertimos a entero sin signo con >>> 0 para evitar tamaños negativos erróneos
+            const size = (bytes[offset+4] | (bytes[offset+5] << 8) | (bytes[offset+6] << 16) | (bytes[offset+7] << 24)) >>> 0;
             offset += 8;
             if (offset + size > bytes.length) break;
             const data = bytes.slice(offset, offset + size);
@@ -180,11 +184,12 @@
     async function exportWebPAnimado(width, height, delay) {
         statusText.innerText = "Preparando WebP Animado...";
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         canvas.width = width;
         canvas.height = height;
 
         const framePayloads = [];
+        let globalHasAlpha = false; // Bandera vital para que el navegador no rechace el archivo
 
         for (let i = 0; i < sortedFiles.length; i++) {
             statusText.innerText = `Procesando cuadro ${i + 1} de ${sortedFiles.length} (WebP)...`;
@@ -199,12 +204,17 @@
 
             let frameDataParts = [];
             for (let chunk of chunks) {
-                if (chunk.tag === 'VP8X') continue;
-                const tagBytes = stringToBytes(chunk.tag);
-                const sizeBytes = writeUint32LE(chunk.data.length);
-                frameDataParts.push(tagBytes, sizeBytes, chunk.data);
-                if (chunk.data.length % 2 !== 0) {
-                    frameDataParts.push(new Uint8Array([0]));
+                // Solo incluimos chunks de imagen puros en los fotogramas
+                if (chunk.tag === 'VP8 ' || chunk.tag === 'VP8L' || chunk.tag === 'ALPH') {
+                    if (chunk.tag === 'VP8L' || chunk.tag === 'ALPH') globalHasAlpha = true;
+
+                    const tagBytes = stringToBytes(chunk.tag);
+                    const sizeBytes = writeUint32LE(chunk.data.length);
+                    frameDataParts.push(tagBytes, sizeBytes, chunk.data);
+                    
+                    if (chunk.data.length % 2 !== 0) {
+                        frameDataParts.push(new Uint8Array([0]));
+                    }
                 }
             }
             framePayloads.push(concatTypedArrays(frameDataParts));
@@ -216,9 +226,10 @@
 
         const animParts = [];
 
-        // Cabecera VP8X (Animación activada = 0x02)
+        // Cabecera VP8X (0x02 = Animación. Si hay alpha, sumamos 0x10 = 0x12)
+        const vp8xFlags = 0x02 | (globalHasAlpha ? 0x10 : 0);
         const vp8xData = concatTypedArrays([
-            new Uint8Array([0x02]),
+            new Uint8Array([vp8xFlags]),
             new Uint8Array([0, 0, 0]),
             writeUint24LE(width - 1),
             writeUint24LE(height - 1)
@@ -240,7 +251,7 @@
                 writeUint24LE(width - 1),
                 writeUint24LE(height - 1),
                 writeUint24LE(delay),
-                new Uint8Array([0])
+                new Uint8Array([0]) // Flags de mezcla (0 = normal)
             ]);
 
             const anmfPayloadSize = anmfHeader.length + payload.length;
