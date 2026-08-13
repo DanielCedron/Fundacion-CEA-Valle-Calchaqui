@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Creador de Animaciones (GIF / WebP Animado)</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #1e1e1e; color: #fff; padding: 20px; display: flex; justify-content: center; }
+        .container { background: #2d2d2d; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 100%; max-width: 500px; text-align: center; }
+        input[type="file"], input[type="number"], select { width: 100%; padding: 10px; margin-top: 5px; background: #1e1e1e; color: #fff; border: 1px solid #555; border-radius: 5px; box-sizing: border-box; }
+        .control-group { margin: 20px 0; text-align: left; }
+        button { background: #4da6ff; color: #1e1e1e; border: none; padding: 12px; font-weight: bold; border-radius: 5px; cursor: pointer; width: 100%; transition: 0.2s; }
+        button:hover { background: #3388dd; }
+        button:disabled { background: #555; color: #888; cursor: not-allowed; }
+        #status { margin-top: 15px; font-weight: bold; color: #ffcc00; }
+        #resultContainer { max-width: 100%; margin-top: 15px; display: none; }
+        #resultImg, #resultGif { max-width: 100%; border: 2px solid #4da6ff; border-radius: 5px; }
+        .download-btn { display: none; margin-top: 15px; background: #28a745; color: white; text-decoration: none; padding: 10px; border-radius: 5px; font-weight: bold; }
+    </style>
+
+    <!-- Librerías para GIF -->
+    <script src="https://cdn.jsdelivr.net/gh/antimatter15/jsgif@master/LZWEncoder.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/antimatter15/jsgif@master/NeuQuant.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/antimatter15/jsgif@master/GIFEncoder.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/antimatter15/jsgif@master/b64.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="color: #4da6ff; margin-top: 0;">Maker Anti-Crashes (WebP Animado)</h2>
+    
+    <div class="control-group">
+        <label>1. Imágenes (Se ordenarán 1, 2, 3...)</label>
+        <input type="file" id="fileInput" accept="image/jpeg, image/png, image/webp" multiple>
+    </div>
+
+    <div class="control-group">
+        <label>2. Velocidad (Milisegundos por imagen)</label>
+        <input type="number" id="delayInput" value="500" step="100" min="100">
+    </div>
+
+    <div class="control-group">
+        <label>3. Tamaño Exacto (Ancho x Alto en píxeles)</label>
+        <div style="display: flex; gap: 10px;">
+            <input type="number" id="widthInput" placeholder="Ancho" value="220" min="1">
+            <input type="number" id="heightInput" placeholder="Alto" value="320" min="1">
+        </div>
+    </div>
+    
+    <div class="control-group">
+        <label>4. Formato de Exportación</label>
+        <select id="formatInput">
+            <option value="webp">WebP Animado (Alta calidad, liviano)</option>
+            <option value="gif">GIF Animado (Clásico)</option>
+        </select>
+    </div>
+
+    <button id="generateBtn" disabled>Comenzar Proceso Lento pero Seguro</button>
+    <div id="status">Esperando imágenes...</div>
+
+    <div id="resultContainer">
+        <img id="resultImg" src="" alt="Resultado Animación">
+    </div>
+    <a id="downloadLink" class="download-btn" href="#" download="mi_animacion">Descargar Animación</a>
+</div>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const statusText = document.getElementById('status');
+    let sortedFiles = [];
+
+    const loadImage = (file) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    fileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            sortedFiles = files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+            statusText.innerText = `¡${sortedFiles.length} imágenes listas!`;
+            generateBtn.disabled = false;
+        }
+    });
+
+    generateBtn.addEventListener('click', async () => {
+        generateBtn.disabled = true;
+        document.getElementById('resultContainer').style.display = 'none';
+        document.getElementById('downloadLink').style.display = 'none';
+        
+        const format = document.getElementById('formatInput').value;
+        const exactWidth = parseInt(document.getElementById('widthInput').value);
+        const exactHeight = parseInt(document.getElementById('heightInput').value);
+        const delay = parseInt(document.getElementById('delayInput').value);
+        
+        try {
+            if (format === 'webp') {
+                await exportWebPAnimado(exactWidth, exactHeight, delay);
+            } else {
+                await exportGIF(exactWidth, exactHeight, delay);
+            }
+        } catch (error) {
+            console.error(error);
+            statusText.innerText = "Error crítico durante el procesamiento.";
+            statusText.style.color = "#dc3545";
+        } finally {
+            generateBtn.disabled = false;
+        }
+    });
+
+    // --- UTILIDADES BINARIAS PARA WEBP ANIMADO ---
+    function writeUint32LE(val) {
+        const buf = new Uint8Array(4);
+        buf[0] = val & 0xff;
+        buf[1] = (val >> 8) & 0xff;
+        buf[2] = (val >> 16) & 0xff;
+        buf[3] = (val >> 24) & 0xff;
+        return buf;
+    }
+
+    function writeUint24LE(val) {
+        const buf = new Uint8Array(3);
+        buf[0] = val & 0xff;
+        buf[1] = (val >> 8) & 0xff;
+        buf[2] = (val >> 16) & 0xff;
+        return buf;
+    }
+
+    function writeUint16LE(val) {
+        const buf = new Uint8Array(2);
+        buf[0] = val & 0xff;
+        buf[1] = (val >> 8) & 0xff;
+        return buf;
+    }
+
+    function concatTypedArrays(arrays) {
+        let totalLength = 0;
+        for (let arr of arrays) totalLength += arr.length;
+        let result = new Uint8Array(totalLength);
+        let offset = 0;
+        for (let arr of arrays) {
+            result.set(arr, offset);
+            offset += arr.length;
+        }
+        return result;
+    }
+
+    function stringToBytes(str) {
+        const buf = new Uint8Array(str.length);
+        for (let i = 0; i < str.length; i++) buf[i] = str.charCodeAt(i);
+        return buf;
+    }
+
+    function extractWebPChunks(buffer) {
+        const bytes = new Uint8Array(buffer);
+        let offset = 12; // Salta RIFF (4), tamaño (4), WEBP (4)
+        const chunks = [];
+        while (offset < bytes.length) {
+            if (offset + 8 > bytes.length) break;
+            const tag = String.fromCharCode(bytes[offset], bytes[offset+1], bytes[offset+2], bytes[offset+3]);
+            const size = bytes[offset+4] | (bytes[offset+5] << 8) | (bytes[offset+6] << 16) | (bytes[offset+7] << 24);
+            offset += 8;
+            if (offset + size > bytes.length) break;
+            const data = bytes.slice(offset, offset + size);
+            chunks.push({ tag, data });
+            offset += size;
+            if (size % 2 !== 0) offset++;
+        }
+        return chunks;
+    }
+
+    // EXPORTACIÓN A WEBP ANIMADO PURO (HOSTING FRIENDLY)
+    async function exportWebPAnimado(width, height, delay) {
+        statusText.innerText = "Preparando WebP Animado...";
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = width;
+        canvas.height = height;
+
+        const framePayloads = [];
+
+        for (let i = 0; i < sortedFiles.length; i++) {
+            statusText.innerText = `Procesando cuadro ${i + 1} de ${sortedFiles.length} (WebP)...`;
+            const img = await loadImage(sortedFiles[i]);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.9));
+            const arrayBuffer = await blob.arrayBuffer();
+            const chunks = extractWebPChunks(arrayBuffer);
+
+            let frameDataParts = [];
+            for (let chunk of chunks) {
+                if (chunk.tag === 'VP8X') continue;
+                const tagBytes = stringToBytes(chunk.tag);
+                const sizeBytes = writeUint32LE(chunk.data.length);
+                frameDataParts.push(tagBytes, sizeBytes, chunk.data);
+                if (chunk.data.length % 2 !== 0) {
+                    frameDataParts.push(new Uint8Array([0]));
+                }
+            }
+            framePayloads.push(concatTypedArrays(frameDataParts));
+            await new Promise(r => setTimeout(r, 30));
+        }
+
+        statusText.innerText = "Empaquetando contenedor WebP Animado...";
+        await new Promise(r => setTimeout(r, 50));
+
+        const animParts = [];
+
+        // Cabecera VP8X (Animación activada = 0x02)
+        const vp8xData = concatTypedArrays([
+            new Uint8Array([0x02]),
+            new Uint8Array([0, 0, 0]),
+            writeUint24LE(width - 1),
+            writeUint24LE(height - 1)
+        ]);
+        animParts.push(stringToBytes('VP8X'), writeUint32LE(vp8xData.length), vp8xData);
+
+        // Cabecera ANIM (Bucle infinito = 0)
+        const animData = concatTypedArrays([
+            new Uint8Array([0, 0, 0, 0]),
+            writeUint16LE(0)
+        ]);
+        animParts.push(stringToBytes('ANIM'), writeUint32LE(animData.length), animData);
+
+        // Fotogramas ANMF
+        for (let payload of framePayloads) {
+            const anmfHeader = concatTypedArrays([
+                writeUint24LE(0),
+                writeUint24LE(0),
+                writeUint24LE(width - 1),
+                writeUint24LE(height - 1),
+                writeUint24LE(delay),
+                new Uint8Array([0])
+            ]);
+
+            const anmfPayloadSize = anmfHeader.length + payload.length;
+            animParts.push(stringToBytes('ANMF'), writeUint32LE(anmfPayloadSize), anmfHeader, payload);
+            if (anmfPayloadSize % 2 !== 0) {
+                animParts.push(new Uint8Array([0]));
+            }
+        }
+
+        const allAnimContent = concatTypedArrays(animParts);
+        const riffHeader = concatTypedArrays([
+            stringToBytes('RIFF'),
+            writeUint32LE(4 + allAnimContent.length),
+            stringToBytes('WEBP')
+        ]);
+
+        const finalWebpBytes = concatTypedArrays([riffHeader, allAnimContent]);
+        const finalBlob = new Blob([finalWebpBytes], { type: 'image/webp' });
+        const finalSrc = URL.createObjectURL(finalBlob);
+
+        const imgEl = document.getElementById('resultImg');
+        imgEl.src = finalSrc;
+        imgEl.style.display = 'block';
+        document.getElementById('resultContainer').style.display = 'block';
+
+        const dl = document.getElementById('downloadLink');
+        dl.href = finalSrc;
+        dl.download = "animacion.webp";
+        dl.style.display = 'inline-block';
+        dl.innerText = "Descargar WebP Animado";
+
+        statusText.innerText = "¡Proceso WebP Animado terminado con éxito!";
+        statusText.style.color = "#28a745";
+    }
+
+    // EXPORTACIÓN A GIF CLÁSICO
+    async function exportGIF(width, height, delay) {
+        const encoder = new GIFEncoder();
+        encoder.setRepeat(0);
+        encoder.setDelay(delay);
+        encoder.start();
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        canvas.width = width;
+        canvas.height = height;
+        encoder.setSize(width, height);
+
+        for (let i = 0; i < sortedFiles.length; i++) {
+            statusText.innerText = `Procesando imagen ${i + 1} de ${sortedFiles.length} (GIF)...`;
+            const img = await loadImage(sortedFiles[i]);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+            encoder.addFrame(ctx);
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+
+        statusText.innerText = "Empaquetando el archivo GIF...";
+        await new Promise(resolve => setTimeout(resolve, 100));
+        encoder.finish();
+        
+        const b64 = encode64(encoder.stream().getData());
+        const finalSrc = 'data:image/gif;base64,' + b64;
+        
+        const imgEl = document.getElementById('resultImg');
+        imgEl.src = finalSrc;
+        imgEl.style.display = 'block';
+        document.getElementById('resultContainer').style.display = 'block';
+        
+        const dl = document.getElementById('downloadLink');
+        dl.href = finalSrc;
+        dl.download = "animacion.gif";
+        dl.style.display = 'inline-block';
+        dl.innerText = "Descargar GIF";
+        
+        statusText.innerText = "¡Proceso GIF terminado con éxito!";
+        statusText.style.color = "#28a745";
+    }
+</script>
+</body>
+</html>
