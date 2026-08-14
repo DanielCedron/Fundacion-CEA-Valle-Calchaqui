@@ -24,28 +24,47 @@
             width: 100%; padding: 12px; margin-bottom: 15px; background-color: #151515; border: 1px solid #444; color: #fff; border-radius: 6px; box-sizing: border-box;
         }
         
-        /* Contenedor de edición de imagen (Corregido sin Flexbox) */
-        .editor-box {
-            width: 100%; max-width: 400px; height: 400px; background-color: #151515;
+        /* Caja de vista previa en el panel principal (Muestra el resultado final) */
+        .preview-box {
+            width: 100%; max-width: 240px; height: 350px; background-color: #151515;
             border: 2px dashed #555; border-radius: 8px; margin: 0 auto 15px auto;
-            position: relative;
-            overflow: hidden;
+            display: flex; justify-content: center; align-items: center; overflow: hidden;
         }
-        .editor-box img { 
-            display: none; 
-            max-width: 100%; 
-            max-height: 100%; 
-            margin: auto; 
+        .preview-box img { max-width: 100%; max-height: 100%; display: none; object-fit: contain;}
+
+        /* ESTILOS DEL MODAL (Ventana emergente) */
+        .modal {
+            display: none; /* Oculto por defecto */
+            position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: rgba(0,0,0,0.9);
+            align-items: center; justify-content: center;
         }
-        #previewText {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: #666; font-size: 14px; text-align: center; width: 100%;
+        .modal-content {
+            background-color: #1e1e1e; border-radius: 12px; width: 90%; max-width: 800px;
+            height: 80% ; max-height: 700px; display: flex; flex-direction: column;
+            border: 1px solid #333; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
+        .modal-header { padding: 15px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { margin: 0; font-size: 18px; color: #4CAF50; }
+        
+        .modal-body { flex: 1; padding: 20px; overflow: hidden; display: flex; justify-content: center; align-items: center; background-color: #151515;}
+        /* Importante para Cropper: la imagen debe estar dentro de un bloque y tener max-width 100% */
+        .modal-body img { max-width: 100%; max-height: 100%; display: block; }
+
+        .modal-footer { padding: 15px 20px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 10px; }
+
+        /* Botones adicionales */
+        .btn { padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; border: none; transition: background 0.2s; }
+        .btn-cancel { background-color: #444; color: white; }
+        .btn-cancel:hover { background-color: #555; }
+        .btn-ok { background-color: #4CAF50; color: white; }
+        .btn-ok:hover { background-color: #45a049; }
 
         button.submit-btn { width: 100%; padding: 15px; background-color: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.3s; }
         button.submit-btn:hover { background-color: #45a049; }
         button.submit-btn:disabled { background-color: #555; cursor: not-allowed; }
-        .status { margin-top: 15px; font-size: 14px; text-align: center; font-weight: bold; padding: 10px; border-radius: 6px; display: none; }
+        
+        .status { margin-top: 15px; font-size: 14px; text-align: center; font-weight: bold; padding: 10px; border-radius: 6px; display: none; min-height: 1em;}
         .success { background-color: rgba(76, 175, 80, 0.2); color: #4CAF50; display: block;}
         .error { background-color: rgba(244, 67, 54, 0.2); color: #f44336; display: block;}
         .loading { background-color: rgba(255, 193, 7, 0.2); color: #ffc107; display: block;}
@@ -75,22 +94,42 @@
 
         <!-- PASO 3 -->
         <div class="step-container">
-            <h3 class="step-title"><span>3</span> Recortar Imagen y Destino</h3>
+            <h3 class="step-title"><span>3</span> Imagen y Destino</h3>
             
-            <label>Adjuntar Imagen (Arrástrala y ajusta el zoom):</label>
+            <label>Seleccionar Imagen (Se abrirá editor):</label>
+            <!-- He cambiado el texto del label para aclarar el flujo -->
             <input type="file" id="fileInput" accept="image/*">
 
-            <div class="editor-box" id="editorContainer">
-                <span id="previewText">La imagen aparecerá aquí para recortar</span>
-                <img id="imgPreview" src="" alt="Vista previa">
+            <!-- Esta caja ahora solo muestra la vista previa FINAL -->
+            <div class="preview-box" id="previewContainer">
+                <span id="previewText" style="color: #666; font-size: 14px; text-align: center; padding: 10px;">La imagen recortada aparecerá aquí</span>
+                <img id="imgFinalPreview" src="" alt="Vista previa final">
             </div>
             
             <label>Enlace de destino:</label>
             <input type="text" id="urlInput" placeholder="Ej: https... o escribe 'no' para anular">
         </div>
 
-        <button id="btnSubir" class="submit-btn" onclick="iniciarSubida()">RECORTAR Y SUBIR AL LAUNCHER</button>
+        <button id="btnSubir" class="submit-btn" onclick="iniciarSubida()">SUBIR AL LAUNCHER</button>
         <div id="statusBox" class="status"></div>
+    </div>
+
+    <!-- VENTANA EMERGENTE (MODAL) PARA RECORTAR -->
+    <div id="cropperModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Recortar Imagen</h2>
+                <button class="btn-cancel" style="padding: 5px 10px;" onclick="cerrarModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Imagen que usará Cropper.js -->
+                <img id="imgToCrop" src="" alt="Editor">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="cerrarModal()">Cancelar</button>
+                <button class="btn btn-ok" onclick="confirmarRecorte()">Confirmar Recorte</button>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->
@@ -99,22 +138,30 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref as dbRef, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
+        // Configuración (Se mantiene igual)
         const IMGBB_API_KEY = "68faba876c6a75e2a3569b6467f976d1";
         const firebaseConfig = { databaseURL: "https://quix-ce6d9-default-rtdb.firebaseio.com/" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // Elementos del DOM panel principal
         const selCategoria = document.getElementById('selCategoria');
         const selSlot = document.getElementById('selSlot');
         const fileInput = document.getElementById('fileInput');
-        const imgPreview = document.getElementById('imgPreview');
-        const previewText = document.getElementById('previewText');
         const urlInput = document.getElementById('urlInput');
         const statusBox = document.getElementById('statusBox');
         const btnSubir = document.getElementById('btnSubir');
+        const imgFinalPreview = document.getElementById('imgFinalPreview');
+        const previewText = document.getElementById('previewText');
 
-        let cropper;
+        // Elementos del DOM Modal
+        const modal = document.getElementById('cropperModal');
+        const imgToCrop = document.getElementById('imgToCrop');
 
+        let cropper; // Instancia de Cropper
+        let croppedBlob; // Guardará la imagen recortada final para subirla
+
+        // Lógica de Slots (Se mantiene igual)
         function actualizarSlots() {
             selSlot.innerHTML = '';
             const maxSlots = selCategoria.value === 'nov' ? 4 : 6; 
@@ -125,89 +172,138 @@
                 selSlot.appendChild(option);
             }
         }
-
         actualizarSlots();
         selCategoria.addEventListener('change', actualizarSlots);
 
-        // Inicializar el recortador manual corregido con delay
+        // --- FLUJO DE RECORTE ---
+
+        // 1. Detectar cambio de archivo y abrir Modal
         fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    imgPreview.src = event.target.result;
-                    imgPreview.style.display = 'block';
-                    previewText.style.display = 'none';
-                    
-                    if (cropper) cropper.destroy();
-
-                    // Esperar a que el navegador dibuje la imagen físicamente en el DOM
-                    setTimeout(() => {
-                        cropper = new Cropper(imgPreview, {
-                            aspectRatio: 240 / 350,
-                            viewMode: 1,
-                            background: false
-                        });
-                    }, 100);
+                    // Cargar imagen en el editor del modal
+                    imgToCrop.src = event.target.result;
+                    abrirModal();
                 }
                 reader.readAsDataURL(file);
             }
         });
 
+        function abrirModal() {
+            modal.style.display = 'flex';
+            // Limpiar mensaje de estado anterior si existe
+            statusBox.style.display = 'none';
+            
+            // Ocultar vista previa final anterior mientras editamos
+            imgFinalPreview.style.display = 'none';
+            previewText.style.display = 'block';
+            croppedBlob = null; // Resetear recorte anterior
+
+            // Inicializar Cropper DESPUÉS de que el modal sea visible
+            // Fijamos la proporción exacta (240x350)
+            if (cropper) cropper.destroy();
+            
+            cropper = new Cropper(imgToCrop, {
+                aspectRatio: 240 / 350,
+                viewMode: 1, // Restringe la caja de recorte al tamaño de la imagen
+                background: false,
+                responsive: true,
+                checkOrientation: false // Evita problemas de rotación automática
+            });
+        }
+
+        // Definir funciones en window para que sean accesibles desde el HTML (onclick)
+        window.cerrarModal = function() {
+            modal.style.display = 'none';
+            if (cropper) cropper.destroy();
+            fileInput.value = ''; // Resetear input file para poder subir la misma imagen si se desea
+        }
+
+        window.confirmarRecorte = function() {
+            if (!cropper) return;
+
+            // Obtener el canvas recortado en el tamaño exacto del Launcher
+            const canvas = cropper.getCroppedCanvas({ 
+                width: 240, 
+                height: 350,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high'
+            });
+
+            // 1. Mostrar vista previa en el panel principal
+            imgFinalPreview.src = canvas.toDataURL('image/jpeg');
+            imgFinalPreview.style.display = 'block';
+            previewText.style.display = 'none';
+
+            // 2. Convertir a Blob para la futura subida
+            canvas.toBlob(function(blob) {
+                croppedBlob = blob;
+            }, 'image/jpeg', 0.9);
+
+            // 3. Cerrar editor
+            cerrarModal();
+        }
+
+        // --- SUBIDA A FIREBASE ---
+
         window.iniciarSubida = async function() {
             const linkDestinoRaw = urlInput.value.trim();
             const slotElegido = selCategoria.value + selSlot.value;
 
-            if (!cropper) { mostrarMensaje("Error: Debes adjuntar una imagen.", "error"); return; }
+            // Validaciones
+            if (!croppedBlob) { mostrarMensaje("Error: Debes recortar una imagen primero.", "error"); return; }
             if (linkDestinoRaw === "") { mostrarMensaje("Error: Coloca un enlace o la palabra 'no'.", "error"); return; }
 
             const linkFinal = linkDestinoRaw.toLowerCase() === 'no' ? "" : linkDestinoRaw;
             btnSubir.disabled = true;
-            mostrarMensaje("Paso 1: Procesando recorte y subiendo a ImgBB...", "loading");
+            mostrarMensaje("Paso 1: Subiendo imagen a ImgBB...", "loading");
 
-            // Generar recorte con la proporción exacta del Launcher
-            cropper.getCroppedCanvas({ width: 240, height: 350 }).toBlob(async (blob) => {
-                try {
-                    const formData = new FormData();
-                    formData.append("image", blob, "recorte.jpg");
+            try {
+                // Subir Blob recortado a ImgBB
+                const formData = new FormData();
+                formData.append("image", croppedBlob, "recorte.jpg");
 
-                    const respuestaImgbb = await fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
-                        method: "POST", body: formData
-                    });
-                    
-                    const datosImgbb = await respuestaImgbb.json();
-                    if (!datosImgbb.success) throw new Error("Error con ImgBB.");
-                    
-                    mostrarMensaje("Paso 2: Conectando a Firebase...", "loading");
+                const respuestaImgbb = await fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
+                    method: "POST", body: formData
+                });
+                
+                const datosImgbb = await respuestaImgbb.json();
+                if (!datosImgbb.success) throw new Error("Error con ImgBB: " + datosImgbb.error.message);
+                
+                mostrarMensaje("Paso 2: Guardando en Firebase...", "loading");
 
-                    await set(dbRef(db, 'novedades/' + slotElegido), {
-                        imagen: datosImgbb.data.url,
-                        url: linkFinal
-                    });
+                // Guardar URL en Firebase
+                await set(dbRef(db, 'novedades/' + slotElegido), {
+                    imagen: datosImgbb.data.url,
+                    url: linkFinal
+                });
 
-                    mostrarMensaje(`¡Éxito! El slot ${slotElegido} ha sido actualizado.`, "success");
-                    
-                    // Limpieza
-                    setTimeout(() => { 
-                        statusBox.style.display = 'none'; 
-                        if (cropper) cropper.destroy(); 
-                        cropper = null;
-                        imgPreview.style.display = 'none';
-                        previewText.style.display = 'block';
-                        fileInput.value = "";
-                    }, 4000);
+                mostrarMensaje(`¡Éxito! Slot ${slotElegido} actualizado.`, "success");
+                
+                // Resetear formulario parcialmente
+                croppedBlob = null;
+                imgFinalPreview.style.display = 'none';
+                imgFinalPreview.src = '';
+                previewText.style.display = 'block';
+                fileInput.value = "";
+                urlInput.value = "";
 
-                } catch (error) {
-                    mostrarMensaje("Error: " + error.message, "error");
-                } finally {
-                    btnSubir.disabled = false;
-                }
-            }, 'image/jpeg', 0.9);
+                setTimeout(() => { statusBox.style.display = 'none'; }, 5000);
+
+            } catch (error) {
+                console.error(error);
+                mostrarMensaje("Error: " + error.message, "error");
+            } finally {
+                btnSubir.disabled = false;
+            }
         };
 
         function mostrarMensaje(texto, tipo) {
             statusBox.textContent = texto;
             statusBox.className = "status " + tipo;
+            statusBox.style.display = 'block';
         }
     </script>
 </body>
