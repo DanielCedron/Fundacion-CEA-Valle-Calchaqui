@@ -24,13 +24,23 @@
             width: 100%; padding: 12px; margin-bottom: 15px; background-color: #151515; border: 1px solid #444; color: #fff; border-radius: 6px; box-sizing: border-box;
         }
         
-        /* Contenedor de edición de imagen */
+        /* Contenedor de edición de imagen (Corregido sin Flexbox) */
         .editor-box {
             width: 100%; max-width: 400px; height: 400px; background-color: #151515;
             border: 2px dashed #555; border-radius: 8px; margin: 0 auto 15px auto;
-            display: flex; justify-content: center; align-items: center; overflow: hidden;
+            position: relative;
+            overflow: hidden;
         }
-        .editor-box img { max-width: 100%; display: none; }
+        .editor-box img { 
+            display: none; 
+            max-width: 100%; 
+            max-height: 100%; 
+            margin: auto; 
+        }
+        #previewText {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #666; font-size: 14px; text-align: center; width: 100%;
+        }
 
         button.submit-btn { width: 100%; padding: 15px; background-color: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.3s; }
         button.submit-btn:hover { background-color: #45a049; }
@@ -71,7 +81,7 @@
             <input type="file" id="fileInput" accept="image/*">
 
             <div class="editor-box" id="editorContainer">
-                <span id="previewText" style="color: #666; font-size: 14px;">La imagen aparecerá aquí para recortar</span>
+                <span id="previewText">La imagen aparecerá aquí para recortar</span>
                 <img id="imgPreview" src="" alt="Vista previa">
             </div>
             
@@ -119,7 +129,7 @@
         actualizarSlots();
         selCategoria.addEventListener('change', actualizarSlots);
 
-        // Inicializar el recortador manual
+        // Inicializar el recortador manual corregido con delay
         fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -130,12 +140,15 @@
                     previewText.style.display = 'none';
                     
                     if (cropper) cropper.destroy();
-                    // Fijamos la proporción exacta que usa tu C# (240x350)
-                    cropper = new Cropper(imgPreview, {
-                        aspectRatio: 240 / 350,
-                        viewMode: 1,
-                        background: false
-                    });
+
+                    // Esperar a que el navegador dibuje la imagen físicamente en el DOM
+                    setTimeout(() => {
+                        cropper = new Cropper(imgPreview, {
+                            aspectRatio: 240 / 350,
+                            viewMode: 1,
+                            background: false
+                        });
+                    }, 100);
                 }
                 reader.readAsDataURL(file);
             }
@@ -152,7 +165,7 @@
             btnSubir.disabled = true;
             mostrarMensaje("Paso 1: Procesando recorte y subiendo a ImgBB...", "loading");
 
-            // Extraemos la imagen ya recortada en el tamaño exacto del Launcher
+            // Generar recorte con la proporción exacta del Launcher
             cropper.getCroppedCanvas({ width: 240, height: 350 }).toBlob(async (blob) => {
                 try {
                     const formData = new FormData();
@@ -174,10 +187,10 @@
 
                     mostrarMensaje(`¡Éxito! El slot ${slotElegido} ha sido actualizado.`, "success");
                     
-                    // Resetear
+                    // Limpieza
                     setTimeout(() => { 
                         statusBox.style.display = 'none'; 
-                        cropper.destroy(); 
+                        if (cropper) cropper.destroy(); 
                         cropper = null;
                         imgPreview.style.display = 'none';
                         previewText.style.display = 'block';
