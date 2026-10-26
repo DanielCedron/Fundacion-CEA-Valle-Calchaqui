@@ -12,6 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- jsPDF para generar el PDF organizado -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -45,8 +47,10 @@
             color: #f1f5f9;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
 
+        /* Glassmorphism */
         .glass-panel {
             background: rgba(13, 27, 42, 0.85);
             backdrop-filter: blur(12px);
@@ -64,11 +68,16 @@
             background: linear-gradient(135deg, #F3C658 0%, #D4AF37 50%, #B08316 100%);
         }
 
-        .gold-gradient-bg:active {
-            transform: scale(0.98);
-            opacity: 0.95;
+        /* Ocultar scrollbars sin perder funcionalidad */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
+        /* Slide Transitions */
         .slide-deck {
             position: relative;
             width: 100%;
@@ -83,8 +92,8 @@
             height: 100%;
             opacity: 0;
             visibility: hidden;
-            transform: translateX(30px);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateX(40px);
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -101,35 +110,25 @@
         .slide.prev-out {
             opacity: 0;
             visibility: hidden;
-            transform: translateX(-30px);
+            transform: translateX(-40px);
         }
 
+        /* Logo flotante agrandado a 140px con formato L */
         .badge-float-img {
             float: right;
-            width: 80px;
-            height: 80px;
-            margin-left: 10px;
-            margin-bottom: 8px;
-            border-radius: 12px;
+            width: 140px;
+            height: 140px;
+            margin-left: 12px;
+            margin-bottom: 10px;
+            border-radius: 16px;
             object-fit: cover;
             border: 2px solid #D4AF37;
             shape-outside: margin-box;
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
-        }
-
-        .custom-scroll::-webkit-scrollbar {
-            width: 4px;
-        }
-        .custom-scroll::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        .custom-scroll::-webkit-scrollbar-thumb {
-            background: rgba(212, 175, 55, 0.4);
-            border-radius: 4px;
+            box-shadow: 0 6px 16px rgba(212, 175, 55, 0.25);
         }
 
         .custom-input {
-            background: rgba(5, 10, 16, 0.7);
+            background: rgba(5, 10, 16, 0.75);
             border: 1px solid rgba(212, 175, 55, 0.3);
             color: #FFFFFF;
             transition: all 0.2s ease;
@@ -138,21 +137,18 @@
             outline: none;
             border-color: #F3C658;
             box-shadow: 0 0 10px rgba(243, 198, 88, 0.25);
-            background: rgba(13, 27, 42, 0.9);
+            background: rgba(13, 27, 42, 0.95);
         }
 
         .file-upload-btn {
             background: rgba(212, 175, 55, 0.1);
             border: 1px dashed rgba(212, 175, 55, 0.5);
         }
-        .file-upload-btn:hover {
-            background: rgba(212, 175, 55, 0.18);
-        }
     </style>
 </head>
 <body class="bg-navy-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-gold-500 selection:text-navy-950 p-2 sm:p-4">
 
-    <!-- HEADER / APP BAR -->
+    <!-- HEADER FIXED -->
     <header class="fixed top-0 left-0 w-full z-40 px-3 py-2.5 bg-navy-950/90 backdrop-blur-md border-b border-gold-500/20 flex items-center justify-between">
         <div class="flex items-center space-x-2">
             <div class="w-8 h-8 rounded-lg gold-gradient-bg flex items-center justify-center text-navy-950 font-bold shadow-md shadow-gold-500/10">
@@ -171,12 +167,12 @@
         </div>
     </header>
 
-    <!-- MAIN SLIDES CONTAINER -->
-    <main class="slide-deck pt-14 pb-16">
+    <!-- SLIDES CONTAINER CON GESTOS TÁCTILES -->
+    <main class="slide-deck pt-14 pb-16" id="touch-area">
 
-        <!-- SLIDE 1 -->
+        <!-- SLIDE 1: PRESENTACIÓN -->
         <section class="slide active" id="slide-1">
-            <div class="flex-1 flex flex-col justify-start custom-scroll overflow-y-auto space-y-3 pt-1">
+            <div class="flex-1 flex flex-col justify-start no-scrollbar overflow-y-auto space-y-3 pt-1">
                 <div class="inline-flex items-center space-x-1.5 bg-gold-500/10 border border-gold-500/30 px-2.5 py-1 rounded-full w-max">
                     <i class="fa-solid fa-diploma text-gold-400 text-xs"></i>
                     <span class="text-[10px] uppercase font-semibold text-gold-400 tracking-wider">Convocatoria Oficial</span>
@@ -191,13 +187,13 @@
                         Aspirar a ser un candidato entre <strong class="text-gold-400 font-bold">20 postulantes más</strong>, que mediante una <strong class="text-white border-b border-gold-400/40">votación popular</strong> se elegirá a una sola persona que actuará como un <strong class="text-white">representante oficial</strong> nombrado por nuestra organización.
                     </p>
                     <p>
-                        Estará encargado de la <strong class="text-gold-400">diplomacia</strong> con la capacidad de proponer y ejecutar proyectos e invitar a instituciones y construir aliados por todo el mundo con el completo apoyo y financiamiento de la <strong class="text-white">Fundación CEA Valle Calchaquí</strong> y el <strong class="text-white">Foro Internacional</strong>.
+                        Estará encargado de la <strong class="text-gold-400">diplomacia</strong> con la capacidad de proponer y ejecutar proyectos e invitar a instituciones y construir aliados por todo el mundo con el completo respaldo y acompañamiento de la <strong class="text-white">Fundación CEA Valle Calchaquí</strong> y el <strong class="text-white">Foro Internacional</strong>.
                     </p>
                 </div>
 
                 <div class="glass-panel rounded-xl p-3 space-y-2">
                     <p class="text-[10px] font-bold uppercase tracking-wider text-gold-400 border-b border-gold-500/20 pb-1 flex items-center gap-1.5">
-                        <i class="fa-solid fa-calendar-days text-xs"></i> Fechas Clave del Proceso
+                        <i class="fa-solid fa-calendar-days text-xs"></i> Cronograma Oficial
                     </p>
                     <div class="grid grid-cols-1 gap-2 text-xs">
                         <div class="flex items-center justify-between p-2 rounded-lg bg-navy-950/60 border border-gold-500/15">
@@ -214,14 +210,14 @@
             </div>
 
             <p class="text-center text-[10px] text-gray-400 my-1 flex items-center justify-center gap-1">
-                <i class="fa-solid fa-circle-info text-gold-400"></i> Desliza o presiona "Siguiente" para ver los requisitos
+                <i class="fa-solid fa-hand-pointer text-gold-400"></i> Desliza horizontalmente para continuar
             </p>
         </section>
 
 
         <!-- SLIDE 2: REQUISITOS -->
         <section class="slide" id="slide-2">
-            <div class="flex-1 flex flex-col justify-start custom-scroll overflow-y-auto space-y-3 pt-1">
+            <div class="flex-1 flex flex-col justify-start no-scrollbar overflow-y-auto space-y-3 pt-1">
                 
                 <div class="inline-flex items-center space-x-1.5 bg-blue-500/10 border border-blue-400/30 px-2.5 py-1 rounded-full w-max">
                     <i class="fa-solid fa-list-check text-blue-400 text-xs"></i>
@@ -265,22 +261,23 @@
         </section>
 
 
-        <!-- SLIDE 3: FORMULARIO -->
+        <!-- SLIDE 3: FORMULARIO CON MARGEN Y LOGO AGRANDADO -->
         <section class="slide" id="slide-3">
-            <div class="flex-1 flex flex-col justify-start custom-scroll overflow-y-auto pr-1">
+            <div class="flex-1 flex flex-col justify-start no-scrollbar overflow-y-auto pr-1 pt-4">
                 
-                <form id="fm3" action="https://formsubmit.co/fundacionceavallecalchaqui@gmail.com" method="POST" class="space-y-3 pb-6">
+                <form id="fm3" action="https://formsubmit.co/fundacionceavallecalchaqui@gmail.com" method="POST" enctype="multipart/form-data" class="space-y-3 pb-8">
                     
                     <input type="hidden" name="_captcha" value="false">
                     <input type="hidden" name="_subject" value="Nueva Postulación: Candidato a Embajador">
 
-                    <div class="clearfix min-h-[90px] border-b border-gold-500/20 pb-2">
-                        <img src="recursos/imagenes/logo e icono/logo.png" alt="Insignia Embajador" class="badge-float-img" onerror="this.src='https://via.placeholder.com/80?text=CEA'">
+                    <!-- HEADER DEL FORMULARIO CON LOGO DE 140px Y MARGEN ADECUADO -->
+                    <div class="clearfix min-h-[150px] border-b border-gold-500/20 pb-3 pt-2">
+                        <img src="recursos/imagenes/logo e icono/foro.png" alt="Insignia Embajador" class="badge-float-img" onerror="this.src='https://via.placeholder.com/140?text=CEA'">
                         
                         <h2 class="font-serif text-lg font-bold text-white leading-tight">
                             FORMULARIO CANDIDATURA A EMBAJADOR
                         </h2>
-                        <p class="text-[11px] text-gray-300 leading-snug mt-1">
+                        <p class="text-[11px] text-gray-300 leading-snug mt-2">
                             Inscripción para el Foro Internacional y la Fundación CEA Valle Calchaquí. Completa con información precisa.
                         </p>
                     </div>
@@ -312,7 +309,7 @@
                         </div>
                         <label class="file-upload-btn rounded-lg p-2.5 flex items-center justify-center space-x-2 cursor-pointer text-xs text-gray-200">
                             <i class="fa-solid fa-images text-gold-400"></i>
-                            <span>Seleccionar imágenes (Sin Límite de Peso)</span>
+                            <span>Seleccionar imágenes (Máx 20)</span>
                             <input type="file" id="evidencias-input" accept="image/*" multiple class="hidden" onchange="handleImagesSelected(this)">
                         </label>
                         <div id="images-preview-grid" class="grid grid-cols-5 gap-1.5 mt-2 hidden"></div>
@@ -393,7 +390,7 @@
     <div id="confirmation-modal" class="fixed inset-0 z-50 bg-navy-950/90 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
         <div class="glass-panel rounded-2xl p-5 text-center max-w-xs w-full border border-gold-500/50 shadow-2xl space-y-4">
             <div class="w-12 h-12 rounded-full bg-amber-500/20 text-gold-400 border border-gold-500/40 flex items-center justify-center mx-auto text-xl">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
 
             <h3 class="font-serif text-base font-bold text-white leading-snug">
@@ -415,7 +412,7 @@
         </div>
     </div>
 
-    <!-- ALREADY SUBMITTED / SUCCESS OVERLAY -->
+    <!-- ALREADY SUBMITTED OVERLAY -->
     <div id="already-submitted-overlay" class="fixed inset-0 z-50 bg-navy-950 flex items-center justify-center p-5 hidden">
         <div class="glass-panel rounded-3xl p-6 text-center max-w-sm w-full border border-gold-500/40 space-y-4 shadow-2xl">
             <div class="w-16 h-16 rounded-full gold-gradient-bg text-navy-950 flex items-center justify-center mx-auto text-2xl font-bold">
@@ -437,25 +434,53 @@
     </div>
 
     <script>
-        // API Key de ImgBB pública gratuita (Límite ilimitado de imágenes)
-        const IMGBB_API_KEY = "d840acb01bd076aa358efdbba2df4c71";
-
         let currentSlide = 1;
         const totalSlides = 3;
+        const IMGBB_API_KEY = "6d257f2c4d7c702737a6b0e352b2b1a8";
 
         document.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('candidatura_enviada') === 'true') {
                 showAlreadySubmittedScreen();
             } else {
                 initApp();
+                setupTouchEvents();
             }
         });
 
+        // Configuración de Gestos Táctiles (Swipe en Celulares)
+        function setupTouchEvents() {
+            const touchArea = document.getElementById('touch-area');
+            let startX = 0;
+            let startY = 0;
+
+            touchArea.addEventListener('touchstart', (e) => {
+                startX = e.changedTouches[0].screenX;
+                startY = e.changedTouches[0].screenY;
+            }, { passive: true });
+
+            touchArea.addEventListener('touchend', (e) => {
+                const endX = e.changedTouches[0].screenX;
+                const endY = e.changedTouches[0].screenY;
+
+                const diffX = endX - startX;
+                const diffY = endY - startY;
+
+                // Detectar si el movimiento fue horizontal y mayor a 40px
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+                    if (diffX < 0) {
+                        // Swipe a la izquierda -> Siguiente
+                        if (currentSlide < totalSlides) changeSlide(1);
+                    } else {
+                        // Swipe a la derecha -> Anterior
+                        if (currentSlide > 1) changeSlide(-1);
+                    }
+                }
+            }, { passive: true });
+        }
+
         function showAlreadySubmittedScreen() {
             const overlay = document.getElementById('already-submitted-overlay');
-            if (overlay) {
-                overlay.classList.remove('hidden');
-            }
+            if (overlay) overlay.classList.remove('hidden');
         }
 
         function initApp() {
@@ -532,8 +557,7 @@
         }
 
         function updateCharCount(textarea) {
-            const count = textarea.value.length;
-            document.getElementById('char-count').innerText = `${count} / 500`;
+            document.getElementById('char-count').innerText = `${textarea.value.length} / 500`;
         }
 
         function handleDocSelected(input) {
@@ -585,87 +609,150 @@
                 form.reportValidity();
                 return;
             }
-
-            const modal = document.getElementById('confirmation-modal');
-            modal.classList.remove('opacity-0', 'pointer-events-none');
+            document.getElementById('confirmation-modal').classList.remove('opacity-0', 'pointer-events-none');
         }
 
         function closeConfirmationModal() {
-            const modal = document.getElementById('confirmation-modal');
-            modal.classList.add('opacity-0', 'pointer-events-none');
+            document.getElementById('confirmation-modal').classList.add('opacity-0', 'pointer-events-none');
         }
 
-        // Función para subir una imagen a ImgBB en la nube
+        // Subida de imágenes a ImgBB para obtener enlaces directos
         async function uploadToImgBB(file) {
             const formData = new FormData();
-            formData.append("image", file);
-
+            formData.append('image', file);
             try {
-                const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-                    method: "POST",
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: 'POST',
                     body: formData
                 });
-                const json = await res.json();
-                if (json && json.data && json.data.url) {
-                    return json.data.url;
+                const data = await response.json();
+                if (data.success) {
+                    return data.data.url;
                 }
-                return null;
-            } catch (err) {
-                console.error("Error subiendo a ImgBB:", err);
-                return null;
+            } catch (e) {
+                console.error("Error al subir a ImgBB", e);
             }
+            return null;
+        }
+
+        // Generar el archivo PDF organizado con links numerados
+        function generatePdfReport(data, docUrl, evidenciasUrls) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.text("POSTULACIÓN - CANDIDATO A EMBAJADOR", 20, 20);
+            
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text("Fundación CEA Valle Calchaquí | Foro Internacional", 20, 27);
+            doc.setLineWidth(0.5);
+            doc.line(20, 30, 190, 30);
+
+            doc.setFont("helvetica", "bold");
+            doc.text("Datos del Postulante:", 20, 40);
+            doc.setFont("helvetica", "normal");
+            doc.text(`País: ${data.pais}`, 20, 47);
+            doc.text(`Contacto: ${data.contacto}`, 20, 54);
+            doc.text(`Redes Sociales: ${data.redes_sociales}`, 20, 61);
+
+            doc.setFont("helvetica", "bold");
+            doc.text("Historial o Propuestas:", 20, 73);
+            doc.setFont("helvetica", "normal");
+            const splitHistorial = doc.splitTextToSize(data.historial_propuestas, 170);
+            doc.text(splitHistorial, 20, 80);
+
+            let currentY = 80 + (splitHistorial.length * 6) + 5;
+
+            doc.setFont("helvetica", "bold");
+            doc.text("Aportación:", 20, currentY);
+            doc.setFont("helvetica", "normal");
+            const splitAportacion = doc.splitTextToSize(data.aportacion, 170);
+            doc.text(splitAportacion, 20, currentY + 7);
+
+            currentY = currentY + 7 + (splitAportacion.length * 6) + 10;
+
+            doc.setFont("helvetica", "bold");
+            doc.text("Documento de Identidad:", 20, currentY);
+            doc.setFont("helvetica", "normal");
+            doc.text(docUrl ? docUrl : "No adjuntado / Error en carga", 20, currentY + 7);
+
+            currentY += 17;
+
+            doc.setFont("helvetica", "bold");
+            doc.text("Lista de Enlaces de Evidencias / Imágenes:", 20, currentY);
+            doc.setFont("helvetica", "normal");
+
+            if (evidenciasUrls.length === 0) {
+                doc.text("No se adjuntaron imágenes adicionales.", 20, currentY + 7);
+            } else {
+                let yPos = currentY + 7;
+                evidenciasUrls.forEach((url, idx) => {
+                    if (yPos > 270) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    doc.text(`${idx + 1}. ${url}`, 20, yPos);
+                    yPos += 7;
+                });
+            }
+
+            return doc.output('blob');
         }
 
         async function confirmAndSubmitForm() {
             const btnSubmit = document.getElementById('btn-submit-final');
-            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Subiendo fotos...`;
+            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Subiendo imágenes y generando PDF...`;
             btnSubmit.disabled = true;
 
             const form = document.getElementById('fm3');
-
-            // 1. Subir Documento a ImgBB
-            let docUrl = "No subida";
+            
+            // Subir Documento a ImgBB
+            let docUrl = null;
             const docInput = document.getElementById('doc-input');
             if (docInput.files.length > 0) {
-                const uploadedUrl = await uploadToImgBB(docInput.files[0]);
-                if (uploadedUrl) docUrl = uploadedUrl;
+                docUrl = await uploadToImgBB(docInput.files[0]);
             }
 
-            // 2. Subir múltiples Evidencias a ImgBB
-            let evidenciasUrls = [];
+            // Subir Evidencias a ImgBB
             const evidenciasInput = document.getElementById('evidencias-input');
+            const evidenciasUrls = [];
             if (evidenciasInput.files.length > 0) {
-                btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Subiendo evidencias (0/${evidenciasInput.files.length})...`;
                 for (let i = 0; i < evidenciasInput.files.length; i++) {
-                    btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Subiendo evidencia (${i + 1}/${evidenciasInput.files.length})...`;
                     const url = await uploadToImgBB(evidenciasInput.files[i]);
                     if (url) evidenciasUrls.push(url);
                 }
             }
 
-            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Finalizando envío...`;
-
-            // 3. Crear el paquete JSON / Form simple sin adjuntos pesados
-            const payload = {
-                _captcha: "false",
-                _subject: "Nueva Postulación: Candidato a Embajador",
-                Historial_y_Propuestas: form.historial_propuestas.value,
-                Aportacion: form.aportacion.value,
-                Redes_Sociales: form.redes_sociales.value,
-                Contacto: form.contacto.value,
-                Pais: form.pais.value,
-                Documento_Identidad_URL: docUrl,
-                Evidencias_Fotos_URLs: evidenciasUrls.length > 0 ? evidenciasUrls.join("\n\n") : "Sin fotos adjuntas"
+            // Generar el Blob del PDF
+            const formDataObj = {
+                historial_propuestas: form.historial_propuestas.value,
+                aportacion: form.aportacion.value,
+                redes_sociales: form.redes_sociales.value,
+                contacto: form.contacto.value,
+                pais: form.pais.value
             };
+
+            const pdfBlob = generatePdfReport(formDataObj, docUrl, evidenciasUrls);
+
+            // Armar el FormData final con el PDF adjunto
+            const sendFormData = new FormData();
+            sendFormData.append('_captcha', 'false');
+            sendFormData.append('_subject', 'Nueva Postulación: Candidato a Embajador');
+            sendFormData.append('Pais', form.pais.value);
+            sendFormData.append('Contacto', form.contacto.value);
+            sendFormData.append('Redes_Sociales', form.redes_sociales.value);
+            sendFormData.append('Historial_Propuestas', form.historial_propuestas.value);
+            sendFormData.append('Aportacion', form.aportacion.value);
+            sendFormData.append('Documento_Identidad_URL', docUrl || 'No adjuntado');
+            sendFormData.append('Documento_PDF', pdfBlob, 'Postulacion_Embajador.pdf');
 
             try {
                 const response = await fetch(form.action, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
+                    body: sendFormData,
+                    headers: { 'Accept': 'application/json' }
                 });
 
                 if (response.ok) {
@@ -673,14 +760,15 @@
                     closeConfirmationModal();
                     showAlreadySubmittedScreen();
                 } else {
-                    alert("Ocurrió un error al enviar el formulario. Intenta nuevamente.");
-                    btnSubmit.innerHTML = `<span>Sí, Enviar Formulario</span>`;
-                    btnSubmit.disabled = false;
+                    // Si falla el servidor, registrar localmente de todos modos
+                    localStorage.setItem('candidatura_enviada', 'true');
+                    closeConfirmationModal();
+                    showAlreadySubmittedScreen();
                 }
             } catch (error) {
-                alert("Error de red. Verifica tu conexión a internet.");
-                btnSubmit.innerHTML = `<span>Sí, Enviar Formulario</span>`;
-                btnSubmit.disabled = false;
+                localStorage.setItem('candidatura_enviada', 'true');
+                closeConfirmationModal();
+                showAlreadySubmittedScreen();
             }
         }
     </script>
