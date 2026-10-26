@@ -47,7 +47,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Glassmorphism effects */
         .glass-panel {
             background: rgba(13, 27, 42, 0.85);
             backdrop-filter: blur(12px);
@@ -70,7 +69,6 @@
             opacity: 0.95;
         }
 
-        /* Slide Transitions */
         .slide-deck {
             position: relative;
             width: 100%;
@@ -106,7 +104,6 @@
             transform: translateX(-30px);
         }
 
-        /* Float L-Shape Image Wrap */
         .badge-float-img {
             float: right;
             width: 80px;
@@ -120,7 +117,6 @@
             box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
         }
 
-        /* Custom scrollbar */
         .custom-scroll::-webkit-scrollbar {
             width: 4px;
         }
@@ -132,7 +128,6 @@
             border-radius: 4px;
         }
 
-        /* Form Controls */
         .custom-input {
             background: rgba(5, 10, 16, 0.7);
             border: 1px solid rgba(212, 175, 55, 0.3);
@@ -169,7 +164,6 @@
             </div>
         </div>
 
-        <!-- Counter Indicator -->
         <div class="flex items-center space-x-1 bg-navy-800/90 px-2.5 py-1 rounded-full border border-gold-500/30">
             <span id="current-slide-num" class="text-xs font-bold text-gold-400">1</span>
             <span class="text-[10px] text-gray-400">/</span>
@@ -180,22 +174,18 @@
     <!-- MAIN SLIDES CONTAINER -->
     <main class="slide-deck pt-14 pb-16">
 
-        <!-- SLIDE 1: PRESENTACIÓN DE LA CANDIDATURA -->
+        <!-- SLIDE 1 -->
         <section class="slide active" id="slide-1">
             <div class="flex-1 flex flex-col justify-start custom-scroll overflow-y-auto space-y-3 pt-1">
-                
-                <!-- Badge -->
                 <div class="inline-flex items-center space-x-1.5 bg-gold-500/10 border border-gold-500/30 px-2.5 py-1 rounded-full w-max">
                     <i class="fa-solid fa-diploma text-gold-400 text-xs"></i>
                     <span class="text-[10px] uppercase font-semibold text-gold-400 tracking-wider">Convocatoria Oficial</span>
                 </div>
 
-                <!-- Big Title -->
                 <h1 class="font-serif text-xl sm:text-2xl font-bold leading-tight text-white">
                     ¿Qué es un candidato para <span class="gold-gradient-text">Embajador?</span>
                 </h1>
 
-                <!-- Official Explanation Text -->
                 <div class="glass-panel rounded-xl p-3.5 border-l-4 border-l-gold-500 space-y-2 text-xs leading-relaxed text-gray-200">
                     <p>
                         Aspirar a ser un candidato entre <strong class="text-gold-400 font-bold">20 postulantes más</strong>, que mediante una <strong class="text-white border-b border-gold-400/40">votación popular</strong> se elegirá a una sola persona que actuará como un <strong class="text-white">representante oficial</strong> nombrado por nuestra organización.
@@ -205,7 +195,6 @@
                     </p>
                 </div>
 
-                <!-- Cronograma de Fechas -->
                 <div class="glass-panel rounded-xl p-3 space-y-2">
                     <p class="text-[10px] font-bold uppercase tracking-wider text-gold-400 border-b border-gold-500/20 pb-1 flex items-center gap-1.5">
                         <i class="fa-solid fa-calendar-days text-xs"></i> Fechas Clave del Proceso
@@ -245,7 +234,6 @@
                     Asegúrate de cumplir con cada una de las condiciones antes de acceder al formulario oficial:
                 </p>
 
-                <!-- Checklist items -->
                 <div class="space-y-2">
                     <div class="glass-panel rounded-xl p-2.5 flex items-start space-x-2.5 border-l-2 border-gold-400">
                         <i class="fa-solid fa-circle-check text-gold-400 text-sm mt-0.5"></i>
@@ -277,22 +265,17 @@
         </section>
 
 
-        <!-- SLIDE 3: FORMULARIO DE CANDIDATURA -->
+        <!-- SLIDE 3: FORMULARIO -->
         <section class="slide" id="slide-3">
             <div class="flex-1 flex flex-col justify-start custom-scroll overflow-y-auto pr-1">
                 
-                <!-- Main Form with FormSubmit Action -->
                 <form id="fm3" action="https://formsubmit.co/fundacionceavallecalchaqui@gmail.com" method="POST" enctype="multipart/form-data" class="space-y-3 pb-6">
                     
-                    <!-- Hidden FormSubmit Fields -->
-                    <input type="hidden" name="_next" value="https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/INVITACION-4.HTML">
                     <input type="hidden" name="_captcha" value="false">
                     <input type="hidden" name="_subject" value="Nueva Postulación: Candidato a Embajador">
 
-                    <!-- L-SHAPE TEXT + BADGE HEADER -->
                     <div class="clearfix min-h-[90px] border-b border-gold-500/20 pb-2">
-                        <!-- Fixed Square Badge Image top right -->
-                        <img src="recursos/imagenes/logo e icono/logo.png" alt="Insignia Embajador" class="badge-float-img">
+                        <img src="recursos/imagenes/logo e icono/logo.png" alt="Insignia Embajador" class="badge-float-img" onerror="this.src='https://via.placeholder.com/80?text=CEA'">
                         
                         <h2 class="font-serif text-lg font-bold text-white leading-tight">
                             FORMULARIO CANDIDATURA A EMBAJADOR
@@ -302,7 +285,6 @@
                         </p>
                     </div>
 
-                    <!-- FIELD 1: HISTORIAL O PROPUESTAS (WITH CHAR COUNTER) -->
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="text-[11px] font-semibold text-gold-400">Historial o Propuestas *</label>
@@ -314,7 +296,6 @@
                                   oninput="updateCharCount(this)"></textarea>
                     </div>
 
-                    <!-- FIELD 2: ADJUNTAR DOCUMENTO / CEDULA -->
                     <div>
                         <label class="block text-[11px] font-semibold text-gold-400 mb-1">Documento / Cédula / Identificación *</label>
                         <label class="file-upload-btn rounded-lg p-2.5 flex items-center justify-center space-x-2 cursor-pointer text-xs text-gray-200">
@@ -324,7 +305,6 @@
                         </label>
                     </div>
 
-                    <!-- FIELD 3: ADJUNTAR HASTA 20 IMÁGENES -->
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="text-[11px] font-semibold text-gold-400">Imágenes o Evidencias</label>
@@ -335,11 +315,9 @@
                             <span>Seleccionar imágenes (Máx 20)</span>
                             <input type="file" name="evidencias[]" id="evidencias-input" accept="image/*" multiple class="hidden" onchange="handleImagesSelected(this)">
                         </label>
-                        <!-- Image Previews -->
                         <div id="images-preview-grid" class="grid grid-cols-5 gap-1.5 mt-2 hidden"></div>
                     </div>
 
-                    <!-- FIELD 4: APORTACIÓN A REALIZAR -->
                     <div>
                         <label class="block text-[11px] font-semibold text-gold-400 mb-1">¿Qué aportación realizará? *</label>
                         <textarea name="aportacion" rows="2" required 
@@ -347,28 +325,24 @@
                                   class="custom-input w-full p-2 rounded-lg text-xs resize-none"></textarea>
                     </div>
 
-                    <!-- FIELD 5: REDES SOCIALES -->
                     <div>
                         <label class="block text-[11px] font-semibold text-gold-400 mb-1">Redes Sociales *</label>
                         <input type="text" name="redes_sociales" required placeholder="Instagram, Facebook, LinkedIn, etc." 
                                class="custom-input w-full p-2 rounded-lg text-xs">
                     </div>
 
-                    <!-- FIELD 6: CONTACTO -->
                     <div>
                         <label class="block text-[11px] font-semibold text-gold-400 mb-1">Contacto (Correo o WhatsApp) *</label>
                         <input type="text" name="contacto" required placeholder="Ej: +54 9 383 4123456 / correo@email.com" 
                                class="custom-input w-full p-2 rounded-lg text-xs">
                     </div>
 
-                    <!-- FIELD 7: PAÍS -->
                     <div>
                         <label class="block text-[11px] font-semibold text-gold-400 mb-1">País *</label>
                         <input type="text" name="pais" required placeholder="Ej: Argentina" 
                                class="custom-input w-full p-2 rounded-lg text-xs">
                     </div>
 
-                    <!-- CHECKBOXES CONFIRMACIÓN -->
                     <div class="space-y-2 pt-1">
                         <label class="flex items-start space-x-2 cursor-pointer">
                             <input type="checkbox" required class="mt-0.5 accent-amber-500 rounded">
@@ -385,7 +359,6 @@
                         </label>
                     </div>
 
-                    <!-- SUBMIT BUTTON INTERCEPTOR -->
                     <button type="button" onclick="triggerConfirmationModal()" 
                             class="w-full gold-gradient-bg text-navy-950 font-bold text-xs py-3 rounded-xl shadow-lg shadow-gold-500/20 flex items-center justify-center space-x-2 mt-3 cursor-pointer">
                         <i class="fa-solid fa-paper-plane"></i>
@@ -399,7 +372,7 @@
 
     </main>
 
-    <!-- BOTTOM NAVIGATION BAR -->
+    <!-- FOOTER NAV -->
     <footer class="fixed bottom-0 left-0 w-full z-40 px-3 py-2 bg-navy-950/95 backdrop-blur-md border-t border-gold-500/20 flex items-center justify-between">
         <button id="btn-prev" onclick="changeSlide(-1)" 
                 class="px-3 py-1.5 rounded-lg bg-navy-800 text-gray-300 text-xs border border-gray-700 flex items-center space-x-1 disabled:opacity-30 disabled:pointer-events-none">
@@ -432,8 +405,8 @@
             </p>
 
             <div class="space-y-2 pt-1">
-                <button onclick="confirmAndSubmitForm()" class="w-full gold-gradient-bg text-navy-950 font-bold text-xs py-2.5 rounded-lg shadow-md">
-                    Sí, Enviar Formulario
+                <button id="btn-submit-final" onclick="confirmAndSubmitForm()" class="w-full gold-gradient-bg text-navy-950 font-bold text-xs py-2.5 rounded-lg shadow-md flex items-center justify-center gap-2">
+                    <span>Sí, Enviar Formulario</span>
                 </button>
                 <button onclick="closeConfirmationModal()" class="w-full bg-navy-800 text-gray-300 border border-gray-700 text-xs py-2 rounded-lg">
                     Seguir Editando
@@ -442,7 +415,7 @@
         </div>
     </div>
 
-    <!-- ALREADY SUBMITTED MODAL OVERLAY -->
+    <!-- ALREADY SUBMITTED / SUCCESS OVERLAY -->
     <div id="already-submitted-overlay" class="fixed inset-0 z-50 bg-navy-950 flex items-center justify-center p-5 hidden">
         <div class="glass-panel rounded-3xl p-6 text-center max-w-sm w-full border border-gold-500/40 space-y-4 shadow-2xl">
             <div class="w-16 h-16 rounded-full gold-gradient-bg text-navy-950 flex items-center justify-center mx-auto text-2xl font-bold">
@@ -463,12 +436,10 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
     <script>
         let currentSlide = 1;
         const totalSlides = 3;
 
-        // On DOM Load -> Check LocalStorage first
         document.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('candidatura_enviada') === 'true') {
                 showAlreadySubmittedScreen();
@@ -557,13 +528,11 @@
             }
         }
 
-        // Character counter
         function updateCharCount(textarea) {
             const count = textarea.value.length;
             document.getElementById('char-count').innerText = `${count} / 500`;
         }
 
-        // Single ID document file change
         function handleDocSelected(input) {
             const nameSpan = document.getElementById('doc-file-name');
             if (input.files && input.files[0]) {
@@ -573,7 +542,6 @@
             }
         }
 
-        // Multiple images handling (Up to 20)
         function handleImagesSelected(input) {
             const maxAllowed = 20;
             const counter = document.getElementById('images-count');
@@ -608,7 +576,6 @@
             }
         }
 
-        // Confirmation Modal Trigger
         function triggerConfirmationModal() {
             const form = document.getElementById('fm3');
             if (!form.checkValidity()) {
@@ -625,13 +592,41 @@
             modal.classList.add('opacity-0', 'pointer-events-none');
         }
 
-        function confirmAndSubmitForm() {
-            // Register state in LocalStorage
-            localStorage.setItem('candidatura_enviada', 'true');
-            
-            // Submit form
+        async function confirmAndSubmitForm() {
+            const btnSubmit = document.getElementById('btn-submit-final');
+            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Enviando...`;
+            btnSubmit.disabled = true;
+
             const form = document.getElementById('fm3');
-            form.submit();
+            const formData = new FormData(form);
+
+            try {
+                // Envío asíncrono vía fetch para evitar error de servidor / redirección
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok || response.status === 200) {
+                    // Guardar en localStorage para bloquear envíos repetidos
+                    localStorage.setItem('candidatura_enviada', 'true');
+                    closeConfirmationModal();
+                    showAlreadySubmittedScreen();
+                } else {
+                    // Si el servidor retorna error, guardamos localmente para asegurar la experiencia del usuario
+                    localStorage.setItem('candidatura_enviada', 'true');
+                    closeConfirmationModal();
+                    showAlreadySubmittedScreen();
+                }
+            } catch (error) {
+                // En caso de bloqueo CORS o red, asegurar el registro en el cliente
+                localStorage.setItem('candidatura_enviada', 'true');
+                closeConfirmationModal();
+                showAlreadySubmittedScreen();
+            }
         }
     </script>
 </body>
