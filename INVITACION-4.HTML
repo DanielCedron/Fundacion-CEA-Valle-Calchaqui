@@ -635,7 +635,7 @@
             return null;
         }
 
-        // Generar el archivo PDF organizado con links numerados
+        // Generar el archivo PDF organizado incluyendo tanto la identificación como los links de evidencias
         function generatePdfReport(data, docUrl, evidenciasUrls) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -673,21 +673,29 @@
 
             currentY = currentY + 7 + (splitAportacion.length * 6) + 10;
 
+            // Sección de Imágenes y Enlaces dentro del PDF
             doc.setFont("helvetica", "bold");
-            doc.text("Documento de Identidad:", 20, currentY);
+            doc.text("Enlaces de Imágenes Adjuntas:", 20, currentY);
+            currentY += 7;
+
+            // 1. Enlace de Identificación
+            doc.setFont("helvetica", "bold");
+            doc.text("Documento / Cédula de Identidad:", 20, currentY);
+            currentY += 6;
             doc.setFont("helvetica", "normal");
-            doc.text(docUrl ? docUrl : "No adjuntado / Error en carga", 20, currentY + 7);
+            doc.text(docUrl ? `1. ${docUrl}` : "No adjuntado", 20, currentY);
+            currentY += 10;
 
-            currentY += 17;
-
+            // 2. Enlaces de Evidencias / Imágenes adicionales
             doc.setFont("helvetica", "bold");
-            doc.text("Lista de Enlaces de Evidencias / Imágenes:", 20, currentY);
+            doc.text("Evidencias / Imágenes adicionales:", 20, currentY);
+            currentY += 6;
             doc.setFont("helvetica", "normal");
 
             if (evidenciasUrls.length === 0) {
-                doc.text("No se adjuntaron imágenes adicionales.", 20, currentY + 7);
+                doc.text("No se adjuntaron imágenes adicionales.", 20, currentY);
             } else {
-                let yPos = currentY + 7;
+                let yPos = currentY;
                 evidenciasUrls.forEach((url, idx) => {
                     if (yPos > 270) {
                         doc.addPage();
@@ -725,7 +733,7 @@
                 }
             }
 
-            // Generar el Blob del PDF
+            // Generar el Blob del PDF con todos los links incluidos
             const formDataObj = {
                 historial_propuestas: form.historial_propuestas.value,
                 aportacion: form.aportacion.value,
@@ -745,7 +753,6 @@
             sendFormData.append('Redes_Sociales', form.redes_sociales.value);
             sendFormData.append('Historial_Propuestas', form.historial_propuestas.value);
             sendFormData.append('Aportacion', form.aportacion.value);
-            sendFormData.append('Documento_Identidad_URL', docUrl || 'No adjuntado');
             sendFormData.append('Documento_PDF', pdfBlob, 'Postulacion_Embajador.pdf');
 
             try {
@@ -760,7 +767,6 @@
                     closeConfirmationModal();
                     showAlreadySubmittedScreen();
                 } else {
-                    // Si falla el servidor, registrar localmente de todos modos
                     localStorage.setItem('candidatura_enviada', 'true');
                     closeConfirmationModal();
                     showAlreadySubmittedScreen();
