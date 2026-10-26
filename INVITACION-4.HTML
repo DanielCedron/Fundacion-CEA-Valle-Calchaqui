@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Candidato a Embajador | Fundación CEA & Foro Internacional</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            800: '#0d1b2a',
+                            900: '#0a1420',
+                            950: '#050a10',
+                        },
+                        gold: {
+                            400: '#f3c658',
+                            500: '#d4af37',
+                            600: '#b08316',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050a10;
+            color: #f1f5f9;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Glassmorphism effects */
+        .glass-panel {
+            background: rgba(13, 27, 42, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+        }
+
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #FFF0CA 0%, #D4AF37 50%, #B08316 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gold-gradient-bg {
+            background: linear-gradient(135deg, #F3C658 0%, #D4AF37 50%, #B08316 100%);
+        }
+
+        .gold-gradient-bg:active {
+            transform: scale(0.98);
+            opacity: 0.95;
+        }
+
+        /* Slide Transitions */
+        .slide-deck {
+            position: relative;
+            width: 100%;
+            min-height: calc(100vh - 120px);
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(30px);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 0.75rem;
+            box-sizing: border-box;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+
+        .slide.prev-out {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-30px);
+        }
+
+        /* Float L-Shape Image Wrap */
+        .badge-float-img {
+            float: right;
+            width: 80px;
+            height: 80px;
+            margin-left: 10px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid #D4AF37;
+            shape-outside: margin-box;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+        }
+
+        /* Custom scrollbar */
+        .custom-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(212, 175, 55, 0.4);
+            border-radius: 4px;
+        }
+
+        /* Form Controls */
+        .custom-input {
+            background: rgba(5, 10, 16, 0.7);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: #FFFFFF;
+            transition: all 0.2s ease;
+        }
+        .custom-input:focus {
+            outline: none;
+            border-color: #F3C658;
+            box-shadow: 0 0 10px rgba(243, 198, 88, 0.25);
+            background: rgba(13, 27, 42, 0.9);
+        }
+
+        .file-upload-btn {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px dashed rgba(212, 175, 55, 0.5);
+        }
+        .file-upload-btn:hover {
+            background: rgba(212, 175, 55, 0.18);
+        }
+    </style>
+</head>
+<body class="bg-navy-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-gold-500 selection:text-navy-950 p-2 sm:p-4">
+
+    <!-- HEADER / APP BAR -->
+    <header class="fixed top-0 left-0 w-full z-40 px-3 py-2.5 bg-navy-950/90 backdrop-blur-md border-b border-gold-500/20 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-lg gold-gradient-bg flex items-center justify-center text-navy-950 font-bold shadow-md shadow-gold-500/10">
+                <i class="fa-solid fa-crown text-sm"></i>
+            </div>
+            <div>
+                <p class="text-[9px] font-bold uppercase tracking-widest text-gold-400 leading-tight">Fundación CEA Valle Calchaquí</p>
+                <p class="text-[11px] font-bold text-white tracking-wide leading-tight">Foro Internacional</p>
+            </div>
+        </div>
+
+        <!-- Counter Indicator -->
+        <div class="flex items-center space-x-1 bg-navy-800/90 px-2.5 py-1 rounded-full border border-gold-500/30">
+            <span id="current-slide-num" class="text-xs font-bold text-gold-400">1</span>
+            <span class="text-[10px] text-gray-400">/</span>
+            <span id="total-slide-num" class="text-xs text-gray-400 font-medium">3</span>
+        </div>
+    </header>
+
+    <!-- MAIN SLIDES CONTAINER -->
+    <main class="slide-deck pt-14 pb-16">
+
+        <!-- SLIDE 1: PRESENTACIÓN DE LA CANDIDATURA -->
+        <section class="slide active" id="slide-1">
+            <div class="flex-1 flex flex-col justify-start custom-scroll overflow-y-auto space-y-3 pt-1">
+                
+                <!-- Badge -->
+                <div class="inline-flex items-center space-x-1.5 bg-gold-500/10 border border-gold-500/30 px-2.5 py-1 rounded-full w-max">
+                    <i class="fa-solid fa-diploma text-gold-400 text-xs"></i>
+                    <span class="text-[10px] uppercase font-semibold text-gold-400 tracking-wider">Convocatoria Oficial</span>
+                </div>
+
+                <!-- Big Title -->
+                <h1 class="font-serif text-xl sm:text-2xl font-bold leading-tight text-white">
+                    ¿Qué es un candidato para <span class="gold-gradient-text">Embajador?</span>
+                </h1>
+
+                <!-- Official Explanation Text -->
+                <div class="glass-panel rounded-xl p-3.5 border-l-4 border-l-gold-500 space-y-2 text-xs leading-relaxed text-gray-200">
+                    <p>
+                        Aspirar a ser un candidato entre <strong class="text-gold-400 font-bold">20 postulantes más</strong>, que mediante una <strong class="text-white border-b border-gold-400/40">votación popular</strong> se elegirá a una sola persona que actuará como un <strong class="text-white">representante oficial</strong> nombrado por nuestra organización.
+                    </p>
+                    <p>
+                        Estará encargado de la <strong class="text-gold-400">diplomacia</strong> con la capacidad de proponer y ejecutar proyectos e invitar a instituciones y construir aliados por todo el mundo con el completo apoyo y financiamiento de la <strong class="text-white">Fundación CEA Valle Calchaquí</strong> y el <strong class="text-white">Foro Internacional</strong>.
+                    </p>
+                </div>
+
+                <!-- Cronograma de Fechas -->
+                <div class="glass-panel rounded-xl p-3 space-y-2">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-gold-400 border-b border-gold-500/20 pb-1 flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar-days text-xs"></i> Fechas Clave del Proceso
+                    </p>
+                    <div class="grid grid-cols-1 gap-2 text-xs">
+                        <div class="flex items-center justify-between p-2 rounded-lg bg-navy-950/60 border border-gold-500/15">
+                            <span class="text-gray-300 font-medium text-[11px]">Cierre de Candidatura</span>
+                            <span class="text-gold-400 font-bold text-[11px]">26 Oct - 8 Nov</span>
+                        </div>
+                        <div class="flex items-center justify-between p-2 rounded-lg bg-navy-950/60 border border-gold-500/15">
+                            <span class="text-gray-300 font-medium text-[11px]">Inicio de Votaciones</span>
+                            <span class="text-gold-400 font-bold text-[11px]">16 Nov - 9 Dic</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <p class="text-center text-[10px] text-gray-400 my-1 flex items-center justify-center gap-1">
+                <i class="fa-solid fa-circle-info text-gold-400"></i> Desliza o presiona "Siguiente" para ver los requisitos
+            </p>
+        </section>
+
+
+        <!-- SLIDE 2: REQUISITOS -->
+        <section class="slide" id="slide-2">
+            <div class="flex-1 flex flex-col justify-start custom-scroll overflow-y-auto space-y-3 pt-1">
+                
+                <div class="inline-flex items-center space-x-1.5 bg-blue-500/10 border border-blue-400/30 px-2.5 py-1 rounded-full w-max">
+                    <i class="fa-solid fa-list-check text-blue-400 text-xs"></i>
+                    <span class="text-[10px] uppercase font-semibold text-blue-300 tracking-wider">Verificación</span>
+                </div>
+
+                <h2 class="font-serif text-xl font-bold text-white">LEER REQUISITOS</h2>
+
+                <p class="text-xs text-gray-300">
+                    Asegúrate de cumplir con cada una de las condiciones antes de acceder al formulario oficial:
+                </p>
+
+                <!-- Checklist items -->
+                <div class="space-y-2">
+                    <div class="glass-panel rounded-xl p-2.5 flex items-start space-x-2.5 border-l-2 border-gold-400">
+                        <i class="fa-solid fa-circle-check text-gold-400 text-sm mt-0.5"></i>
+                        <p class="text-xs text-gray-200"><strong class="text-white">Edad mínima:</strong> Tener +18 años de edad cumplidos.</p>
+                    </div>
+
+                    <div class="glass-panel rounded-xl p-2.5 flex items-start space-x-2.5 border-l-2 border-gold-400">
+                        <i class="fa-solid fa-id-card text-gold-400 text-sm mt-0.5"></i>
+                        <p class="text-xs text-gray-200"><strong class="text-white">Identificación:</strong> Adjuntar foto legible de documento/identificación/cédula.</p>
+                    </div>
+
+                    <div class="glass-panel rounded-xl p-2.5 flex items-start space-x-2.5 border-l-2 border-gold-400">
+                        <i class="fa-solid fa-scale-balanced text-gold-400 text-sm mt-0.5"></i>
+                        <p class="text-xs text-gray-200"><strong class="text-white">Apartidario:</strong> No estar aliado ni ser referente de ningún partido político.</p>
+                    </div>
+
+                    <div class="glass-panel rounded-xl p-2.5 flex items-start space-x-2.5 border-l-2 border-gold-400">
+                        <i class="fa-solid fa-share-nodes text-gold-400 text-sm mt-0.5"></i>
+                        <p class="text-xs text-gray-200"><strong class="text-white">Presencia Digital:</strong> Ingresar enlaces a tus redes sociales activas.</p>
+                    </div>
+
+                    <div class="glass-panel rounded-xl p-2.5 flex items-start space-x-2.5 border-l-2 border-gold-400">
+                        <i class="fa-solid fa-bullhorn text-gold-400 text-sm mt-0.5"></i>
+                        <p class="text-xs text-gray-200"><strong class="text-white">Consentimiento:</strong> Estar de acuerdo con la difusión y compartir su contenido con el Foro Internacional.</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- SLIDE 3: FORMULARIO DE CANDIDATURA -->
+        <section class="slide" id="slide-3">
+            <div class="flex-1 flex flex-col justify-start custom-scroll overflow-y-auto pr-1">
+                
+                <!-- Main Form with FormSubmit Action -->
+                <form id="fm3" action="https://formsubmit.co/fundacionceavallecalchaqui@gmail.com" method="POST" enctype="multipart/form-data" class="space-y-3 pb-6">
+                    
+                    <!-- Hidden FormSubmit Fields -->
+                    <input type="hidden" name="_next" value="https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/INVITACION-4.HTML">
+                    <input type="hidden" name="_captcha" value="false">
+                    <input type="hidden" name="_subject" value="Nueva Postulación: Candidato a Embajador">
+
+                    <!-- L-SHAPE TEXT + BADGE HEADER -->
+                    <div class="clearfix min-h-[90px] border-b border-gold-500/20 pb-2">
+                        <!-- Fixed Square Badge Image top right -->
+                        <img src="recursos/imagenes/logo e icono/logo.png" alt="Insignia Embajador" class="badge-float-img">
+                        
+                        <h2 class="font-serif text-lg font-bold text-white leading-tight">
+                            FORMULARIO CANDIDATURA A EMBAJADOR
+                        </h2>
+                        <p class="text-[11px] text-gray-300 leading-snug mt-1">
+                            Inscripción para el Foro Internacional y la Fundación CEA Valle Calchaquí. Completa con información precisa.
+                        </p>
+                    </div>
+
+                    <!-- FIELD 1: HISTORIAL O PROPUESTAS (WITH CHAR COUNTER) -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[11px] font-semibold text-gold-400">Historial o Propuestas *</label>
+                            <span id="char-count" class="text-[10px] text-gray-400">0 / 500</span>
+                        </div>
+                        <textarea name="historial_propuestas" id="historial" rows="3" maxlength="500" required 
+                                  placeholder="Resume tu historial laboral/social y tus principales propuestas en un texto breve y conciso..." 
+                                  class="custom-input w-full p-2 rounded-lg text-xs resize-none"
+                                  oninput="updateCharCount(this)"></textarea>
+                    </div>
+
+                    <!-- FIELD 2: ADJUNTAR DOCUMENTO / CEDULA -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-gold-400 mb-1">Documento / Cédula / Identificación *</label>
+                        <label class="file-upload-btn rounded-lg p-2.5 flex items-center justify-center space-x-2 cursor-pointer text-xs text-gray-200">
+                            <i class="fa-solid fa-id-card text-gold-400"></i>
+                            <span id="doc-file-name">Adjuntar foto de Documento (Max 1)</span>
+                            <input type="file" name="documento_identidad" accept="image/*" required class="hidden" onchange="handleDocSelected(this)">
+                        </label>
+                    </div>
+
+                    <!-- FIELD 3: ADJUNTAR HASTA 20 IMÁGENES -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[11px] font-semibold text-gold-400">Imágenes o Evidencias</label>
+                            <span id="images-count" class="text-[10px] text-gray-400">0 / 20 seleccionadas</span>
+                        </div>
+                        <label class="file-upload-btn rounded-lg p-2.5 flex items-center justify-center space-x-2 cursor-pointer text-xs text-gray-200">
+                            <i class="fa-solid fa-images text-gold-400"></i>
+                            <span>Seleccionar imágenes (Máx 20)</span>
+                            <input type="file" name="evidencias[]" id="evidencias-input" accept="image/*" multiple class="hidden" onchange="handleImagesSelected(this)">
+                        </label>
+                        <!-- Image Previews -->
+                        <div id="images-preview-grid" class="grid grid-cols-5 gap-1.5 mt-2 hidden"></div>
+                    </div>
+
+                    <!-- FIELD 4: APORTACIÓN A REALIZAR -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-gold-400 mb-1">¿Qué aportación realizará? *</label>
+                        <textarea name="aportacion" rows="2" required 
+                                  placeholder="Describe de qué manera aportarás valor al Foro Internacional y la región..." 
+                                  class="custom-input w-full p-2 rounded-lg text-xs resize-none"></textarea>
+                    </div>
+
+                    <!-- FIELD 5: REDES SOCIALES -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-gold-400 mb-1">Redes Sociales *</label>
+                        <input type="text" name="redes_sociales" required placeholder="Instagram, Facebook, LinkedIn, etc." 
+                               class="custom-input w-full p-2 rounded-lg text-xs">
+                    </div>
+
+                    <!-- FIELD 6: CONTACTO -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-gold-400 mb-1">Contacto (Correo o WhatsApp) *</label>
+                        <input type="text" name="contacto" required placeholder="Ej: +54 9 383 4123456 / correo@email.com" 
+                               class="custom-input w-full p-2 rounded-lg text-xs">
+                    </div>
+
+                    <!-- FIELD 7: PAÍS -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-gold-400 mb-1">País *</label>
+                        <input type="text" name="pais" required placeholder="Ej: Argentina" 
+                               class="custom-input w-full p-2 rounded-lg text-xs">
+                    </div>
+
+                    <!-- CHECKBOXES CONFIRMACIÓN -->
+                    <div class="space-y-2 pt-1">
+                        <label class="flex items-start space-x-2 cursor-pointer">
+                            <input type="checkbox" required class="mt-0.5 accent-amber-500 rounded">
+                            <span class="text-[10px] text-gray-300 leading-tight">
+                                Confirmo que tengo +18 años y no pertenezco a ningún partido político.
+                            </span>
+                        </label>
+
+                        <label class="flex items-start space-x-2 cursor-pointer">
+                            <input type="checkbox" required class="mt-0.5 accent-amber-500 rounded">
+                            <span class="text-[10px] text-gray-300 leading-tight">
+                                Acepto la difusión y el intercambio de contenidos con el Foro Internacional.
+                            </span>
+                        </label>
+                    </div>
+
+                    <!-- SUBMIT BUTTON INTERCEPTOR -->
+                    <button type="button" onclick="triggerConfirmationModal()" 
+                            class="w-full gold-gradient-bg text-navy-950 font-bold text-xs py-3 rounded-xl shadow-lg shadow-gold-500/20 flex items-center justify-center space-x-2 mt-3 cursor-pointer">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>PRESENTAR POSTULACIÓN</span>
+                    </button>
+
+                </form>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BOTTOM NAVIGATION BAR -->
+    <footer class="fixed bottom-0 left-0 w-full z-40 px-3 py-2 bg-navy-950/95 backdrop-blur-md border-t border-gold-500/20 flex items-center justify-between">
+        <button id="btn-prev" onclick="changeSlide(-1)" 
+                class="px-3 py-1.5 rounded-lg bg-navy-800 text-gray-300 text-xs border border-gray-700 flex items-center space-x-1 disabled:opacity-30 disabled:pointer-events-none">
+            <i class="fa-solid fa-chevron-left text-[10px]"></i>
+            <span>Anterior</span>
+        </button>
+
+        <div id="dots-container" class="flex items-center space-x-1"></div>
+
+        <button id="btn-next" onclick="changeSlide(1)" 
+                class="px-3.5 py-1.5 rounded-lg gold-gradient-bg text-navy-950 font-bold text-xs flex items-center space-x-1 shadow-md shadow-gold-500/10">
+            <span id="btn-next-text">Siguiente</span>
+            <i id="btn-next-icon" class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+    </footer>
+
+    <!-- CONFIRMATION MODAL -->
+    <div id="confirmation-modal" class="fixed inset-0 z-50 bg-navy-950/90 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="glass-panel rounded-2xl p-5 text-center max-w-xs w-full border border-gold-500/50 shadow-2xl space-y-4">
+            <div class="w-12 h-12 rounded-full bg-amber-500/20 text-gold-400 border border-gold-500/40 flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+
+            <h3 class="font-serif text-base font-bold text-white leading-snug">
+                Solo tiene una sola oportunidad de presentar este formulario.
+            </h3>
+
+            <p class="text-xs text-amber-300/90 font-medium">
+                ¿Está seguro que terminó?
+            </p>
+
+            <div class="space-y-2 pt-1">
+                <button onclick="confirmAndSubmitForm()" class="w-full gold-gradient-bg text-navy-950 font-bold text-xs py-2.5 rounded-lg shadow-md">
+                    Sí, Enviar Formulario
+                </button>
+                <button onclick="closeConfirmationModal()" class="w-full bg-navy-800 text-gray-300 border border-gray-700 text-xs py-2 rounded-lg">
+                    Seguir Editando
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALREADY SUBMITTED MODAL OVERLAY -->
+    <div id="already-submitted-overlay" class="fixed inset-0 z-50 bg-navy-950 flex items-center justify-center p-5 hidden">
+        <div class="glass-panel rounded-3xl p-6 text-center max-w-sm w-full border border-gold-500/40 space-y-4 shadow-2xl">
+            <div class="w-16 h-16 rounded-full gold-gradient-bg text-navy-950 flex items-center justify-center mx-auto text-2xl font-bold">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+
+            <h2 class="font-serif text-xl font-bold text-white">Postulación Registrada</h2>
+
+            <p class="text-xs text-gray-200 leading-relaxed bg-navy-900/80 p-3 rounded-xl border border-gold-500/20">
+                "Te enviaremos un mensaje para informarte si pasaste como candidato"
+            </p>
+
+            <div class="text-[11px] text-gray-400 space-y-1 pt-1 text-left">
+                <p><strong class="text-gold-400">Organización:</strong> Fundación CEA Valle Calchaquí</p>
+                <p><strong class="text-gold-400">Respaldo:</strong> Foro Internacional</p>
+                <p><strong class="text-gold-400">Inicio de Votación:</strong> 16 de Noviembre</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 3;
+
+        // On DOM Load -> Check LocalStorage first
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('candidatura_enviada') === 'true') {
+                showAlreadySubmittedScreen();
+            } else {
+                initApp();
+            }
+        });
+
+        function showAlreadySubmittedScreen() {
+            const overlay = document.getElementById('already-submitted-overlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+            }
+        }
+
+        function initApp() {
+            document.getElementById('total-slide-num').innerText = totalSlides;
+            createDots();
+            updateUI();
+        }
+
+        function createDots() {
+            const container = document.getElementById('dots-container');
+            container.innerHTML = '';
+            for (let i = 1; i <= totalSlides; i++) {
+                const dot = document.createElement('div');
+                dot.className = `h-1.5 rounded-full transition-all duration-300 ${i === currentSlide ? 'w-4 bg-gold-400' : 'w-1.5 bg-gray-600'}`;
+                dot.id = `dot-${i}`;
+                container.appendChild(dot);
+            }
+        }
+
+        function changeSlide(direction) {
+            const newSlide = currentSlide + direction;
+
+            if (newSlide >= 1 && newSlide <= totalSlides) {
+                const currentEl = document.getElementById(`slide-${currentSlide}`);
+                const nextEl = document.getElementById(`slide-${newSlide}`);
+
+                currentEl.classList.remove('active');
+                if (direction > 0) {
+                    currentEl.classList.add('prev-out');
+                } else {
+                    currentEl.classList.remove('prev-out');
+                }
+
+                setTimeout(() => {
+                    nextEl.classList.remove('prev-out');
+                    nextEl.classList.add('active');
+                }, 40);
+
+                currentSlide = newSlide;
+                updateUI();
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('current-slide-num').innerText = currentSlide;
+
+            for (let i = 1; i <= totalSlides; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if (dot) {
+                    dot.className = (i === currentSlide) 
+                        ? 'h-1.5 w-4 bg-gold-400 rounded-full transition-all duration-300' 
+                        : 'h-1.5 w-1.5 bg-gray-600 rounded-full transition-all duration-300';
+                }
+            }
+
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const btnNextText = document.getElementById('btn-next-text');
+            const btnNextIcon = document.getElementById('btn-next-icon');
+
+            btnPrev.disabled = (currentSlide === 1);
+
+            if (currentSlide === 1) {
+                btnNextText.innerText = "Requisitos";
+                btnNextIcon.className = "fa-solid fa-chevron-right text-[10px]";
+                btnNext.style.display = "flex";
+            } else if (currentSlide === 2) {
+                btnNextText.innerText = "Formulario";
+                btnNextIcon.className = "fa-solid fa-pen-to-square text-[10px]";
+                btnNext.style.display = "flex";
+            } else {
+                btnNext.style.display = "none";
+            }
+        }
+
+        // Character counter
+        function updateCharCount(textarea) {
+            const count = textarea.value.length;
+            document.getElementById('char-count').innerText = `${count} / 500`;
+        }
+
+        // Single ID document file change
+        function handleDocSelected(input) {
+            const nameSpan = document.getElementById('doc-file-name');
+            if (input.files && input.files[0]) {
+                nameSpan.innerText = "✓ " + input.files[0].name;
+            } else {
+                nameSpan.innerText = "Adjuntar foto de Documento (Max 1)";
+            }
+        }
+
+        // Multiple images handling (Up to 20)
+        function handleImagesSelected(input) {
+            const maxAllowed = 20;
+            const counter = document.getElementById('images-count');
+            const previewGrid = document.getElementById('images-preview-grid');
+
+            if (input.files.length > maxAllowed) {
+                alert(`Solo puedes seleccionar un máximo de ${maxAllowed} imágenes.`);
+                input.value = "";
+                counter.innerText = `0 / ${maxAllowed} seleccionadas`;
+                previewGrid.classList.add('hidden');
+                previewGrid.innerHTML = "";
+                return;
+            }
+
+            counter.innerText = `${input.files.length} / ${maxAllowed} seleccionadas`;
+            previewGrid.innerHTML = "";
+
+            if (input.files.length > 0) {
+                previewGrid.classList.remove('hidden');
+                Array.from(input.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'w-full h-10 object-cover rounded border border-gold-500/30';
+                        previewGrid.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                previewGrid.classList.add('hidden');
+            }
+        }
+
+        // Confirmation Modal Trigger
+        function triggerConfirmationModal() {
+            const form = document.getElementById('fm3');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const modal = document.getElementById('confirmation-modal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+        }
+
+        function closeConfirmationModal() {
+            const modal = document.getElementById('confirmation-modal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function confirmAndSubmitForm() {
+            // Register state in LocalStorage
+            localStorage.setItem('candidatura_enviada', 'true');
+            
+            // Submit form
+            const form = document.getElementById('fm3');
+            form.submit();
+        }
+    </script>
+</body>
+</html>
