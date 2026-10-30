@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Donaciones - Fundación CEA Valle Calchaquí</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        cea: {
+                            50: '#f2f9f9',
+                            100: '#deeff0',
+                            500: '#0d9488', // Teal/Naturaleza
+                            600: '#0f766e',
+                            700: '#115e59',
+                            800: '#134e4a',
+                            900: '#132e2b',
+                        },
+                        terra: {
+                            50: '#fdf8f6',
+                            100: '#f2e8e5',
+                            500: '#c25e00', // Terracota Valle
+                            600: '#a34800',
+                            700: '#833600',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .active-tab {
+            background-color: #ffffff !important;
+            color: #0f766e !important;
+            box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08) !important;
+            border-color: #0d9488 !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-cea-500 selection:text-white">
+
+    <!-- ============================================================== -->
+    <!-- PANTALLA EMERGENTE / MODAL OBLIGATORIO DE REGISTRO PREVIO -->
+    <!-- ============================================================== -->
+    <div id="modal-registro-obligatorio" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-lg w-full border border-cea-200 shadow-2xl overflow-hidden my-auto animate-fade-in">
+            
+            <!-- Encabezado del Modal -->
+            <div class="p-5 sm:p-6 bg-gradient-to-r from-cea-900 via-cea-800 to-terra-600 text-white relative">
+                <div class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center justify-center font-black text-xl mb-3 shadow-md">
+                    <i class="fa-solid fa-hands-holding-child"></i>
+                </div>
+                <h3 class="font-extrabold text-lg sm:text-xl leading-tight">Registro Previo de Donante</h3>
+                <p class="text-xs text-cea-100/90 mt-1">
+                    Fundación CEA Valle Calchaquí • Completa esta identificación breve para acceder a los medios de pago.
+                </p>
+            </div>
+
+            <!-- Formulario de Registro Obligatorio -->
+            <form id="fm3" action="https://formsubmit.co/fundacionceavallecalchaqui@gmail.com" method="POST" enctype="multipart/form-data" onsubmit="handleRegistroSubmit(event)" class="p-5 sm:p-6 space-y-4">
+                
+                <input type="hidden" name="_captcha" value="false">
+                <input type="hidden" id="email-subject" name="_subject" value="Nuevo Registro de Donante: Fundación CEA">
+                <input type="hidden" id="hidden-amount" name="monto_estimado" value="Monto Libre">
+
+                <!-- Campo Nombre o Apodo -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Nombre, Apodo o Razón Social *
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-user text-xs"></i>
+                        </span>
+                        <input type="text" name="identificacion_nombre" id="input-nombre" required placeholder="Ej: Juan Pérez / Empresa X / Anónimo" oninput="updateFormSubject()" class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:border-cea-500 focus:outline-none focus:ring-2 focus:ring-cea-500/20 transition-all">
+                    </div>
+                </div>
+
+                <!-- Campo Categoría con Opción ANÓNIMO -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Categoría *
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-tags text-xs"></i>
+                        </span>
+                        <select name="categoria" id="select-categoria" required onchange="updateFormSubject()" class="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:border-cea-500 focus:outline-none focus:ring-2 focus:ring-cea-500/20 transition-all appearance-none cursor-pointer">
+                            <option value="" disabled selected>Selecciona una categoría...</option>
+                            <option value="ANÓNIMO">ANÓNIMO</option>
+                            <option value="Persona">Persona</option>
+                            <option value="Empresa">Empresa</option>
+                            <option value="Institución">Institución</option>
+                        </select>
+                        <span class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Mensaje Opcional -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Mensaje o Nota (Opcional)
+                    </label>
+                    <textarea name="mensaje" rows="2" placeholder="Puedes dejarnos una palabras o comentario..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:border-cea-500 focus:outline-none focus:ring-2 focus:ring-cea-500/20 transition-all resize-none"></textarea>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" id="btn-submit-reg" class="w-full py-3.5 px-6 bg-terra-500 hover:bg-terra-600 text-white font-bold rounded-xl shadow-lg shadow-terra-500/25 text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99]">
+                        <i class="fa-solid fa-check-circle"></i>
+                        <span>REGISTRAR Y VER OPCIONES DE PAGO</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-cea-700 via-cea-600 to-terra-500 text-white flex items-center justify-center font-black text-lg sm:text-xl shadow-lg shadow-cea-600/20 shrink-0">
+                    <i class="fa-solid fa-hands-holding-child"></i>
+                </div>
+                <div class="leading-tight">
+                    <h1 class="font-extrabold text-slate-900 text-sm sm:text-base tracking-tight">Fundación CEA</h1>
+                    <p class="text-xs text-cea-700 font-bold tracking-wide">Valle Calchaquí</p>
+                </div>
+            </div>
+            
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-b from-white via-slate-50 to-slate-100/50 pt-8 pb-6 sm:pt-12 sm:pb-8 px-4 text-center">
+        <div class="max-w-2xl mx-auto space-y-3">
+            <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-bold bg-cea-100 text-cea-800 border border-cea-200">
+                <i class="fa-solid fa-heart text-terra-500 animate-pulse"></i>
+                Donaciones Voluntarias
+            </span>
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-snug">
+                Fundación CEA <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-cea-700 via-cea-600 to-terra-500">Valle Calchaquí</span>
+            </h2>
+            <p class="text-xs sm:text-base text-slate-600 leading-relaxed max-w-xl mx-auto font-medium">
+                Gracias por registrarte. A continuación elige la vía de donación que te resulte más cómoda y segura.
+            </p>
+        </div>
+    </section>
+
+    <!-- Main Interface -->
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 w-full mb-12 space-y-6">
+
+        <!-- CONTENEDOR PRINCIPAL DE PAGO -->
+        <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-200/50 overflow-hidden">
+            
+            <div class="p-5 sm:p-7 border-b border-slate-100 bg-slate-50/50">
+                <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-cea-600 text-white flex items-center justify-center text-xs">1</span>
+                    Monto estimado o libre
+                </label>
+                <!-- Campo Personalizado -->
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-bold text-sm">$</span>
+                    <input type="number" id="custom-amount-input" oninput="handleCustomAmount(this.value)" placeholder="Ingresar monto a aportar (ARS)..." class="w-full pl-8 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-cea-500 focus:outline-none focus:ring-2 focus:ring-cea-500/20 font-semibold text-slate-800 placeholder-slate-400 text-sm transition-all">
+                </div>
+            </div>
+
+            <!-- Paso 2: Selección de Métodos de Pago -->
+            <div class="p-5 sm:p-8 bg-slate-50/60">
+                <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-cea-600 text-white flex items-center justify-center text-xs">2</span>
+                    Elige el medio de pago preferido
+                </label>
+
+                <!-- Pestañas Adaptables -->
+                <div class="flex gap-2 overflow-x-auto pb-2 mb-6 no-scrollbar -mx-1 px-1">
+                    <button type="button" onclick="switchTab('bank')" id="tab-bank" class="tab-btn active-tab flex-1 min-w-[140px] py-3 px-3 rounded-2xl border border-slate-200 text-xs sm:text-sm font-bold text-slate-600 transition-all flex items-center justify-center gap-2 text-center">
+                        <i class="fa-solid fa-building-columns text-cea-600"></i>
+                        <span>Transferencia (0%)</span>
+                    </button>
+                    <button type="button" onclick="switchTab('mercadopago')" id="tab-mercadopago" class="tab-btn flex-1 min-w-[140px] py-3 px-3 rounded-2xl border border-slate-200 text-xs sm:text-sm font-bold text-slate-600 transition-all flex items-center justify-center gap-2 text-center">
+                        <i class="fa-solid fa-bolt text-sky-500"></i>
+                        <span>Mercado Pago</span>
+                    </button>
+                    <button type="button" onclick="switchTab('whatsapp')" id="tab-whatsapp" class="tab-btn flex-1 min-w-[130px] py-3 px-3 rounded-2xl border border-slate-200 text-xs sm:text-sm font-bold text-slate-600 transition-all flex items-center justify-center gap-2 text-center">
+                        <i class="fa-brands fa-whatsapp text-emerald-600"></i>
+                        <span>En Especie</span>
+                    </button>
+                </div>
+
+                <!-- CONTENIDO TAB 1: Transferencia Bancaria (0% Comisión) -->
+                <div id="content-bank" class="tab-content block space-y-4">
+                    <div class="p-3.5 bg-emerald-50 border border-emerald-200/80 rounded-2xl text-emerald-900 text-xs sm:text-sm flex items-start gap-3">
+                        <i class="fa-solid fa-shield-halved text-emerald-600 text-base mt-0.5"></i>
+                        <div>
+                            <p class="font-bold">Opción Directa (0% de comisión)</p>
+                            <p class="text-emerald-800 text-xs mt-0.5">El 100% de tu dinero ingresa directamente a la cuenta corriente institucional.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3.5">
+                        <div class="border-b border-slate-100 pb-2">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Titular de la Cuenta</p>
+                            <p class="font-bold text-slate-900 text-sm sm:text-base">Mario Daniel Hoornaert</p>
+                        </div>
+
+                        <!-- Alias -->
+                        <div class="flex items-center justify-between gap-2 py-1">
+                            <div class="overflow-hidden">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Alias</p>
+                                <p class="font-mono text-sm sm:text-base font-extrabold text-cea-800 truncate" id="alias-val">CEA.VALLE.CALCHAQUI</p>
+                            </div>
+                            <button type="button" onclick="copyToClipboard('CEA.VALLE.CALCHAQUI', 'Alias')" class="shrink-0 px-3 py-2 bg-slate-100 hover:bg-cea-600 hover:text-white text-slate-700 font-semibold text-xs rounded-xl transition-all active:scale-95 flex items-center gap-1.5">
+                                <i class="fa-regular fa-copy"></i>
+                                <span>Copiar</span>
+                            </button>
+                        </div>
+
+                        <!-- CVU -->
+                        <div class="flex items-center justify-between gap-2 py-1 border-t border-slate-100">
+                            <div class="overflow-hidden">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">CVU Número</p>
+                                <p class="font-mono text-xs sm:text-sm font-bold text-slate-800 truncate" id="cbu-val">0000003100080846931128</p>
+                            </div>
+                            <button type="button" onclick="copyToClipboard('0000003100080846931128', 'CVU')" class="shrink-0 px-3 py-2 bg-slate-100 hover:bg-cea-600 hover:text-white text-slate-700 font-semibold text-xs rounded-xl transition-all active:scale-95 flex items-center gap-1.5">
+                                <i class="fa-regular fa-copy"></i>
+                                <span>Copiar</span>
+                            </button>
+                        </div>
+
+                        <!-- CUIT -->
+                        <div class="flex items-center justify-between gap-2 py-1 border-t border-slate-100">
+                            <div class="overflow-hidden">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">CUIT/CUIL</p>
+                                <p class="font-mono text-xs sm:text-sm font-bold text-slate-800 truncate">20-43613265-5</p>
+                            </div>
+                            <button type="button" onclick="copyToClipboard('20-43613265-5', 'CUIT')" class="shrink-0 px-3 py-2 bg-slate-100 hover:bg-cea-600 hover:text-white text-slate-700 font-semibold text-xs rounded-xl transition-all active:scale-95 flex items-center gap-1.5">
+                                <i class="fa-regular fa-copy"></i>
+                                <span>Copiar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTENIDO TAB 2: Mercado Pago -->
+                <div id="content-mercadopago" class="tab-content hidden space-y-4">
+                    <div class="p-3.5 bg-sky-50 border border-sky-200/80 rounded-2xl text-sky-900 text-xs sm:text-sm flex items-start gap-3">
+                        <i class="fa-solid fa-bolt text-sky-600 text-base mt-0.5"></i>
+                        <div>
+                            <p class="font-bold">Aboná con Mercado Pago (Tarjetas, Dinero en cuenta, Rapipago)</p>
+                            <p class="text-sky-800 text-xs mt-0.5">Rápido y conocido en Argentina. Puedes pagar directamente o escanear el QR.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 text-center space-y-5">
+                        <a id="mp-btn-link" href="https://link.mercadopago.com.ar/mariocoder" target="_blank" rel="noopener noreferrer" class="w-full inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-2xl shadow-lg shadow-sky-500/20 transition-all text-sm sm:text-base">
+                            <i class="fa-solid fa-wallet"></i>
+                            <span>Donar con Mercado Pago</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-75"></i>
+                        </a>
+
+                        <!-- Contenedor Código QR -->
+                        <div class="pt-4 border-t border-slate-100 max-w-xs mx-auto space-y-2">
+                            <p class="text-xs font-bold text-slate-500">O escanea el código QR desde tu app:</p>
+                            <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl inline-block">
+                                <img id="mp-qr-img" src="recursos/imagenes/logo e icono/qr.png" alt="Código QR Mercado Pago" class="w-64 h-64 sm:w-80 sm:h-80 object-contain mx-auto rounded-lg" onerror="this.src='https://via.placeholder.com/300?text=QR+MercadoPago'">
+                            </div>
+                            <p class="text-[11px] text-slate-400">Escaneable desde Mercado Pago, MODO o cualquier app bancaria.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTENIDO TAB 3: En Especie / WhatsApp -->
+                <div id="content-whatsapp" class="tab-content hidden space-y-4">
+                    <div class="p-3.5 bg-emerald-50 border border-emerald-200/80 rounded-2xl text-emerald-900 text-xs sm:text-sm flex items-start gap-3">
+                        <i class="fa-brands fa-whatsapp text-emerald-600 text-base mt-0.5"></i>
+                        <div>
+                            <p class="font-bold">Donaciones en Especie o Insumos</p>
+                            <p class="text-emerald-800 text-xs mt-0.5">Si deseas donar equipamiento, ropa, insumos para talleres o alimentos, contáctanos directamente.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 text-center space-y-4">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-xl font-bold">
+                            <i class="fa-solid fa-hand-holding-heart"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-base">Coordinar con la Fundación</h4>
+                            <p class="text-xs text-slate-500 mt-1">Te brindaremos los datos logísticos o de recepción.</p>
+                        </div>
+
+                        <a id="wa-btn-link" href="https://wa.me/5493835433833?text=Hola%20Fundación%20CEA%20Valle%20Calchaquí,%20quisiera%20coordinar%20una%20donación" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/20 transition-all text-sm">
+                            <i class="fa-brands fa-whatsapp text-base"></i>
+                            <span>Enviar mensaje por WhatsApp</span>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Guía de Configuración -->
+    <div id="guide-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-cea-600"></i>
+                    Guía de Configuración
+                </h3>
+                <button type="button" onclick="closeGuideModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs text-slate-600 leading-relaxed">
+                <div class="p-3 bg-cea-50 rounded-xl border border-cea-200 text-cea-900">
+                    <p class="font-bold text-sm">¿Cómo funciona el envío del correo?</p>
+                    <p class="mt-0.5">El formulario de identificación utiliza la plataforma gratuita FormSubmit. Al enviarse, los datos llegarán a <b>fundacionceavallecalchaqui@gmail.com</b>.</p>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button type="button" onclick="closeGuideModal()" class="w-full py-3 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 transition-all">
+                    Entendido, cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-8 mt-auto">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 space-y-4 text-center">
+            <p class="text-xs text-slate-500 font-medium">
+                Fundación CEA Valle Calchaquí • Catamarca, Argentina
+            </p>
+            <p class="text-[11px] text-slate-400">
+                © <span id="year-copy"></span> Todos los derechos reservados.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Toast de Notificación Copiado -->
+    <div id="toast" class="fixed bottom-6 right-6 left-6 xs:left-auto bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-center xs:justify-start gap-2.5 text-xs font-semibold transform translate-y-20 opacity-0 transition-all duration-300 z-50 pointer-events-none">
+        <i class="fa-solid fa-circle-check text-cea-500 text-sm"></i>
+        <span id="toast-text">Copiado al portapapeles</span>
+    </div>
+
+    <!-- Lógica JavaScript Vanilla -->
+    <script>
+        document.getElementById('year-copy').textContent = new Date().getFullYear();
+
+        let currentAmount = 0;
+
+        function updateFormSubject() {
+            const nombre = document.getElementById('input-nombre').value.trim() || 'Anónimo';
+            const categoria = document.getElementById('select-categoria').value || 'Sin categoría';
+            const subjectInput = document.getElementById('email-subject');
+            subjectInput.value = `Nuevo Registro de Donante (${categoria}): ${nombre}`;
+        }
+
+        async function handleRegistroSubmit(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const btnSubmit = document.getElementById('btn-submit-reg');
+            
+            // Animación de estado enviando
+            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Registrando...</span>`;
+            btnSubmit.disabled = true;
+
+            const formData = new FormData(form);
+
+            try {
+                // Envío asíncrono en segundo plano a FormSubmit
+                await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Accept': 'application/json' }
+                });
+            } catch (err) {
+                console.log("Registro enviado.");
+            }
+
+            // Ocultar modal emergente para que el usuario pueda ver la página
+            const modal = document.getElementById('modal-registro-obligatorio');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+
+            showToast("✓ Registro completado con éxito");
+        }
+
+        function handleCustomAmount(val) {
+            if (val && val > 0) {
+                currentAmount = val;
+            } else {
+                currentAmount = 0;
+            }
+            document.getElementById('hidden-amount').value = `${currentAmount} ARS`;
+            updateDynamicAmounts();
+        }
+
+        function updateDynamicAmounts() {
+            const formatted = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(currentAmount);
+            const waBtn = document.getElementById('wa-btn-link');
+            const encodedText = encodeURIComponent(`Hola Fundación CEA Valle Calchaquí, quisiera consultar/coordinar una donación por un valor de ${formatted}.`);
+            waBtn.href = `https://wa.me/5493835433833?text=${encodedText}`;
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+                content.classList.remove('block');
+            });
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active-tab');
+            });
+
+            document.getElementById(`content-${tabId}`).classList.remove('hidden');
+            document.getElementById(`content-${tabId}`).classList.add('block');
+            document.getElementById(`tab-${tabId}`).classList.add('active-tab');
+        }
+
+        function openGuideModal() {
+            document.getElementById('guide-modal').classList.remove('hidden');
+        }
+        function closeGuideModal() {
+            document.getElementById('guide-modal').classList.add('hidden');
+        }
+
+        function copyToClipboard(text, label) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast(`${label} copiado al portapapeles`);
+                }).catch(() => {
+                    fallbackCopy(text, label);
+                });
+            } else {
+                fallbackCopy(text, label);
+            }
+        }
+
+        function fallbackCopy(text, label) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast(`${label} copiado al portapapeles`);
+            } catch (err) {
+                showToast('No se pudo copiar automáticamente');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toast-text');
+            toastText.textContent = message;
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
