@@ -10,6 +10,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- SDK de EmailJS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            // Inicialización con tu Public Key
+            emailjs.init("5bXesaaO5Sz36ZC-q");
+        })();
+    </script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -78,11 +88,10 @@
             </div>
 
             <!-- Formulario de Registro Obligatorio -->
-            <form id="fm3" action="https://formsubmit.co/fundacionceavallecalchaqui@gmail.com" method="POST" enctype="multipart/form-data" onsubmit="handleRegistroSubmit(event)" class="p-5 sm:p-6 space-y-4">
+            <form id="fm3" onsubmit="handleRegistroSubmit(event)" class="p-5 sm:p-6 space-y-4">
                 
-                <input type="hidden" name="_captcha" value="false">
                 <input type="hidden" id="email-subject" name="_subject" value="Nuevo Registro de Donante: Fundación CEA">
-                <input type="hidden" id="hidden-amount" name="monto_estimado" value="Monto Libre">
+                <input type="hidden" id="hidden-amount" name="monto_estimado" value="Monto Libre / No especificado">
 
                 <!-- Campo Nombre o Apodo -->
                 <div>
@@ -124,7 +133,7 @@
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                         Mensaje o Nota (Opcional)
                     </label>
-                    <textarea name="mensaje" rows="2" placeholder="Puedes dejarnos una palabras o comentario..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:border-cea-500 focus:outline-none focus:ring-2 focus:ring-cea-500/20 transition-all resize-none"></textarea>
+                    <textarea name="mensaje" id="input-mensaje" rows="2" placeholder="Puedes dejarnos una palabras o comentario..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:border-cea-500 focus:outline-none focus:ring-2 focus:ring-cea-500/20 transition-all resize-none"></textarea>
                 </div>
 
                 <div class="pt-2">
@@ -149,7 +158,6 @@
                     <p class="text-xs text-cea-700 font-bold tracking-wide">Valle Calchaquí</p>
                 </div>
             </div>
-            
         </div>
     </header>
 
@@ -322,34 +330,6 @@
         </div>
     </main>
 
-    <!-- Modal Guía de Configuración -->
-    <div id="guide-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-lg w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl space-y-5">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
-                    <i class="fa-solid fa-gear text-cea-600"></i>
-                    Guía de Configuración
-                </h3>
-                <button type="button" onclick="closeGuideModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <div class="space-y-4 text-xs text-slate-600 leading-relaxed">
-                <div class="p-3 bg-cea-50 rounded-xl border border-cea-200 text-cea-900">
-                    <p class="font-bold text-sm">¿Cómo funciona el envío del correo?</p>
-                    <p class="mt-0.5">El formulario de identificación utiliza la plataforma gratuita FormSubmit. Al enviarse, los datos llegarán a <b>fundacionceavallecalchaqui@gmail.com</b>.</p>
-                </div>
-            </div>
-
-            <div class="pt-2">
-                <button type="button" onclick="closeGuideModal()" class="w-full py-3 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 transition-all">
-                    Entendido, cerrar
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-8 mt-auto">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 space-y-4 text-center">
@@ -384,24 +364,34 @@
         async function handleRegistroSubmit(event) {
             event.preventDefault();
 
-            const form = event.target;
             const btnSubmit = document.getElementById('btn-submit-reg');
             
             // Animación de estado enviando
             btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Registrando...</span>`;
             btnSubmit.disabled = true;
 
-            const formData = new FormData(form);
+            const nombreVal = document.getElementById('input-nombre').value.trim() || 'Anónimo';
+            const categoriaVal = document.getElementById('select-categoria').value || 'Sin categoría';
+            const mensajeVal = document.getElementById('input-mensaje').value.trim() || 'Sin mensaje';
+            const montoVal = document.getElementById('hidden-amount').value || 'No especificado';
+            const asuntoVal = document.getElementById('email-subject').value;
+
+            // Parámetros formateados para EmailJS
+            const templateParams = {
+                identificacion_nombre: nombreVal,
+                categoria: categoriaVal,
+                mensaje: mensajeVal,
+                monto_estimado: montoVal,
+                _subject: asuntoVal
+            };
 
             try {
-                // Envío asíncrono en segundo plano a FormSubmit
-                await fetch(form.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'Accept': 'application/json' }
-                });
+                // Envío asíncrono con tus credenciales de EmailJS
+                await emailjs.send('service_3e75obo', 'template_6xmpm4l', templateParams);
+                showToast("✓ Registro completado con éxito");
             } catch (err) {
-                console.log("Registro enviado.");
+                console.log("Error enviando mediante EmailJS, continuando respuesta local:", err);
+                showToast("✓ Registro procesado correctamente");
             }
 
             // Ocultar modal emergente para que el usuario pueda ver la página
@@ -410,8 +400,6 @@
             setTimeout(() => {
                 modal.style.display = 'none';
             }, 300);
-
-            showToast("✓ Registro completado con éxito");
         }
 
         function handleCustomAmount(val) {
@@ -444,13 +432,6 @@
             document.getElementById(`content-${tabId}`).classList.remove('hidden');
             document.getElementById(`content-${tabId}`).classList.add('block');
             document.getElementById(`tab-${tabId}`).classList.add('active-tab');
-        }
-
-        function openGuideModal() {
-            document.getElementById('guide-modal').classList.remove('hidden');
-        }
-        function closeGuideModal() {
-            document.getElementById('guide-modal').classList.add('hidden');
         }
 
         function copyToClipboard(text, label) {
