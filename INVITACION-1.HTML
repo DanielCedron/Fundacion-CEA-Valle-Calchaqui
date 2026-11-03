@@ -124,7 +124,7 @@
     accent-color: var(--accent);
   }
 
-  /* Estilos para Botones del Formulario */
+  /* --- Estilos para Botones del Formulario --- */
   .envi, .close {
     display: block;
     width: 100%;
@@ -232,7 +232,7 @@
     cursor: pointer;
   }
   .btn-modal-pagar {
-    background: #009ee3; /* Color Mercado Pago */
+    background: #009ee3;
     color: #ffffff;
     border: none;
     padding: 12px;
@@ -268,7 +268,8 @@
   </div>
 
   <div id="formPanel" class="panel hidden">
-    <form id="fm3" action="https://formsubmit.co/fundacionceavallecalchaqui@gmail.com" method="POST" enctype="multipart/form-data">
+    <!-- Se actualizó el action a formsubmit.io -->
+    <form id="fm3" action="https://formsubmit.io/fundacionceavallecalchaqui@gmail.com" method="POST" enctype="multipart/form-data">
       <h1 class="tit">Inscripción para el Foro Internacional</h1>
 
       <input type="text" id="asunto" name="asunto" value="Foro Internacional de Neurodivergencia y Derechos Humanos" hidden>
@@ -326,7 +327,6 @@
 
       <input type="hidden" name="_captcha" value="false">
     </form>
-
   </div>
 
   <div id="thankPanel" class="panel hidden">
@@ -334,8 +334,8 @@
       <h1 id="gracias">¡Muchas Gracias por contar contigo!</h1>
     </div>
     <table class="schedule">
-      <tr><th colspan="3">Mes de Noviembre | Año 2026</th></tr>
-      <tr><td>Dia y hora en espera de confirmación...</td></tr>
+      <tr><th colspan="3">Mes de Diciembre | Año 2026</th></tr>
+      <tr><td>Fecha: 11 y 12, en el local "Punto Digital" en Belén, Catamarca</td></tr>
     </table>
     <div class="image-placeholder">
         <img src="INVITACIONES/inv1/logo.jpg" alt="Logo de la Fundación CEA Valle Calchaquí">
@@ -424,7 +424,7 @@ const REUNION_ACTUAL = 2;
     modalCertificado.classList.add('hidden');
   });
 
-  // ----- ENVÍO DE FORMULARIO SIN ERROR 522 (FETCH ASÍNCRONO) -----
+  // ----- ENVÍO DE FORMULARIO CON FORMSUBMIT.IO (FETCH ASÍNCRONO) -----
   const form = document.getElementById('fm3');
   const btnEnviar = document.getElementById('btnEnviar');
 
@@ -445,7 +445,6 @@ const REUNION_ACTUAL = 2;
       console.log("Formulario enviado con respuesta capturada.");
     }
 
-    // Guardar en LocalStorage y mostrar pantalla final
     localStorage.setItem(LS_KEY, REUNION_ACTUAL);
     formPanel.classList.add('hidden');
     thank.classList.remove('hidden');
