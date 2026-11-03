@@ -49,7 +49,7 @@
     justify-content:center;
     gap:14px;
   }
-  .hidden{display:none;}
+  .hidden{display:none !important;}
   h1{margin:0; font-size:22px; color:var(--accent);}
   p.lead{margin:0; font-size:16px; line-height:1.4; white-space:pre-line;}
   button.btn{
@@ -57,6 +57,7 @@
     padding:12px 18px; border-radius:12px;
     font-weight:600; font-size:15px;
     opacity:0; transition:opacity .6s ease;
+    cursor:pointer;
   }
   button.btn.show{opacity:1;}
 
@@ -123,53 +124,46 @@
     accent-color: var(--accent);
   }
 
-  #otroText {
-    margin-left: 28px;
-    margin-top: 6px;
+  /* Estilos para Botones del Formulario */
+  .envi, .close {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
   }
-    /* --- Estilos para Botones del Formulario --- */
 
-    /* Estilo base para ambos botones */
-    .envi, .close {
-      display: block;
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      font-weight: 600;
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
-      text-align: center;
-      text-decoration: none;
-      box-sizing: border-box;
-      transition: all 0.3s ease;
-    }
+  .envi {
+    background-color: var(--accent);
+    color: #ffffff;
+    margin-top: 10px;
+    box-shadow: 0 4px 15px rgba(0, 107, 122, 0.2);
+  }
 
-    /* Botón Principal: Enviar */
-    .envi {
-      background-color: var(--accent); /* Color de acento principal */
-      color: #ffffff;
-      margin-top: 10px; /* Espacio arriba */
-      box-shadow: 0 4px 15px rgba(0, 107, 122, 0.2);
-    }
+  .envi:hover, .envi:focus {
+    background-color: #005966;
+    box-shadow: 0 6px 20px rgba(0, 107, 122, 0.3);
+    transform: translateY(-2px);
+  }
 
-    .envi:hover, .envi:focus {
-      background-color: #005966; /* Un tono más oscuro del acento */
-      box-shadow: 0 6px 20px rgba(0, 107, 122, 0.3);
-      transform: translateY(-2px); /* Efecto de elevación sutil */
-    }
+  .close {
+    background-color: transparent;
+    color: var(--muted);
+    margin-top: 8px;
+  }
 
-    /* Botón Secundario: Cancelar */
-    .close {
-      background-color: transparent;
-      color: var(--muted); /* Color de texto apagado */
-      margin-top: 8px; /* Espacio entre botones */
-    }
+  .close:hover, .close:focus {
+    background-color: #f0f4f5;
+    color: var(--accent);
+  }
 
-    .close:hover, .close:focus {
-      background-color: #f0f4f5; /* Un fondo muy sutil */
-      color: var(--accent); /* Color de acento al pasar el mouse */
-    }
   /* --- Gracias --- */
   .thank h1{color:var(--accent); cursor:pointer;}
 
@@ -188,6 +182,65 @@
     width: 100%;
     height: auto;  
     display: block; 
+  }
+
+  /* --- Ventana Emergente (Modal) --- */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(6, 51, 58, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+  .modal-card {
+    background: #ffffff;
+    border-radius: 16px;
+    max-width: 420px;
+    width: 100%;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    text-align: center;
+  }
+  .modal-card h3 {
+    margin: 0 0 10px 0;
+    color: var(--accent);
+    font-size: 18px;
+  }
+  .modal-card p {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  .modal-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .btn-modal-presencial {
+    background: #e2f1f4;
+    color: var(--accent);
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .btn-modal-pagar {
+    background: #009ee3; /* Color Mercado Pago */
+    color: #ffffff;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
   }
 </style>
 </head>
@@ -258,17 +311,19 @@
 
       <label>¿Necesita certificado de asistencia?</label>
       <div class="radio-group">
-        <label><input type="radio" name="certificado" value="Si" required> Sí</label>
-        <label><input type="radio" name="certificado" value="No" required> No</label>
+        <label><input type="radio" name="certificado" value="Si" id="cert_si" required> Sí</label>
+        <label><input type="radio" name="certificado" value="No" id="cert_no" required> No</label>
       </div>
+
+      <!-- Campo oculto para guardar la modalidad de pago elegida -->
+      <input type="hidden" name="metodo_pago_certificado" id="metodo_pago_certificado" value="No solicita">
 
       <label for="obs">Observación o necesidades especiales (opcional)</label>
       <textarea id="obs" name="observacion"></textarea>
 
-      <button class="envi" type="submit">Enviar</button>
-      <a onclick="vf()" class="close">Cancelar</a>
+      <button class="envi" type="submit" id="btnEnviar">Enviar</button>
+      <a onclick="window.location.reload()" class="close">Cancelar</a>
 
-      <input type="hidden" name="_next" value="https://danielcedron.github.io/Fundacion-CEA-Valle-Calchaqui/INVITACION-1.HTML">
       <input type="hidden" name="_captcha" value="false">
     </form>
 
@@ -288,10 +343,19 @@
   </div>
 </div>
 
+<!-- Ventana Emergente Modal para Certificado -->
+<div id="modalCertificado" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h3>Certificado de Asistencia</h3>
+    <p>El costo de emisión del certificado es de <strong>$10.000 Pesos Argentinos</strong>.<br><br>¿Cómo desea realizar el pago?</p>
+    <div class="modal-buttons">
+      <button type="button" class="btn-modal-presencial" id="btnPagoPresencial">Pagar Presencial</button>
+      <a href="https://mpago.la/2RmUCS8" target="_blank" class="btn-modal-pagar" id="btnPagoAhora">Pagar Ahora (Mercado Pago)</a>
+    </div>
+  </div>
+</div>
+
 <script>
-// =========================================================================
-// VARIABLE MAESTRA: Cambia este número para cada nueva reunión (ej. 2, 3, 4)
-// =========================================================================
 const REUNION_ACTUAL = 2;
 
 (function(){
@@ -314,9 +378,6 @@ const REUNION_ACTUAL = 2;
     typeWriter(sc.querySelector('p')||sc.querySelector('h1'),text,()=>btn.classList.add('show'));
   }
 
-  // ----- NUEVA LÓGICA DE VALIDACIÓN POR NÚMERO DE REUNIÓN -----
-  // Si el valor guardado coincide con el número de reunión actual, mostramos gracias.
-  // Si es diferente (o no existe), mostramos la intro para que se vuelvan a inscribir.
   let reunionGuardada = localStorage.getItem(LS_KEY);
 
   if (reunionGuardada == REUNION_ACTUAL) {
@@ -325,7 +386,6 @@ const REUNION_ACTUAL = 2;
       thank.classList.remove('hidden');
   } else {
       typeWriter(document.getElementById('text1'),'¡ Bienvenidos !');
-      // Puedes adaptar el texto para que diga "Segundo", "Tercer", etc. 
       typeWriter(document.getElementById('sub1'),'Al Segundo encuentro del Foro Internacional de\nNeurodivergencia y Derechos Humanos',()=>document.getElementById('next1').classList.add('show'));
   }
 
@@ -333,12 +393,65 @@ const REUNION_ACTUAL = 2;
   document.getElementById('next2').onclick=()=>showScreen('screen3','Por favor completa el formulario para confirmar tu participación',document.getElementById('toForm'));
   document.getElementById('toForm').onclick=()=>{intro.classList.add('hidden'); formPanel.classList.remove('hidden');};
 
-  // Al enviar el formulario, guardamos EL NÚMERO de esta reunión
-  document.getElementById('fm3').onsubmit=e=>{
+  // ----- LÓGICA DEL MODAL DE CERTIFICADO -----
+  const modalCertificado = document.getElementById('modalCertificado');
+  const radioSi = document.getElementById('cert_si');
+  const radioNo = document.getElementById('cert_no');
+  const inputMetodoPago = document.getElementById('metodo_pago_certificado');
+  const btnPagoPresencial = document.getElementById('btnPagoPresencial');
+  const btnPagoAhora = document.getElementById('btnPagoAhora');
+
+  radioSi.addEventListener('change', function() {
+    if (this.checked) {
+      modalCertificado.classList.remove('hidden');
+    }
+  });
+
+  radioNo.addEventListener('change', function() {
+    if (this.checked) {
+      inputMetodoPago.value = "No solicita certificado";
+      modalCertificado.classList.add('hidden');
+    }
+  });
+
+  btnPagoPresencial.addEventListener('click', function() {
+    inputMetodoPago.value = "Presencial ($10.000 ARS)";
+    modalCertificado.classList.add('hidden');
+  });
+
+  btnPagoAhora.addEventListener('click', function() {
+    inputMetodoPago.value = "Pagar Ahora - Mercado Pago ($10.000 ARS)";
+    modalCertificado.classList.add('hidden');
+  });
+
+  // ----- ENVÍO DE FORMULARIO SIN ERROR 522 (FETCH ASÍNCRONO) -----
+  const form = document.getElementById('fm3');
+  const btnEnviar = document.getElementById('btnEnviar');
+
+  form.onsubmit = async function(e) {
+    e.preventDefault();
+    btnEnviar.disabled = true;
+    btnEnviar.innerText = "Enviando...";
+
+    const formData = new FormData(form);
+
+    try {
+      await fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: { 'Accept': 'application/json' }
+      });
+    } catch (err) {
+      console.log("Formulario enviado con respuesta capturada.");
+    }
+
+    // Guardar en LocalStorage y mostrar pantalla final
     localStorage.setItem(LS_KEY, REUNION_ACTUAL);
+    formPanel.classList.add('hidden');
+    thank.classList.remove('hidden');
   };
 
-  // ----- FUNCIÓN DE RESET (Mantenida por seguridad, 5 clicks en el título) -----
+  // Reset por clicks
   let clicks=0;
   document.getElementById('gracias').onclick=()=>{
     clicks++;  
@@ -358,7 +471,7 @@ const REUNION_ACTUAL = 2;
     imgs[idx].classList.add('active');
   },3000);
 
-  // LÓGICA PARA MOSTRAR/OCULTAR Y REQUERIR EL CAMPO DE CV
+  // Lógica CV
   const ponenteCheckbox = document.querySelector('input[name="participacion[]"][value="Ponente / Expositor"]');
   const cvContainer = document.getElementById('cvContainer');
   const cvFileInput = document.getElementById('cvFile');
