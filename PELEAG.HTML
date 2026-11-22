@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Brawler P2P | 3 Jugadores</title>
+    <!-- PeerJS para conexión directa P2P por Wi-Fi -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0d1117;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #fff;
+        }
+
+        /* PANTALLA BLOQUEO PORTRAIT (VERTICAL) */
+        #rotate-warning {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: #090c10;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .phone-icon {
+            width: 60px;
+            height: 100px;
+            border: 4px solid #f59e0b;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            animation: rotatePhone 1.8s infinite ease-in-out;
+        }
+
+        @keyframes rotatePhone {
+            0%, 20% { transform: rotate(0deg); }
+            50%, 80% { transform: rotate(-90deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        @media screen and (orientation: portrait) {
+            #rotate-warning { display: flex; }
+            #lobby-screen, #game-container { display: none !important; }
+        }
+
+        /* LOBBY MULTIJUGADOR */
+        #lobby-screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #1e293b 0%, #090c10 100%);
+            z-index: 100;
+            padding: 15px;
+        }
+
+        .lobby-box {
+            background: rgba(15, 23, 42, 0.9);
+            border: 2px solid #f59e0b;
+            border-radius: 16px;
+            padding: 18px 24px;
+            max-width: 520px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+
+        .lobby-box h1 {
+            font-size: 1.4rem;
+            color: #f59e0b;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .lobby-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        input {
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            text-align: center;
+            width: 140px;
+            text-transform: uppercase;
+        }
+
+        button.btn {
+            background: #f59e0b;
+            color: #090c10;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        button.btn:active { transform: scale(0.95); }
+        button.btn-secondary { background: #3b82f6; color: #fff; }
+        button.btn-start { background: #10b981; color: #fff; width: 100%; margin-top: 12px; font-size: 1.1rem; }
+
+        #room-status {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            min-height: 20px;
+        }
+
+        /* CONTENEDOR DEL JUEGO */
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* HUD SUPERIOR */
+        #hud {
+            position: absolute;
+            top: 8px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+        }
+
+        .players-hud {
+            display: flex;
+            gap: 10px;
+        }
+
+        .p-card {
+            background: rgba(9, 12, 16, 0.75);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 4px 8px;
+            min-width: 105px;
+        }
+
+        .p-name {
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-bottom: 3px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .hp-bar-bg {
+            width: 100%;
+            height: 7px;
+            background: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .hp-bar-fill {
+            height: 100%;
+            background: #10b981;
+            transition: width 0.15s;
+        }
+
+        .stage-info {
+            background: rgba(9, 12, 16, 0.8);
+            border: 1px solid #f59e0b;
+            padding: 5px 12px;
+            border-radius: 8px;
+            text-align: right;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* CONTROLES TÁCTILES */
+        #controls-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        #joystick-zone {
+            position: absolute;
+            bottom: 20px;
+            left: 25px;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #joystick-knob {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: rgba(245, 158, 11, 0.8);
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+            transform: translate(0px, 0px);
+        }
+
+        .action-buttons {
+            position: absolute;
+            bottom: 25px;
+            right: 25px;
+            display: flex;
+            gap: 16px;
+            pointer-events: auto;
+        }
+
+        .act-btn {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.4);
+            color: #fff;
+            font-weight: 900;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+        }
+
+        .act-btn:active { transform: scale(0.9); }
+        #btn-punch { background: rgba(239, 68, 68, 0.75); }
+        #btn-kick { background: rgba(59, 130, 246, 0.75); margin-top: -18px; }
+
+        /* PANTALLA FIN DE NIVEL */
+        #end-banner {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            text-align: center;
+        }
+        #end-banner h2 { font-size: 2rem; color: #f59e0b; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- AVISO DE GIRAR CELULAR -->
+    <div id="rotate-warning">
+        <div class="phone-icon"></div>
+        <h2>Gira tu celular a horizontal</h2>
+        <p style="color:#94a3b8; margin-top:8px; font-size:0.9rem;">Este juego está diseñado exclusivamente para jugarse en modo apaisado.</p>
+    </div>
+
+    <!-- LOBBY P2P -->
+    <div id="lobby-screen">
+        <div class="lobby-box">
+            <h1>Brawler Local P2P (3 Jugadores)</h1>
+            <p style="font-size:0.8rem; color:#94a3b8;">Conéctense al mismo Wi-Fi. Un jugador crea la sala y los otros 2 se unen.</p>
+            
+            <div class="lobby-row">
+                <button class="btn" id="btn-create-room" onclick="createRoom()">Crear Sala (Host)</button>
+                <input type="text" id="join-code-input" placeholder="CÓDIGO" maxlength="4">
+                <button class="btn btn-secondary" id="btn-join-room" onclick="joinRoom()">Unirse</button>
+            </div>
+
+            <div id="room-status">Elige crear sala o ingresa el código de tu amigo.</div>
+
+            <button class="btn btn-start" id="btn-start-game" style="display:none;" onclick="hostStartGame()">
+                ¡COMENZAR NIVEL 1!
+            </button>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE JUEGO -->
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="hud">
+            <div class="players-hud" id="players-hud"></div>
+            <div class="stage-info">
+                <div style="color:#f59e0b;">NIVEL 1</div>
+                <div id="enemy-counter">Enemigos: 0 / 15</div>
+            </div>
+        </div>
+
+        <div id="controls-layer">
+            <div id="joystick-zone">
+                <div id="joystick-knob"></div>
+            </div>
+            <div class="action-buttons">
+                <div class="act-btn" id="btn-punch">GOLPE</div>
+                <div class="act-btn" id="btn-kick">PATADA</div>
+            </div>
+        </div>
+
+        <div id="end-banner">
+            <h2 id="end-title">¡NIVEL COMPLETADO!</h2>
+            <p id="end-subtitle" style="margin-bottom:16px; color:#cbd5e1;">Todos los enemigos derrotados.</p>
+            <button class="btn" id="btn-restart" onclick="location.reload()">Volver al Lobby</button>
+        </div>
+    </div>
+
+<script>
+/**
+ * ============================================================================
+ * CONFIGURACIÓN DE SPRITES (PEGA AQUÍ TUS IMÁGENES PNG TRANSPARENTES)
+ * ============================================================================
+ * Cada personaje usa 4 estados:
+ * - idle: estático
+ * - walk: caminando
+ * - punch: golpe de puño
+ * - kick: patada
+ * Si dejas "" vacío, el juego dibujará un personaje de prueba automáticamente.
+ */
+const SPRITES_CONFIG = {
+    players: [
+        // Jugador 1 (Host - Amarillo/Dorado)
+        { idle: "", walk: "", punch: "", kick: "", fallbackColor: "#f59e0b" },
+        // Jugador 2 (Azul)
+        { idle: "", walk: "", punch: "", kick: "", fallbackColor: "#3b82f6" },
+        // Jugador 3 (Verde)
+        { idle: "", walk: "", punch: "", kick: "", fallbackColor: "#10b981" }
+    ],
+    // Único tipo de enemigo para el Nivel 1
+    enemy: {
+        idle: "",
+        walk: "",
+        punch: "",
+        kick: "",
+        fallbackColor: "#ef4444"
+    }
+};
+
+// Precarga automática de imágenes
+const LOADED_IMAGES = { players: [{}, {}, {}], enemy: {} };
+function preloadSprites() {
+    SPRITES_CONFIG.players.forEach((cfg, idx) => {
+        ['idle', 'walk', 'punch', 'kick'].forEach(state => {
+            if (cfg[state]) {
+                const img = new Image();
+                img.src = cfg[state];
+                LOADED_IMAGES.players[idx][state] = img;
+            }
+        });
+    });
+    ['idle', 'walk', 'punch', 'kick'].forEach(state => {
+        if (SPRITES_CONFIG.enemy[state]) {
+            const img = new Image();
+            img.src = SPRITES_CONFIG.enemy[state];
+            LOADED_IMAGES.enemy[state] = img;
+        }
+    });
+}
+preloadSprites();
+
+/**
+ * ============================================================================
+ * SISTEMA DE RED P2P (PEERJS - HOST AUTORITATIVO)
+ * ============================================================================
+ */
+let peer = null;
+let isHost = false;
+let myPlayerIndex = 0;
+let connections = []; // Solo usado por el Host
+let hostConn = null;    // Solo usado por Clientes
+let roomCode = "";
+let gameStarted = false;
+
+const PREFIX = "brawler-cea-";
+
+function generateCode() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let res = "";
+    for (let i = 0; i < 4; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
+    return res;
+}
+
+function createRoom() {
+    isHost = true;
+    myPlayerIndex = 0;
+    roomCode = generateCode();
+    document.getElementById('btn-create-room').disabled = true;
+    document.getElementById('btn-join-room').disabled = true;
+    document.getElementById('room-status').innerHTML = `Creando sala...`;
+
+    peer = new Peer(PREFIX + roomCode);
+
+    peer.on('open', () => {
+        document.getElementById('room-status').innerHTML = 
+            `Sala creada. Código: <strong style="color:#f59e0b; font-size:1.2rem;">${roomCode}</strong><br>Jugadores conectados: 1 / 3`;
+        document.getElementById('btn-start-game').style.display = 'block';
+    });
+
+    peer.on('connection', (conn) => {
+        if (connections.length >= 2 || gameStarted) {
+            conn.close();
+            return;
+        }
+        const assignedIndex = connections.length + 1;
+        connections.push({ conn, playerIndex: assignedIndex });
+
+        conn.on('open', () => {
+            conn.send({ type: 'WELCOME', playerIndex: assignedIndex });
+            updateLobbyCount();
+        });
+
+        conn.on('data', (data) => {
+            if (data.type === 'INPUT' && gameState.players[assignedIndex]) {
+                gameState.players[assignedIndex].input = data.input;
+            }
+        });
+
+        conn.on('close', () => {
+            connections = connections.filter(c => c.conn !== conn);
+            updateLobbyCount();
+        });
+    });
+
+    peer.on('error', (err) => {
+        document.getElementById('room-status').innerText = "Error de red: " + err.type;
+    });
+}
+
+function updateLobbyCount() {
+    const total = 1 + connections.length;
+    document.getElementById('room-status').innerHTML = 
+        `Código de Sala: <strong style="color:#f59e0b; font-size:1.2rem;">${roomCode}</strong><br>Jugadores conectados: ${total} / 3`;
+}
+
+function joinRoom() {
+    const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+    if (code.length < 4) {
+        document.getElementById('room-status').innerText = "Ingresa el código de 4 letras.";
+        return;
+    }
+
+    isHost = false;
+    document.getElementById('btn-create-room').disabled = true;
+    document.getElementById('btn-join-room').disabled = true;
+    document.getElementById('room-status').innerText = `Conectando a ${code}...`;
+
+    peer = new Peer();
+    peer.on('open', () => {
+        hostConn = peer.connect(PREFIX + code);
+
+        hostConn.on('open', () => {
+            document.getElementById('room-status').innerText = "Conectado. Esperando que el Host inicie...";
+        });
+
+        hostConn.on('data', (data) => {
+            if (data.type === 'WELCOME') {
+                myPlayerIndex = data.playerIndex;
+                document.getElementById('room-status').innerText = 
+                    `¡Listo! Eres el Jugador ${myPlayerIndex + 1}. Esperando inicio...`;
+            } else if (data.type === 'START') {
+                startGameClient(data.playerCount);
+            } else if (data.type === 'STATE') {
+                syncClientState(data.state);
+            }
+        });
+
+        hostConn.on('close', () => {
+            alert("Se perdió la conexión con el Host.");
+            location.reload();
+        });
+    });
+
+    peer.on('error', () => {
+        document.getElementById('room-status').innerText = "No se encontró la sala. Verifica el código.";
+        document.getElementById('btn-join-room').disabled = false;
+    });
+}
+
+/**
+ * ============================================================================
+ * LÓGICA DEL JUEGO BEAT 'EM UP (CASTLE CRASHERS STYLE)
+ * ============================================================================
+ */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Resolución lógica fija para sincronizar coordenadas exactas entre celulares distintos
+const WORLD_W = 960;
+const WORLD_H = 540;
+const FLOOR_TOP = 260;    // Límite superior donde pueden caminar (profundidad Y)
+const FLOOR_BOTTOM = 510; // Límite inferior
+
+const TOTAL_ENEMIES_LEVEL_1 = 15;
+const MAX_ACTIVE_ENEMIES = 3;
+
+let gameState = {
+    players: [],
+    enemies: [],
+    enemiesSpawned: 0,
+    enemiesDefeated: 0,
+    levelFinished: false,
+    victory: false
+};
+
+let localInput = { dx: 0, dy: 0, punch: false, kick: false };
+let lastTime = 0;
+let enemyIdCounter = 1;
+
+function createPlayerEntity(index) {
+    return {
+        id: index,
+        name: `J${index + 1}`,
+        x: 180 + index * 50,
+        y: 340 + index * 45,
+        hp: 100,
+        maxHp: 100,
+        facing: 1, // 1 derecha, -1 izquierda
+        state: 'idle', // idle, walk, punch, kick
+        animTimer: 0,
+        attackCooldown: 0,
+        hasHitThisSwing: false,
+        stunTimer: 0,
+        hitFlash: 0,
+        input: { dx: 0, dy: 0, punch: false, kick: false }
+    };
+}
+
+function createEnemyEntity() {
+    const fromRight = Math.random() > 0.4;
+    return {
+        id: enemyIdCounter++,
+        x: fromRight ? WORLD_W + 40 : -40,
+        y: FLOOR_TOP + 20 + Math.random() * (FLOOR_BOTTOM - FLOOR_TOP - 40),
+        hp: 60,
+        maxHp: 60,
+        facing: fromRight ? -1 : 1,
+        state: 'walk',
+        animTimer: 0,
+        attackCooldown: 0,
+        hasHitThisSwing: false,
+        stunTimer: 0,
+        hitFlash: 0,
+        aiDecisionTimer: 0
+    };
+}
+
+function hostStartGame() {
+    const totalPlayers = 1 + connections.length;
+    gameStarted = true;
+
+    gameState.players = [];
+    for (let i = 0; i < totalPlayers; i++) {
+        gameState.players.push(createPlayerEntity(i));
+    }
+
+    // Generar los primeros enemigos hasta el límite simultáneo
+    for (let i = 0; i < MAX_ACTIVE_ENEMIES; i++) {
+        spawnNextEnemy();
+    }
+
+    // Avisar a los clientes
+    connections.forEach(c => {
+        c.conn.send({ type: 'START', playerCount: totalPlayers });
+    });
+
+    initScreen();
+    // Bucle de red del Host (20 veces por segundo = cada 50ms)
+    setInterval(broadcastStateToClients, 50);
+    requestAnimationFrame(gameLoop);
+}
+
+function startGameClient(playerCount) {
+    gameStarted = true;
+    gameState.players = [];
+    for (let i = 0; i < playerCount; i++) {
+        gameState.players.push(createPlayerEntity(i));
+    }
+    initScreen();
+    // Enviar controles al Host 25 veces por segundo
+    setInterval(() => {
+        if (hostConn && hostConn.open) {
+            hostConn.send({ type: 'INPUT', input: localInput });
+        }
+    }, 40);
+    requestAnimationFrame(clientRenderLoop);
+}
+
+function initScreen() {
+    document.getElementById('lobby-screen').style.display = 'none';
+    document.getElementById('game-container').style.display = 'block';
+    canvas.width = WORLD_W;
+    canvas.height = WORLD_H;
+    buildPlayersHUD();
+}
+
+function spawnNextEnemy() {
+    if (gameState.enemiesSpawned < TOTAL_ENEMIES_LEVEL_1) {
+        gameState.enemies.push(createEnemyEntity());
+        gameState.enemiesSpawned++;
+    }
+}
+
+function broadcastStateToClients() {
+    if (!isHost) return;
+    connections.forEach(c => {
+        if (c.conn.open) {
+            c.conn.send({ type: 'STATE', state: gameState });
+        }
+    });
+}
+
+function syncClientState(serverState) {
+    // Interpolación suave para que no se vea cortado en los celulares clientes
+    serverState.players.forEach((sp, idx) => {
+        if (!gameState.players[idx]) gameState.players[idx] = sp;
+        const lp = gameState.players[idx];
+        lp.x += (sp.x - lp.x) * 0.45;
+        lp.y += (sp.y - lp.y) * 0.45;
+        lp.hp = sp.hp;
+        lp.facing = sp.facing;
+        lp.state = sp.state;
+        lp.hitFlash = sp.hitFlash;
+        lp.stunTimer = sp.stunTimer;
+    });
+
+    gameState.enemies = serverState.enemies;
+    gameState.enemiesDefeated = serverState.enemiesDefeated;
+    gameState.levelFinished = serverState.levelFinished;
+    gameState.victory = serverState.victory;
+}
+
+/**
+ * ============================================================================
+ * ACTUALIZACIÓN DE FÍSICAS, COMBATE E IA (SOLO HOST)
+ * ============================================================================
+ */
+function gameLoop(timestamp) {
+    const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
+    lastTime = timestamp;
+
+    if (!gameState.levelFinished) {
+        gameState.players[0].input = localInput;
+        updatePlayers(dt);
+        updateEnemies(dt);
+        checkLevelStatus();
+    }
+
+    updateHUD();
+    renderScene();
+    requestAnimationFrame(gameLoop);
+}
+
+function clientRenderLoop(timestamp) {
+    const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
+    lastTime = timestamp;
+    updateHUD();
+    renderScene();
+    requestAnimationFrame(clientRenderLoop);
+}
+
+function updatePlayers(dt) {
+    const SPEED = 220;
+
+    gameState.players.forEach(p => {
+        if (p.hp <= 0) return;
+
+        if (p.hitFlash > 0) p.hitFlash -= dt;
+        if (p.attackCooldown > 0) p.attackCooldown -= dt;
+
+        // Si está aturdido (stun), no puede moverse ni atacar
+        if (p.stunTimer > 0) {
+            p.stunTimer -= dt;
+            p.state = 'idle';
+            return;
+        }
+
+        // Si está ejecutando golpe o patada
+        if (p.state === 'punch' || p.state === 'kick') {
+            p.animTimer -= dt;
+            // Ventana activa de impacto a mitad de la animación
+            if (!p.hasHitThisSwing && p.animTimer < 0.18) {
+                p.hasHitThisSwing = true;
+                performPlayerAttack(p);
+            }
+            if (p.animTimer <= 0) {
+                p.state = 'idle';
+            }
+            return;
+        }
+
+        // Iniciar ataque si presionó botón
+        if (p.input.punch && p.attackCooldown <= 0) {
+            p.state = 'punch';
+            p.animTimer = 0.28;
+            p.attackCooldown = 0.35;
+            p.hasHitThisSwing = false;
+            return;
+        }
+        if (p.input.kick && p.attackCooldown <= 0) {
+            p.state = 'kick';
+            p.animTimer = 0.36;
+            p.attackCooldown = 0.45;
+            p.hasHitThisSwing = false;
+            return;
+        }
+
+        // Movimiento libre en X y profundidad Y
+        const { dx, dy } = p.input;
+        if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
+            p.state = 'walk';
+            p.x += dx * SPEED * dt;
+            p.y += dy * (SPEED * 0.75) * dt;
+            if (dx > 0.1) p.facing = 1;
+            if (dx < -0.1) p.facing = -1;
+        } else {
+            p.state = 'idle';
+        }
+
+        // Límites del escenario
+        p.x = Math.max(40, Math.min(WORLD_W - 40, p.x));
+        p.y = Math.max(FLOOR_TOP, Math.min(FLOOR_BOTTOM, p.y));
+    });
+}
+
+function performPlayerAttack(player) {
+    const isKick = player.state === 'kick';
+    const rangeX = isKick ? 85 : 70;
+    const rangeY = 32; // Tolerancia de profundidad para golpear
+    const damage = isKick ? 22 : 14;
+    const knockback = isKick ? 35 : 15;
+
+    gameState.enemies.forEach(enemy => {
+        if (enemy.hp <= 0) return;
+
+        const distX = (enemy.x - player.x) * player.facing;
+        const distY = Math.abs(enemy.y - player.y);
+
+        if (distX >= -15 && distX <= rangeX && distY <= rangeY) {
+            enemy.hp -= damage;
+            enemy.hitFlash = 0.18;     // Destello rojo por 180ms
+            enemy.stunTimer = 0.28;    // Micro-stun para que no haya spam sin salida
+            enemy.x += player.facing * knockback;
+            enemy.x = Math.max(20, Math.min(WORLD_W - 20, enemy.x));
+        }
+    });
+
+    // Limpiar derrotados y reemplazar por el borde hasta completar los 15
+    const beforeCount = gameState.enemies.length;
+    gameState.enemies = gameState.enemies.filter(e => e.hp > 0);
+    const killedNow = beforeCount - gameState.enemies.length;
+
+    if (killedNow > 0) {
+        gameState.enemiesDefeated += killedNow;
+        for (let i = 0; i < killedNow; i++) {
+            spawnNextEnemy();
+        }
+    }
+}
+
+function updateEnemies(dt) {
+    const ENEMY_SPEED = 115;
+
+    gameState.enemies.forEach(e => {
+        if (e.hitFlash > 0) e.hitFlash -= dt;
+        if (e.attackCooldown > 0) e.attackCooldown -= dt;
+
+        // Si recibió golpe, queda estuneado unos microsegundos
+        if (e.stunTimer > 0) {
+            e.stunTimer -= dt;
+            e.state = 'idle';
+            return;
+        }
+
+        // Si está ejecutando ataque
+        if (e.state === 'punch' || e.state === 'kick') {
+            e.animTimer -= dt;
+            if (!e.hasHitThisSwing && e.animTimer < 0.2) {
+                e.hasHitThisSwing = true;
+                performEnemyAttack(e);
+            }
+            if (e.animTimer <= 0) {
+                e.state = 'idle';
+            }
+            return;
+        }
+
+        // Buscar al jugador vivo más cercano
+        let target = null;
+        let minDist = Infinity;
+        gameState.players.forEach(p => {
+            if (p.hp > 0) {
+                const d = Math.hypot(p.x - e.x, p.y - e.y);
+                if (d < minDist) {
+                    minDist = d;
+                    target = p;
+                }
+            }
+        });
+
+        if (!target) {
+            e.state = 'idle';
+            return;
+        }
+
+        const diffX = target.x - e.x;
+        const diffY = target.y - e.y;
+        e.facing = diffX >= 0 ? 1 : -1;
+
+        // Si está en rango de ataque, golpear o patear
+        if (Math.abs(diffX) < 62 && Math.abs(diffY) < 25) {
+            if (e.attackCooldown <= 0) {
+                e.state = Math.random() > 0.35 ? 'punch' : 'kick';
+                e.animTimer = 0.4;
+                e.attackCooldown = 1.1; // Pausa justa entre ataques enemigos
+                e.hasHitThisSwing = false;
+            } else {
+                e.state = 'idle';
+            }
+        } else {
+            // Caminar hacia el jugador
+            e.state = 'walk';
+            const angle = Math.atan2(diffY, diffX);
+            e.x += Math.cos(angle) * ENEMY_SPEED * dt;
+            e.y += Math.sin(angle) * (ENEMY_SPEED * 0.7) * dt;
+            e.y = Math.max(FLOOR_TOP, Math.min(FLOOR_BOTTOM, e.y));
+        }
+    });
+}
+
+function performEnemyAttack(enemy) {
+    const damage = enemy.state === 'kick' ? 12 : 8;
+
+    gameState.players.forEach(p => {
+        if (p.hp <= 0) return;
+        const distX = (p.x - enemy.x) * enemy.facing;
+        const distY = Math.abs(p.y - enemy.y);
+
+        if (distX >= -10 && distX <= 68 && distY <= 28) {
+            p.hp = Math.max(0, p.hp - damage);
+            p.hitFlash = 0.18;
+            p.stunTimer = 0.22; // Micro-stun al jugador también
+            p.x += enemy.facing * 18;
+            p.x = Math.max(40, Math.min(WORLD_W - 40, p.x));
+        }
+    });
+}
+
+function checkLevelStatus() {
+    if (gameState.enemiesDefeated >= TOTAL_ENEMIES_LEVEL_1) {
+        gameState.levelFinished = true;
+        gameState.victory = true;
+    } else if (gameState.players.every(p => p.hp <= 0)) {
+        gameState.levelFinished = true;
+        gameState.victory = false;
+    }
+}
+
+/**
+ * ============================================================================
+ * RENDERIZADO GRÁFICO Y EFECTO ROJO DE IMPACTO
+ * ============================================================================
+ */
+function renderScene() {
+    // 1. Fondo del escenario (Cielo / Muro y Suelo de arena)
+    ctx.fillStyle = "#1e293b";
+    ctx.fillRect(0, 0, WORLD_W, FLOOR_TOP - 20);
+
+    // Detalles arquitectónicos simples de fondo
+    ctx.fillStyle = "#0f172a";
+    for (let x = 40; x < WORLD_W; x += 180) {
+        ctx.fillRect(x, 60, 70, FLOOR_TOP - 80);
+    }
+
+    // Suelo jugable (donde ocurre la acción 2.5D)
+    const grad = ctx.createLinearGradient(0, FLOOR_TOP - 20, 0, WORLD_H);
+    grad.addColorStop(0, "#334155");
+    grad.addColorStop(1, "#1e293b");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, FLOOR_TOP - 20, WORLD_W, WORLD_H - (FLOOR_TOP - 20));
+
+    // Línea de borde superior del suelo
+    ctx.strokeStyle = "#f59e0b";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, FLOOR_TOP - 20);
+    ctx.lineTo(WORLD_W, FLOOR_TOP - 20);
+    ctx.stroke();
+
+    // 2. Ordenar todas las entidades por su coordenada Y (Profundidad tipo Castle Crashers)
+    const renderList = [];
+    gameState.players.forEach(p => {
+        if (p.hp > 0) renderList.push({ type: 'player', data: p });
+    });
+    gameState.enemies.forEach(e => {
+        if (e.hp > 0) renderList.push({ type: 'enemy', data: e });
+    });
+
+    renderList.sort((a, b) => a.data.y - b.data.y);
+
+    // 3. Dibujar cada entidad
+    renderList.forEach(item => {
+        drawCharacter(item.data, item.type === 'player');
+    });
+}
+
+// Canvas auxiliar oculto para teñir el sprite de rojo al recibir daño
+const tintCanvas = document.createElement('canvas');
+const tintCtx = tintCanvas.getContext('2d');
+
+function drawCharacter(ent, isPlayer) {
+    const W = 90;
+    const H = 110;
+
+    // Sombra en el suelo
+    ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+    ctx.beginPath();
+    ctx.ellipse(ent.x, ent.y, 28, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const spriteSet = isPlayer ? LOADED_IMAGES.players[ent.id] : LOADED_IMAGES.enemy;
+    const img = spriteSet[ent.state] || spriteSet['idle'];
+    const fallbackColor = isPlayer 
+        ? SPRITES_CONFIG.players[ent.id].fallbackColor 
+        : SPRITES_CONFIG.enemy.fallbackColor;
+
+    ctx.save();
+    ctx.translate(ent.x, ent.y);
+    ctx.scale(ent.facing, 1);
+
+    // Pequeño rebote al caminar
+    const bobY = ent.state === 'walk' ? Math.abs(Math.sin(performance.now() * 0.015)) * -6 : 0;
+
+    if (img && img.complete && img.naturalWidth > 0) {
+        if (ent.hitFlash > 0) {
+            // Efecto rojo sobre el sprite personalizado usando composición
+            tintCanvas.width = W;
+            tintCanvas.height = H;
+            tintCtx.clearRect(0, 0, W, H);
+            tintCtx.drawImage(img, 0, 0, W, H);
+            tintCtx.globalCompositeOperation = 'source-atop';
+            tintCtx.fillStyle = 'rgba(255, 20, 20, 0.72)';
+            tintCtx.fillRect(0, 0, W, H);
+            tintCtx.globalCompositeOperation = 'source-over';
+            ctx.drawImage(tintCanvas, -W / 2, -H + bobY, W, H);
+        } else {
+            ctx.drawImage(img, -W / 2, -H + bobY, W, H);
+        }
+    } else {
+        // Personaje de prueba (si aún no pusiste tus sprites)
+        ctx.fillStyle = ent.hitFlash > 0 ? "#ff0000" : fallbackColor;
+        // Cuerpo
+        ctx.beginPath();
+        ctx.roundRect(-18, -75 + bobY, 36, 52, 10);
+        ctx.fill();
+        // Cabeza
+        ctx.beginPath();
+        ctx.arc(0, -88 + bobY, 15, 0, Math.PI * 2);
+        ctx.fill();
+        // Ojos mirando al frente
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(5, -92 + bobY, 6, 5);
+
+        // Animación visual de golpe o patada
+        ctx.fillStyle = ent.hitFlash > 0 ? "#ff4444" : "#fde047";
+        if (ent.state === 'punch') {
+            ctx.fillRect(16, -62 + bobY, 34, 12); // Puño extendido
+        } else if (ent.state === 'kick') {
+            ctx.fillRect(14, -36 + bobY, 44, 14); // Patada extendida
+        }
+    }
+
+    ctx.restore();
+
+    // Barra de vida flotante encima del enemigo o etiqueta del jugador
+    if (!isPlayer) {
+        const barW = 46;
+        ctx.fillStyle = "#090c10";
+        ctx.fillRect(ent.x - barW / 2, ent.y - H - 12, barW, 6);
+        ctx.fillStyle = "#ef4444";
+        ctx.fillRect(ent.x - barW / 2, ent.y - H - 12, barW * (ent.hp / ent.maxHp), 6);
+    } else {
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(ent.name, ent.x, ent.y - H - 8);
+    }
+}
+
+/**
+ * ============================================================================
+ * HUD Y CONTROLES TÁCTILES DE CELULAR
+ * ============================================================================
+ */
+function buildPlayersHUD() {
+    const container = document.getElementById('players-hud');
+    container.innerHTML = '';
+    gameState.players.forEach((p, idx) => {
+        const color = SPRITES_CONFIG.players[idx].fallbackColor;
+        container.innerHTML += `
+            <div class="p-card" style="border-color:${color}">
+                <div class="p-name">
+                    <span style="color:${color}">${p.name} ${idx === myPlayerIndex ? '(TÚ)' : ''}</span>
+                    <span id="hud-hp-txt-${idx}">100%</span>
+                </div>
+                <div class="hp-bar-bg">
+                    <div class="hp-bar-fill" id="hud-hp-bar-${idx}" style="width:100%; background:${color}"></div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function updateHUD() {
+    gameState.players.forEach((p, idx) => {
+        const bar = document.getElementById(`hud-hp-bar-${idx}`);
+        const txt = document.getElementById(`hud-hp-txt-${idx}`);
+        if (bar && txt) {
+            const pct = Math.max(0, Math.round((p.hp / p.maxHp) * 100));
+            bar.style.width = pct + "%";
+            txt.innerText = pct > 0 ? pct + "%" : "KO";
+        }
+    });
+
+    document.getElementById('enemy-counter').innerText = 
+        `Derrotados: ${gameState.enemiesDefeated} / ${TOTAL_ENEMIES_LEVEL_1}`;
+
+    if (gameState.levelFinished) {
+        const banner = document.getElementById('end-banner');
+        banner.style.display = 'flex';
+        document.getElementById('end-title').innerText = 
+            gameState.victory ? "¡NIVEL 1 COMPLETADO!" : "DERROTA";
+        document.getElementById('end-subtitle').innerText = 
+            gameState.victory ? "Has vencido a los 15 enemigos." : "Todos los jugadores cayeron en combate.";
+    }
+}
+
+// Joystick Táctil Izquierdo
+const joyZone = document.getElementById('joystick-zone');
+const joyKnob = document.getElementById('joystick-knob');
+let joyTouchId = null;
+
+joyZone.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.changedTouches[0];
+    joyTouchId = touch.identifier;
+    updateJoystick(touch);
+});
+
+joyZone.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === joyTouchId) {
+            updateJoystick(e.changedTouches[i]);
+        }
+    }
+});
+
+function resetJoystick(e) {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === joyTouchId) {
+            joyTouchId = null;
+            joyKnob.style.transform = `translate(0px, 0px)`;
+            localInput.dx = 0;
+            localInput.dy = 0;
+        }
+    }
+}
+joyZone.addEventListener('touchend', resetJoystick);
+joyZone.addEventListener('touchcancel', resetJoystick);
+
+function updateJoystick(touch) {
+    const rect = joyZone.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const maxRadius = rect.width / 2 - 20;
+
+    let deltaX = touch.clientX - centerX;
+    let deltaY = touch.clientY - centerY;
+    const distance = Math.hypot(deltaX, deltaY);
+
+    if (distance > maxRadius) {
+        deltaX = (deltaX / distance) * maxRadius;
+        deltaY = (deltaY / distance) * maxRadius;
+    }
+
+    joyKnob.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+    localInput.dx = deltaX / maxRadius;
+    localInput.dy = deltaY / maxRadius;
+}
+
+// Botones de Golpe y Patada (Multitouch independiente del joystick)
+const btnPunch = document.getElementById('btn-punch');
+const btnKick = document.getElementById('btn-kick');
+
+btnPunch.addEventListener('touchstart', (e) => { e.preventDefault(); localInput.punch = true; });
+btnPunch.addEventListener('touchend', (e) => { e.preventDefault(); localInput.punch = false; });
+
+btnKick.addEventListener('touchstart', (e) => { e.preventDefault(); localInput.kick = true; });
+btnKick.addEventListener('touchend', (e) => { e.preventDefault(); localInput.kick = false; });
+</script>
+</body>
+</html>
