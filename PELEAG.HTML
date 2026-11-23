@@ -56,7 +56,7 @@
 
         @media screen and (orientation: portrait) {
             #rotate-warning { display: flex; }
-            #lobby-screen, #game-container { display: none !important; }
+            #lobby-screen, #char-select-modal, #game-container { display: none !important; }
         }
 
         /* LOBBY MULTIJUGADOR */
@@ -73,11 +73,11 @@
         }
 
         .lobby-box {
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(15, 23, 42, 0.92);
             border: 2px solid #f59e0b;
             border-radius: 16px;
             padding: 18px 24px;
-            max-width: 520px;
+            max-width: 540px;
             width: 100%;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.6);
@@ -120,18 +120,105 @@
             font-weight: 800;
             font-size: 0.95rem;
             cursor: pointer;
-            transition: transform 0.1s;
+            transition: transform 0.1s, opacity 0.2s;
         }
 
         button.btn:active { transform: scale(0.95); }
+        button.btn:disabled { opacity: 0.5; cursor: not-allowed; }
         button.btn-secondary { background: #3b82f6; color: #fff; }
-        button.btn-start { background: #10b981; color: #fff; width: 100%; margin-top: 12px; font-size: 1.1rem; }
+        button.btn-start { background: #10b981; color: #fff; width: 100%; margin-top: 12px; font-size: 1.05rem; }
 
         #room-status {
             margin-top: 10px;
             font-size: 0.85rem;
             color: #cbd5e1;
             min-height: 20px;
+        }
+
+        /* VENTANA EMERGENTE DE SELECCIÓN DE PERSONAJE */
+        #char-select-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: rgba(5, 8, 14, 0.92);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+        }
+
+        .char-modal-box {
+            background: #0f172a;
+            border: 2px solid #f59e0b;
+            border-radius: 16px;
+            padding: 16px 20px;
+            max-width: 680px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .char-modal-box h2 {
+            font-size: 1.25rem;
+            color: #f59e0b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .char-modal-sub {
+            font-size: 0.82rem;
+            color: #94a3b8;
+            margin-bottom: 14px;
+        }
+
+        .char-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .char-card {
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            padding: 10px 8px;
+            cursor: pointer;
+            transition: transform 0.12s, border-color 0.15s, background 0.15s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .char-card:hover {
+            border-color: #94a3b8;
+            transform: translateY(-2px);
+        }
+
+        .char-card.selected {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.14);
+            box-shadow: 0 0 16px rgba(245, 158, 11, 0.25);
+        }
+
+        .char-preview-canvas {
+            width: 110px;
+            height: 120px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .char-title {
+            font-weight: 800;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+
+        .char-tag {
+            font-size: 0.72rem;
+            color: #cbd5e1;
         }
 
         /* CONTENEDOR DEL JUEGO */
@@ -170,7 +257,7 @@
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 8px;
             padding: 4px 8px;
-            min-width: 105px;
+            min-width: 115px;
         }
 
         .p-name {
@@ -179,6 +266,7 @@
             margin-bottom: 3px;
             display: flex;
             justify-content: space-between;
+            gap: 6px;
         }
 
         .hp-bar-bg {
@@ -292,7 +380,7 @@
         <div class="lobby-box">
             <h1>Brawler Local P2P (3 Jugadores)</h1>
             <p style="font-size:0.8rem; color:#94a3b8;">Conéctense al mismo Wi-Fi. Un jugador crea la sala y los otros 2 se unen.</p>
-            
+
             <div class="lobby-row">
                 <button class="btn" id="btn-create-room" onclick="createRoom()">Crear Sala (Host)</button>
                 <input type="text" id="join-code-input" placeholder="CÓDIGO" maxlength="4">
@@ -301,8 +389,24 @@
 
             <div id="room-status">Elige crear sala o ingresa el código de tu amigo.</div>
 
-            <button class="btn btn-start" id="btn-start-game" style="display:none;" onclick="hostStartGame()">
-                ¡COMENZAR NIVEL 1!
+            <button class="btn btn-start" id="btn-start-game" style="display:none;" onclick="openCharacterModalForHost()">
+                ELEGIR PERSONAJE Y COMENZAR
+            </button>
+        </div>
+    </div>
+
+    <!-- VENTANA EMERGENTE DE SELECCIÓN DE PERSONAJE (3 EN IDLE) -->
+    <div id="char-select-modal">
+        <div class="char-modal-box">
+            <h2>Selecciona tu Personaje</h2>
+            <p class="char-modal-sub" id="char-modal-hint">Elige uno de los 3 personajes para entrar a la partida.</p>
+
+            <div class="char-grid" id="char-grid">
+                <!-- Tarjetas generadas dinámicamente con vista previa animada en IDLE -->
+            </div>
+
+            <button class="btn btn-start" id="btn-confirm-char" onclick="confirmCharacterSelection()">
+                CONFIRMAR PERSONAJE
             </button>
         </div>
     </div>
@@ -315,7 +419,7 @@
             <div class="players-hud" id="players-hud"></div>
             <div class="stage-info">
                 <div style="color:#f59e0b;">NIVEL 1</div>
-                <div id="enemy-counter">Enemigos: 0 / 15</div>
+                <div id="enemy-counter">Derrotados: 0 / 15</div>
             </div>
         </div>
 
@@ -339,55 +443,269 @@
 <script>
 /**
  * ============================================================================
- * CONFIGURACIÓN DE SPRITES (PEGA AQUÍ TUS IMÁGENES PNG TRANSPARENTES)
+ * CONFIGURACIÓN DE SPRITES POR FRAMES (ARREGLOS DE IMÁGENES SEPARADAS)
  * ============================================================================
- * Cada personaje usa 4 estados:
- * - idle: estático
- * - walk: caminando
- * - punch: golpe de puño
- * - kick: patada
- * Si dejas "" vacío, el juego dibujará un personaje de prueba automáticamente.
+ * Cada movimiento (idle, walk, punch, kick) recibe un ARRAY [...] con sus frames
+ * en orden (por ejemplo 5 frames en idle: ["f1.png", "f2.png", "f3.png", "f4.png", "f5.png"]).
+ * Puedes poner cualquier cantidad de frames por estado (ej. 5 en idle, 4 en walk, etc.).
+ * Si un array queda vacío [], se dibujará el personaje de prueba automáticamente.
  */
+const ANIM_STATES = ['idle', 'walk', 'punch', 'kick'];
+
 const SPRITES_CONFIG = {
-    players: [
-        // Jugador 1 (Host - Amarillo/Dorado)
-        { idle: "", walk: "", punch: "", kick: "", fallbackColor: "#f59e0b" },
-        // Jugador 2 (Azul)
-        { idle: "", walk: "", punch: "", kick: "", fallbackColor: "#3b82f6" },
-        // Jugador 3 (Verde)
-        { idle: "", walk: "", punch: "", kick: "", fallbackColor: "#10b981" }
+    characters: [
+        {
+            name: "Luchador Dorado",
+            tag: "Equilibrado",
+            fallbackColor: "#f59e0b",
+            fps: { idle: 8, walk: 10, punch: 14, kick: 14 },
+            frames: {
+                idle: ["PELEAG/p1/p1.png","PELEAG/p1/p2.png","PELEAG/p1/p3.png"],
+                walk: ["PELEAG/p1/p9.png","PELEAG/p1/p10.png","PELEAG/p1/p11.png","PELEAG/p1/p12.png"],
+                punch: ["PELEAG/p1/p4.png","PELEAG/p1/p5.png","PELEAG/p1/p6.png","PELEAG/p1/p7.png"],
+                kick: ["PELEAG/p1/p8.png"]
+            }
+        },
+        {
+            name: "Striker Azul",
+            tag: "Ágil",
+            fallbackColor: "#3b82f6",
+            fps: { idle: 8, walk: 12, punch: 16, kick: 14 },
+            frames: {
+                idle: [],
+                walk: [],
+                punch: [],
+                kick: []
+            }
+        },
+        {
+            name: "Titán Esmeralda",
+            tag: "Golpes pesados",
+            fallbackColor: "#10b981",
+            fps: { idle: 7, walk: 9, punch: 12, kick: 12 },
+            frames: {
+                idle: [],
+                walk: [],
+                punch: [],
+                kick: []
+            }
+        }
     ],
     // Único tipo de enemigo para el Nivel 1
     enemy: {
-        idle: "",
-        walk: "",
-        punch: "",
-        kick: "",
-        fallbackColor: "#ef4444"
+        name: "Enemigo",
+        fallbackColor: "#ef4444",
+        fps: { idle: 7, walk: 10, punch: 12, kick: 12 },
+        frames: {
+            idle: [],
+            walk: [],
+            punch: [],
+            kick: []
+        }
     }
 };
 
-// Precarga automática de imágenes
-const LOADED_IMAGES = { players: [{}, {}, {}], enemy: {} };
-function preloadSprites() {
-    SPRITES_CONFIG.players.forEach((cfg, idx) => {
-        ['idle', 'walk', 'punch', 'kick'].forEach(state => {
-            if (cfg[state]) {
-                const img = new Image();
-                img.src = cfg[state];
-                LOADED_IMAGES.players[idx][state] = img;
-            }
+/**
+ * ============================================================================
+ * CARGADOR Y REPRODUCTOR DE FRAMES
+ * ============================================================================
+ */
+const LOADED_FRAMES = {
+    characters: SPRITES_CONFIG.characters.map(() => ({ idle: [], walk: [], punch: [], kick: [] })),
+    enemy: { idle: [], walk: [], punch: [], kick: [] }
+};
+
+function loadFrameList(urlArray) {
+    if (!Array.isArray(urlArray)) return [];
+    return urlArray.map(src => {
+        if (!src) return null;
+        const img = new Image();
+        img.src = src;
+        return img;
+    }).filter(Boolean);
+}
+
+function preloadAllSprites() {
+    SPRITES_CONFIG.characters.forEach((charCfg, cIdx) => {
+        ANIM_STATES.forEach(state => {
+            LOADED_FRAMES.characters[cIdx][state] = loadFrameList(charCfg.frames[state]);
         });
     });
-    ['idle', 'walk', 'punch', 'kick'].forEach(state => {
-        if (SPRITES_CONFIG.enemy[state]) {
-            const img = new Image();
-            img.src = SPRITES_CONFIG.enemy[state];
-            LOADED_IMAGES.enemy[state] = img;
+
+    ANIM_STATES.forEach(state => {
+        LOADED_FRAMES.enemy[state] = loadFrameList(SPRITES_CONFIG.enemy.frames[state]);
+    });
+}
+preloadAllSprites();
+
+/**
+ * Avanza el contador de tiempo y el índice de frame de una entidad.
+ * @param {object} ent - Entidad con state, frameTimer, frameIndex
+ * @param {object} fpsMap - Mapa de fps por estado (ej. charCfg.fps)
+ * @param {number} dt - Delta time en segundos
+ * @param {number} frameCount - Cantidad de frames disponibles para el estado actual
+ */
+function advanceFrameAnimation(ent, fpsMap, dt, frameCount) {
+    const fps = (fpsMap && fpsMap[ent.state]) || 10;
+    const frameDuration = 1 / fps;
+
+    if (typeof ent.frameTimer !== 'number') ent.frameTimer = 0;
+    if (typeof ent.frameIndex !== 'number') ent.frameIndex = 0;
+
+    ent.frameTimer += dt;
+    while (ent.frameTimer >= frameDuration) {
+        ent.frameTimer -= frameDuration;
+        if (frameCount > 0) {
+            ent.frameIndex = (ent.frameIndex + 1) % frameCount;
+        } else {
+            // Si no hay sprites cargados, avanzamos igualmente un ciclo de 5 pasos para animaciones de prueba
+            ent.frameIndex = (ent.frameIndex + 1) % 5;
+        }
+    }
+}
+
+/**
+ * ============================================================================
+ * VENTANA EMERGENTE DE SELECCIÓN DE PERSONAJE (3 EN IDLE)
+ * ============================================================================
+ */
+let selectedCharacterId = 0;
+let charSelectionCallback = null;
+let previewAnimLoopId = null;
+let previewLastTime = 0;
+const previewEntities = SPRITES_CONFIG.characters.map((_, idx) => ({
+    charId: idx,
+    state: 'idle',
+    frameIndex: 0,
+    frameTimer: 0
+}));
+
+function buildCharacterModalCards() {
+    const grid = document.getElementById('char-grid');
+    grid.innerHTML = '';
+
+    SPRITES_CONFIG.characters.forEach((charCfg, idx) => {
+        const isSelected = idx === selectedCharacterId;
+        const card = document.createElement('div');
+        card.className = `char-card ${isSelected ? 'selected' : ''}`;
+        card.id = `char-card-${idx}`;
+        card.onclick = () => selectCharacterCard(idx);
+
+        const previewCanvas = document.createElement('canvas');
+        previewCanvas.width = 110;
+        previewCanvas.height = 120;
+        previewCanvas.className = 'char-preview-canvas';
+        previewCanvas.id = `char-preview-${idx}`;
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'char-title';
+        titleEl.style.color = charCfg.fallbackColor;
+        titleEl.textContent = charCfg.name;
+
+        const tagEl = document.createElement('div');
+        tagEl.className = 'char-tag';
+        tagEl.textContent = charCfg.tag;
+
+        card.appendChild(previewCanvas);
+        card.appendChild(titleEl);
+        card.appendChild(tagEl);
+        grid.appendChild(card);
+    });
+}
+
+function selectCharacterCard(idx) {
+    selectedCharacterId = idx;
+    SPRITES_CONFIG.characters.forEach((_, i) => {
+        const card = document.getElementById(`char-card-${i}`);
+        if (card) {
+            card.classList.toggle('selected', i === idx);
         }
     });
 }
-preloadSprites();
+
+function showCharacterSelectModal(onConfirm) {
+    charSelectionCallback = onConfirm;
+    buildCharacterModalCards();
+    document.getElementById('char-select-modal').style.display = 'flex';
+    previewLastTime = performance.now();
+    if (!previewAnimLoopId) {
+        previewAnimLoopId = requestAnimationFrame(renderCharacterPreviewsLoop);
+    }
+}
+
+function hideCharacterSelectModal() {
+    document.getElementById('char-select-modal').style.display = 'none';
+    if (previewAnimLoopId) {
+        cancelAnimationFrame(previewAnimLoopId);
+        previewAnimLoopId = null;
+    }
+}
+
+function confirmCharacterSelection() {
+    const cb = charSelectionCallback;
+    hideCharacterSelectModal();
+    if (typeof cb === 'function') {
+        cb(selectedCharacterId);
+    }
+}
+
+function renderCharacterPreviewsLoop(timestamp) {
+    const dt = Math.min((timestamp - previewLastTime) / 1000, 0.05);
+    previewLastTime = timestamp;
+
+    SPRITES_CONFIG.characters.forEach((charCfg, idx) => {
+        const pCanvas = document.getElementById(`char-preview-${idx}`);
+        if (!pCanvas) return;
+        const pCtx = pCanvas.getContext('2d');
+        const pEnt = previewEntities[idx];
+        const frames = LOADED_FRAMES.characters[idx].idle;
+
+        advanceFrameAnimation(pEnt, charCfg.fps, dt, frames.length);
+
+        pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+
+        // Sombra en la base
+        pCtx.fillStyle = "rgba(0, 0, 0, 0.45)";
+        pCtx.beginPath();
+        pCtx.ellipse(pCanvas.width / 2, pCanvas.height - 14, 24, 7, 0, 0, Math.PI * 2);
+        pCtx.fill();
+
+        const activeImg = frames.length > 0 ? frames[pEnt.frameIndex % frames.length] : null;
+        const W = 76;
+        const H = 92;
+        const drawX = pCanvas.width / 2;
+        const drawY = pCanvas.height - 14;
+
+        pCtx.save();
+        pCtx.translate(drawX, drawY);
+
+        if (activeImg && activeImg.complete && activeImg.naturalWidth > 0) {
+            pCtx.drawImage(activeImg, -W / 2, -H, W, H);
+        } else {
+            // Animación de prueba en IDLE ciclando por los 5 pasos de frameIndex
+            const breathe = Math.sin((pEnt.frameIndex / 5) * Math.PI * 2) * 2.5;
+            pCtx.fillStyle = charCfg.fallbackColor;
+            pCtx.beginPath();
+            pCtx.roundRect(-16, -64 + breathe, 32, 44, 8);
+            pCtx.fill();
+
+            pCtx.beginPath();
+            pCtx.arc(0, -76 + breathe, 13, 0, Math.PI * 2);
+            pCtx.fill();
+
+            pCtx.fillStyle = "#fff";
+            pCtx.fillRect(4, -79 + breathe, 5, 4);
+        }
+
+        pCtx.restore();
+    });
+
+    if (document.getElementById('char-select-modal').style.display === 'flex') {
+        previewAnimLoopId = requestAnimationFrame(renderCharacterPreviewsLoop);
+    } else {
+        previewAnimLoopId = null;
+    }
+}
 
 /**
  * ============================================================================
@@ -401,6 +719,9 @@ let connections = []; // Solo usado por el Host
 let hostConn = null;    // Solo usado por Clientes
 let roomCode = "";
 let gameStarted = false;
+
+// Almacena el personaje elegido por cada jugador (índice de jugador -> characterId 0..2)
+const playerCharacterChoices = { 0: 0, 1: 1, 2: 2 };
 
 const PREFIX = "brawler-cea-";
 
@@ -422,7 +743,7 @@ function createRoom() {
     peer = new Peer(PREFIX + roomCode);
 
     peer.on('open', () => {
-        document.getElementById('room-status').innerHTML = 
+        document.getElementById('room-status').innerHTML =
             `Sala creada. Código: <strong style="color:#f59e0b; font-size:1.2rem;">${roomCode}</strong><br>Jugadores conectados: 1 / 3`;
         document.getElementById('btn-start-game').style.display = 'block';
     });
@@ -433,6 +754,7 @@ function createRoom() {
             return;
         }
         const assignedIndex = connections.length + 1;
+        playerCharacterChoices[assignedIndex] = assignedIndex % SPRITES_CONFIG.characters.length;
         connections.push({ conn, playerIndex: assignedIndex });
 
         conn.on('open', () => {
@@ -443,6 +765,15 @@ function createRoom() {
         conn.on('data', (data) => {
             if (data.type === 'INPUT' && gameState.players[assignedIndex]) {
                 gameState.players[assignedIndex].input = data.input;
+            } else if (data.type === 'SELECT_CHAR') {
+                const validChar = Number.isInteger(data.characterId) &&
+                    data.characterId >= 0 &&
+                    data.characterId < SPRITES_CONFIG.characters.length
+                    ? data.characterId : 0;
+                playerCharacterChoices[assignedIndex] = validChar;
+                if (gameState.players[assignedIndex]) {
+                    gameState.players[assignedIndex].characterId = validChar;
+                }
             }
         });
 
@@ -459,7 +790,7 @@ function createRoom() {
 
 function updateLobbyCount() {
     const total = 1 + connections.length;
-    document.getElementById('room-status').innerHTML = 
+    document.getElementById('room-status').innerHTML =
         `Código de Sala: <strong style="color:#f59e0b; font-size:1.2rem;">${roomCode}</strong><br>Jugadores conectados: ${total} / 3`;
 }
 
@@ -486,10 +817,18 @@ function joinRoom() {
         hostConn.on('data', (data) => {
             if (data.type === 'WELCOME') {
                 myPlayerIndex = data.playerIndex;
-                document.getElementById('room-status').innerText = 
-                    `¡Listo! Eres el Jugador ${myPlayerIndex + 1}. Esperando inicio...`;
+                selectedCharacterId = myPlayerIndex % SPRITES_CONFIG.characters.length;
+                document.getElementById('room-status').innerText =
+                    `¡Listo! Eres el Jugador ${myPlayerIndex + 1}. Esperando que el Host inicie...`;
             } else if (data.type === 'START') {
-                startGameClient(data.playerCount);
+                // El cliente elige su personaje en la ventana emergente antes de entrar a la partida
+                showCharacterSelectModal((chosenCharId) => {
+                    selectedCharacterId = chosenCharId;
+                    if (hostConn && hostConn.open) {
+                        hostConn.send({ type: 'SELECT_CHAR', characterId: chosenCharId });
+                    }
+                    startGameClient(data.playerCount);
+                });
             } else if (data.type === 'STATE') {
                 syncClientState(data.state);
             }
@@ -507,6 +846,15 @@ function joinRoom() {
     });
 }
 
+function openCharacterModalForHost() {
+    if (!isHost) return;
+    selectedCharacterId = playerCharacterChoices[0] ?? 0;
+    showCharacterSelectModal((chosenCharId) => {
+        playerCharacterChoices[0] = chosenCharId;
+        hostStartGame();
+    });
+}
+
 /**
  * ============================================================================
  * LÓGICA DEL JUEGO BEAT 'EM UP (CASTLE CRASHERS STYLE)
@@ -521,7 +869,7 @@ const WORLD_H = 540;
 const FLOOR_TOP = 260;    // Límite superior donde pueden caminar (profundidad Y)
 const FLOOR_BOTTOM = 510; // Límite inferior
 
-const TOTAL_ENEMIES_LEVEL_1 = 15;
+const TOTAL_ENEMIES_LEVEL_1 = 50;
 const MAX_ACTIVE_ENEMIES = 3;
 
 let gameState = {
@@ -537,9 +885,10 @@ let localInput = { dx: 0, dy: 0, punch: false, kick: false };
 let lastTime = 0;
 let enemyIdCounter = 1;
 
-function createPlayerEntity(index) {
+function createPlayerEntity(index, characterId = 0) {
     return {
         id: index,
+        characterId,
         name: `J${index + 1}`,
         x: 180 + index * 50,
         y: 340 + index * 45,
@@ -548,6 +897,8 @@ function createPlayerEntity(index) {
         facing: 1, // 1 derecha, -1 izquierda
         state: 'idle', // idle, walk, punch, kick
         animTimer: 0,
+        frameIndex: 0,
+        frameTimer: 0,
         attackCooldown: 0,
         hasHitThisSwing: false,
         stunTimer: 0,
@@ -567,11 +918,12 @@ function createEnemyEntity() {
         facing: fromRight ? -1 : 1,
         state: 'walk',
         animTimer: 0,
+        frameIndex: 0,
+        frameTimer: 0,
         attackCooldown: 0,
         hasHitThisSwing: false,
         stunTimer: 0,
-        hitFlash: 0,
-        aiDecisionTimer: 0
+        hitFlash: 0
     };
 }
 
@@ -581,7 +933,8 @@ function hostStartGame() {
 
     gameState.players = [];
     for (let i = 0; i < totalPlayers; i++) {
-        gameState.players.push(createPlayerEntity(i));
+        const charId = playerCharacterChoices[i] ?? (i % SPRITES_CONFIG.characters.length);
+        gameState.players.push(createPlayerEntity(i, charId));
     }
 
     // Generar los primeros enemigos hasta el límite simultáneo
@@ -595,6 +948,7 @@ function hostStartGame() {
     });
 
     initScreen();
+    lastTime = performance.now();
     // Bucle de red del Host (20 veces por segundo = cada 50ms)
     setInterval(broadcastStateToClients, 50);
     requestAnimationFrame(gameLoop);
@@ -604,9 +958,13 @@ function startGameClient(playerCount) {
     gameStarted = true;
     gameState.players = [];
     for (let i = 0; i < playerCount; i++) {
-        gameState.players.push(createPlayerEntity(i));
+        const charId = i === myPlayerIndex
+            ? selectedCharacterId
+            : (i % SPRITES_CONFIG.characters.length);
+        gameState.players.push(createPlayerEntity(i, charId));
     }
     initScreen();
+    lastTime = performance.now();
     // Enviar controles al Host 25 veces por segundo
     setInterval(() => {
         if (hostConn && hostConn.open) {
@@ -643,18 +1001,38 @@ function broadcastStateToClients() {
 function syncClientState(serverState) {
     // Interpolación suave para que no se vea cortado en los celulares clientes
     serverState.players.forEach((sp, idx) => {
-        if (!gameState.players[idx]) gameState.players[idx] = sp;
+        if (!gameState.players[idx]) {
+            gameState.players[idx] = { ...sp, frameIndex: 0, frameTimer: 0 };
+        }
         const lp = gameState.players[idx];
         lp.x += (sp.x - lp.x) * 0.45;
         lp.y += (sp.y - lp.y) * 0.45;
         lp.hp = sp.hp;
         lp.facing = sp.facing;
-        lp.state = sp.state;
+        if (lp.state !== sp.state) {
+            lp.state = sp.state;
+            lp.frameIndex = 0;
+            lp.frameTimer = 0;
+        }
+        if (typeof sp.characterId === 'number') {
+            lp.characterId = sp.characterId;
+        }
         lp.hitFlash = sp.hitFlash;
         lp.stunTimer = sp.stunTimer;
     });
 
-    gameState.enemies = serverState.enemies;
+    // Conservar frameIndex/frameTimer locales de enemigos coincidentes para fluidez visual
+    const prevEnemyMap = new Map(gameState.enemies.map(e => [e.id, e]));
+    gameState.enemies = serverState.enemies.map(se => {
+        const prev = prevEnemyMap.get(se.id);
+        const sameState = prev && prev.state === se.state;
+        return {
+            ...se,
+            frameIndex: sameState ? prev.frameIndex : 0,
+            frameTimer: sameState ? prev.frameTimer : 0
+        };
+    });
+
     gameState.enemiesDefeated = serverState.enemiesDefeated;
     gameState.levelFinished = serverState.levelFinished;
     gameState.victory = serverState.victory;
@@ -665,6 +1043,14 @@ function syncClientState(serverState) {
  * ACTUALIZACIÓN DE FÍSICAS, COMBATE E IA (SOLO HOST)
  * ============================================================================
  */
+function setEntityState(ent, nextState) {
+    if (ent.state !== nextState) {
+        ent.state = nextState;
+        ent.frameIndex = 0;
+        ent.frameTimer = 0;
+    }
+}
+
 function gameLoop(timestamp) {
     const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
     lastTime = timestamp;
@@ -677,7 +1063,7 @@ function gameLoop(timestamp) {
     }
 
     updateHUD();
-    renderScene();
+    renderScene(dt);
     requestAnimationFrame(gameLoop);
 }
 
@@ -685,7 +1071,7 @@ function clientRenderLoop(timestamp) {
     const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
     lastTime = timestamp;
     updateHUD();
-    renderScene();
+    renderScene(dt);
     requestAnimationFrame(clientRenderLoop);
 }
 
@@ -701,7 +1087,7 @@ function updatePlayers(dt) {
         // Si está aturdido (stun), no puede moverse ni atacar
         if (p.stunTimer > 0) {
             p.stunTimer -= dt;
-            p.state = 'idle';
+            setEntityState(p, 'idle');
             return;
         }
 
@@ -714,21 +1100,21 @@ function updatePlayers(dt) {
                 performPlayerAttack(p);
             }
             if (p.animTimer <= 0) {
-                p.state = 'idle';
+                setEntityState(p, 'idle');
             }
             return;
         }
 
         // Iniciar ataque si presionó botón
         if (p.input.punch && p.attackCooldown <= 0) {
-            p.state = 'punch';
+            setEntityState(p, 'punch');
             p.animTimer = 0.28;
             p.attackCooldown = 0.35;
             p.hasHitThisSwing = false;
             return;
         }
         if (p.input.kick && p.attackCooldown <= 0) {
-            p.state = 'kick';
+            setEntityState(p, 'kick');
             p.animTimer = 0.36;
             p.attackCooldown = 0.45;
             p.hasHitThisSwing = false;
@@ -738,13 +1124,13 @@ function updatePlayers(dt) {
         // Movimiento libre en X y profundidad Y
         const { dx, dy } = p.input;
         if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
-            p.state = 'walk';
+            setEntityState(p, 'walk');
             p.x += dx * SPEED * dt;
             p.y += dy * (SPEED * 0.75) * dt;
             if (dx > 0.1) p.facing = 1;
             if (dx < -0.1) p.facing = -1;
         } else {
-            p.state = 'idle';
+            setEntityState(p, 'idle');
         }
 
         // Límites del escenario
@@ -798,7 +1184,7 @@ function updateEnemies(dt) {
         // Si recibió golpe, queda estuneado unos microsegundos
         if (e.stunTimer > 0) {
             e.stunTimer -= dt;
-            e.state = 'idle';
+            setEntityState(e, 'idle');
             return;
         }
 
@@ -810,7 +1196,7 @@ function updateEnemies(dt) {
                 performEnemyAttack(e);
             }
             if (e.animTimer <= 0) {
-                e.state = 'idle';
+                setEntityState(e, 'idle');
             }
             return;
         }
@@ -829,7 +1215,7 @@ function updateEnemies(dt) {
         });
 
         if (!target) {
-            e.state = 'idle';
+            setEntityState(e, 'idle');
             return;
         }
 
@@ -840,16 +1226,16 @@ function updateEnemies(dt) {
         // Si está en rango de ataque, golpear o patear
         if (Math.abs(diffX) < 62 && Math.abs(diffY) < 25) {
             if (e.attackCooldown <= 0) {
-                e.state = Math.random() > 0.35 ? 'punch' : 'kick';
+                setEntityState(e, Math.random() > 0.35 ? 'punch' : 'kick');
                 e.animTimer = 0.4;
                 e.attackCooldown = 1.1; // Pausa justa entre ataques enemigos
                 e.hasHitThisSwing = false;
             } else {
-                e.state = 'idle';
+                setEntityState(e, 'idle');
             }
         } else {
             // Caminar hacia el jugador
-            e.state = 'walk';
+            setEntityState(e, 'walk');
             const angle = Math.atan2(diffY, diffX);
             e.x += Math.cos(angle) * ENEMY_SPEED * dt;
             e.y += Math.sin(angle) * (ENEMY_SPEED * 0.7) * dt;
@@ -888,10 +1274,10 @@ function checkLevelStatus() {
 
 /**
  * ============================================================================
- * RENDERIZADO GRÁFICO Y EFECTO ROJO DE IMPACTO
+ * RENDERIZADO GRÁFICO, REPRODUCTOR DE FRAMES Y EFECTO ROJO DE IMPACTO
  * ============================================================================
  */
-function renderScene() {
+function renderScene(dt = 0.016) {
     // 1. Fondo del escenario (Cielo / Muro y Suelo de arena)
     ctx.fillStyle = "#1e293b";
     ctx.fillRect(0, 0, WORLD_W, FLOOR_TOP - 20);
@@ -928,9 +1314,9 @@ function renderScene() {
 
     renderList.sort((a, b) => a.data.y - b.data.y);
 
-    // 3. Dibujar cada entidad
+    // 3. Dibujar cada entidad avanzando sus frames
     renderList.forEach(item => {
-        drawCharacter(item.data, item.type === 'player');
+        drawCharacter(item.data, item.type === 'player', dt);
     });
 }
 
@@ -938,7 +1324,7 @@ function renderScene() {
 const tintCanvas = document.createElement('canvas');
 const tintCtx = tintCanvas.getContext('2d');
 
-function drawCharacter(ent, isPlayer) {
+function drawCharacter(ent, isPlayer, dt) {
     const W = 90;
     const H = 110;
 
@@ -948,20 +1334,36 @@ function drawCharacter(ent, isPlayer) {
     ctx.ellipse(ent.x, ent.y, 28, 10, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    const spriteSet = isPlayer ? LOADED_IMAGES.players[ent.id] : LOADED_IMAGES.enemy;
-    const img = spriteSet[ent.state] || spriteSet['idle'];
-    const fallbackColor = isPlayer 
-        ? SPRITES_CONFIG.players[ent.id].fallbackColor 
-        : SPRITES_CONFIG.enemy.fallbackColor;
+    const charCfg = isPlayer
+        ? (SPRITES_CONFIG.characters[ent.characterId ?? ent.id] || SPRITES_CONFIG.characters[0])
+        : SPRITES_CONFIG.enemy;
+
+    const frameSet = isPlayer
+        ? (LOADED_FRAMES.characters[ent.characterId ?? ent.id] || LOADED_FRAMES.characters[0])
+        : LOADED_FRAMES.enemy;
+
+    const stateFrames = (frameSet[ent.state] && frameSet[ent.state].length > 0)
+        ? frameSet[ent.state]
+        : (frameSet['idle'] || []);
+
+    advanceFrameAnimation(ent, charCfg.fps, dt, stateFrames.length);
+
+    const img = stateFrames.length > 0
+        ? stateFrames[ent.frameIndex % stateFrames.length]
+        : null;
+    const fallbackColor = charCfg.fallbackColor;
 
     ctx.save();
     ctx.translate(ent.x, ent.y);
     ctx.scale(ent.facing, 1);
 
-    // Pequeño rebote al caminar
-    const bobY = ent.state === 'walk' ? Math.abs(Math.sin(performance.now() * 0.015)) * -6 : 0;
+    // Pequeño rebote al caminar (solo si no hay sprites personalizados)
+    const hasCustomSprite = Boolean(img && img.complete && img.naturalWidth > 0);
+    const bobY = (!hasCustomSprite && ent.state === 'walk')
+        ? Math.abs(Math.sin(performance.now() * 0.015)) * -6
+        : 0;
 
-    if (img && img.complete && img.naturalWidth > 0) {
+    if (hasCustomSprite) {
         if (ent.hitFlash > 0) {
             // Efecto rojo sobre el sprite personalizado usando composición
             tintCanvas.width = W;
@@ -977,7 +1379,7 @@ function drawCharacter(ent, isPlayer) {
             ctx.drawImage(img, -W / 2, -H + bobY, W, H);
         }
     } else {
-        // Personaje de prueba (si aún no pusiste tus sprites)
+        // Personaje de prueba (si aún no pusiste tus frames en SPRITES_CONFIG)
         ctx.fillStyle = ent.hitFlash > 0 ? "#ff0000" : fallbackColor;
         // Cuerpo
         ctx.beginPath();
@@ -991,12 +1393,13 @@ function drawCharacter(ent, isPlayer) {
         ctx.fillStyle = "#fff";
         ctx.fillRect(5, -92 + bobY, 6, 5);
 
-        // Animación visual de golpe o patada
+        // Animación visual de golpe o patada avanzando según frameIndex
+        const reachBoost = (ent.frameIndex % 5) * 4;
         ctx.fillStyle = ent.hitFlash > 0 ? "#ff4444" : "#fde047";
         if (ent.state === 'punch') {
-            ctx.fillRect(16, -62 + bobY, 34, 12); // Puño extendido
+            ctx.fillRect(16, -62 + bobY, 26 + reachBoost, 12);
         } else if (ent.state === 'kick') {
-            ctx.fillRect(14, -36 + bobY, 44, 14); // Patada extendida
+            ctx.fillRect(14, -36 + bobY, 34 + reachBoost, 14);
         }
     }
 
@@ -1013,7 +1416,7 @@ function drawCharacter(ent, isPlayer) {
         ctx.fillStyle = "#fff";
         ctx.font = "bold 12px sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText(ent.name, ent.x, ent.y - H - 8);
+        ctx.fillText(`${ent.name} · ${charCfg.name.split(' ')[0]}`, ent.x, ent.y - H - 8);
     }
 }
 
@@ -1026,7 +1429,8 @@ function buildPlayersHUD() {
     const container = document.getElementById('players-hud');
     container.innerHTML = '';
     gameState.players.forEach((p, idx) => {
-        const color = SPRITES_CONFIG.players[idx].fallbackColor;
+        const charCfg = SPRITES_CONFIG.characters[p.characterId ?? idx] || SPRITES_CONFIG.characters[0];
+        const color = charCfg.fallbackColor;
         container.innerHTML += `
             <div class="p-card" style="border-color:${color}">
                 <div class="p-name">
@@ -1052,15 +1456,15 @@ function updateHUD() {
         }
     });
 
-    document.getElementById('enemy-counter').innerText = 
+    document.getElementById('enemy-counter').innerText =
         `Derrotados: ${gameState.enemiesDefeated} / ${TOTAL_ENEMIES_LEVEL_1}`;
 
     if (gameState.levelFinished) {
         const banner = document.getElementById('end-banner');
         banner.style.display = 'flex';
-        document.getElementById('end-title').innerText = 
+        document.getElementById('end-title').innerText =
             gameState.victory ? "¡NIVEL 1 COMPLETADO!" : "DERROTA";
-        document.getElementById('end-subtitle').innerText = 
+        document.getElementById('end-subtitle').innerText =
             gameState.victory ? "Has vencido a los 15 enemigos." : "Todos los jugadores cayeron en combate.";
     }
 }
